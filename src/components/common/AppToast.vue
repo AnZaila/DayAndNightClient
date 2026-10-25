@@ -27,12 +27,13 @@ const items = useToasts()
 }
 
 .toast {
+  --toast: #34d399;
   margin: 0;
   padding: 10px 14px;
-  border: 1px solid var(--ok);
+  border: 1px solid var(--toast);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--ok) 14%, var(--surface));
-  color: var(--ok);
+  background: color-mix(in srgb, var(--toast) 22%, var(--surface));
+  color: var(--toast);
   box-shadow: var(--shadow);
   font-size: 14px;
   font-weight: 600;
@@ -40,9 +41,15 @@ const items = useToasts()
   text-align: center;
 
   &.error {
-    border-color: var(--danger);
-    background: color-mix(in srgb, var(--danger) 14%, var(--surface));
-    color: var(--danger);
+    --toast: #fda4af;
+  }
+}
+
+:global([data-theme='dark']) .toast {
+  --toast: #d1fae5;
+
+  &.error {
+    --toast: #ffe4e6;
   }
 }
 
