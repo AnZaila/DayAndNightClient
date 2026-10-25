@@ -10,7 +10,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   like: [id: number]
-  reply: [item: Danmaku]
 }>()
 
 const { shown } = useDanmakuVisible()
@@ -44,18 +43,11 @@ function source(id: number) {
 }
 
 function label(id: number) {
-  const item = source(id)
-  if (!item) return ''
-  return item.replyToNickname ? `回复 ${item.replyToNickname} ${item.content}` : item.content
+  return source(id)?.content ?? ''
 }
 
 function finish(id: number) {
   flying.value = flying.value.filter((item) => item.id !== id)
-}
-
-function reply(id: number) {
-  const item = source(id)
-  if (item) emit('reply', item)
 }
 </script>
 
@@ -84,7 +76,6 @@ function reply(id: number) {
             <Heart :size="12" :fill="source(item.id)?.liked ? 'currentColor' : 'none'" />
             <span v-if="source(item.id)?.likeCount">{{ source(item.id)?.likeCount }}</span>
           </button>
-          <button v-wave type="button" @click.stop="reply(item.id)">回复</button>
         </span>
       </span>
     </div>

@@ -7,11 +7,6 @@ import { useSessionStore } from '@/stores/session'
 
 const props = defineProps<{
   send: (nickname: string | null, content: string) => Promise<void>
-  replyTo?: { nickname: string } | null
-}>()
-
-const emit = defineEmits<{
-  cancelReply: []
 }>()
 
 const { shown, toggle } = useDanmakuVisible()
@@ -35,7 +30,6 @@ async function submit() {
   try {
     await props.send(signedIn.value ? null : nickname.value.trim(), content.value.trim())
     content.value = ''
-    if (props.replyTo) emit('cancelReply')
   } finally {
     sending.value = false
   }
@@ -44,10 +38,6 @@ async function submit() {
 
 <template>
   <form class="bar" novalidate @submit.prevent="submit">
-    <p v-if="replyTo" class="reply">
-      回复 {{ replyTo.nickname }}
-      <button v-wave type="button" @click="emit('cancelReply')">取消</button>
-    </p>
     <input
       v-if="!signedIn"
       v-model="nickname"
@@ -58,11 +48,11 @@ async function submit() {
     <input
       v-model="content"
       maxlength="40"
-      :placeholder="replyTo ? `回复 ${replyTo.nickname}` : '飞一句过去'"
+      placeholder="飞一句过去"
       aria-label="弹幕"
     />
     <AppButton variant="quiet" type="button" @click="toggle">{{ shown ? '关掉弹幕' : '打开弹幕' }}</AppButton>
-    <AppButton type="submit" :disabled="sending">{{ replyTo ? '回复' : '发送' }}</AppButton>
+    <AppButton type="submit" :disabled="sending">发送</AppButton>
   </form>
 </template>
 
@@ -72,21 +62,6 @@ async function submit() {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-
-  .reply {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    width: 100%;
-    margin: 0;
-    color: var(--muted);
-    font-size: 13px;
-
-    button {
-      color: var(--primary);
-      cursor: pointer;
-    }
-  }
 
   input {
     min-width: 0;

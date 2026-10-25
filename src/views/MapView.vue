@@ -20,7 +20,6 @@ const danmaku = ref<Danmaku[]>([])
 const error = ref<string | null>(null)
 const ready = ref(false)
 const filled = ref(true)
-const replyTo = ref<Danmaku | null>(null)
 
 const markers = computed(() =>
   places.value.map((place) => ({
@@ -67,7 +66,7 @@ function openPost(id: number) {
 
 async function send(nickname: string | null, content: string) {
   try {
-    const created = await createMapDanmaku(nickname, content, replyTo.value?.id)
+    const created = await createMapDanmaku(nickname, content)
     if (created.status === 'VISIBLE') danmaku.value = [...danmaku.value, created]
     pushToast(created.status === 'VISIBLE' ? '已飞出去' : '已提交，待显示')
   } catch (cause) {
@@ -91,14 +90,14 @@ async function likeNote(id: number) {
     <p v-if="error" class="error">{{ error }}</p>
     <div v-else class="board card">
       <MapPoint :tall="!filled" :fill="filled" :markers="markers" @open="openPost" />
-      <DanmakuStage :items="flying" @like="likeNote" @reply="replyTo = $event" />
+      <DanmakuStage :items="flying" @like="likeNote" />
       <div class="dock">
         <AppButton variant="quiet" type="button" @click="toggleFullscreen">
           <Minimize2 v-if="filled" :size="16" />
           <Maximize2 v-else :size="16" />
           {{ filled ? '退出全屏' : '全屏' }}
         </AppButton>
-        <DanmakuForm :send="send" :reply-to="replyTo" @cancel-reply="replyTo = null" />
+        <DanmakuForm :send="send" />
       </div>
     </div>
     <p v-if="ready && !error && places.length === 0 && !filled" class="muted">还没有标过地点的帖子。</p>

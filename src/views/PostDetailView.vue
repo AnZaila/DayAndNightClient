@@ -35,7 +35,6 @@ const danmaku = ref<Danmaku[]>([])
 const error = ref<string | null>(null)
 const commentError = ref<string | null>(null)
 const replyTarget = ref<Comment | null>(null)
-const danmakuReply = ref<Danmaku | null>(null)
 const confirmOpen = ref(false)
 const active = ref<Media | null>(null)
 const lightboxOpen = computed({
@@ -86,7 +85,7 @@ async function submitComment(nickname: string | null, content: string) {
 
 async function sendDanmaku(nickname: string | null, content: string) {
   try {
-    const created = await createPostDanmaku(postId.value, nickname, content, danmakuReply.value?.id)
+    const created = await createPostDanmaku(postId.value, nickname, content)
     if (created.status === 'VISIBLE') danmaku.value = [...danmaku.value, created]
     pushToast(created.status === 'VISIBLE' ? '已飞出去' : '已提交，待显示')
   } catch (cause) {
@@ -166,12 +165,12 @@ onMounted(load)
         <WaveLink class="btn quiet" :to="{ name: 'write', params: { id: post.id } }">修改这篇</WaveLink>
         <AppButton variant="quiet" type="button" @click="confirmOpen = true">删除这篇</AppButton>
       </div>
-      <DanmakuStage :items="flying" @like="likeNote" @reply="danmakuReply = $event" />
+      <DanmakuStage :items="flying" @like="likeNote" />
     </article>
     <section class="card">
       <h2>弹幕</h2>
       <p class="lede">短短一句，从画面上飞过去。鼠标停在上面会暂停。</p>
-      <DanmakuForm :send="sendDanmaku" :reply-to="danmakuReply" @cancel-reply="danmakuReply = null" />
+      <DanmakuForm :send="sendDanmaku" />
     </section>
     <section class="card">
       <h2>评论<span v-if="comments.length" class="count">{{ comments.length }}</span></h2>

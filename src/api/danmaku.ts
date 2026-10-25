@@ -6,13 +6,8 @@ export async function fetchPostDanmaku(postId: number) {
   return data
 }
 
-export async function createPostDanmaku(
-  postId: number,
-  nickname: string | null,
-  content: string,
-  parentId?: number | null,
-) {
-  const { data } = await request.post<Danmaku>(`/posts/${postId}/danmaku`, { nickname, content, parentId })
+export async function createPostDanmaku(postId: number, nickname: string | null, content: string) {
+  const { data } = await request.post<Danmaku>(`/posts/${postId}/danmaku`, { nickname, content })
   return data
 }
 
@@ -21,8 +16,8 @@ export async function fetchMapDanmaku() {
   return data
 }
 
-export async function createMapDanmaku(nickname: string | null, content: string, parentId?: number | null) {
-  const { data } = await request.post<Danmaku>('/danmaku', { nickname, content, parentId })
+export async function createMapDanmaku(nickname: string | null, content: string) {
+  const { data } = await request.post<Danmaku>('/danmaku', { nickname, content })
   return data
 }
 

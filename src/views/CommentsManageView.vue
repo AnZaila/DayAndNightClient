@@ -97,10 +97,7 @@ async function confirmRemoveNote() {
             <strong>{{ note.nickname }}</strong>
             <span class="muted"> · {{ formatDateTime(note.createdAt) }}</span>
             <span v-if="note.status === 'HIDDEN'" class="muted"> · 已隐藏</span>
-            <p>
-              <template v-if="note.replyToNickname">回复 {{ note.replyToNickname }}：</template>
-              {{ note.content }}
-            </p>
+            <p>{{ note.content }}</p>
             <p class="muted">
               <WaveLink v-if="note.postId" :to="{ name: 'post', params: { id: note.postId } }">看这篇</WaveLink>
               <span v-else>地图</span>
