@@ -191,7 +191,7 @@ const rows = computed(() => Array.from({ length: Math.max(props.count, 1) }, (_,
 
 @media (max-width: 640px) {
   .timeline {
-    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-columns: 4.6rem minmax(0, 1fr);
     gap: 10px;
   }
 }

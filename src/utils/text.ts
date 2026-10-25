@@ -1,7 +1,24 @@
 import DOMPurify from 'dompurify'
 
 const allowed = {
-  ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'h2', 'h3', 'ol', 'ul', 'li', 'a', 'blockquote', 'img'],
+  ALLOWED_TAGS: [
+    'p',
+    'br',
+    'strong',
+    'b',
+    'em',
+    'i',
+    'u',
+    's',
+    'h2',
+    'h3',
+    'ol',
+    'ul',
+    'li',
+    'a',
+    'blockquote',
+    'img',
+  ],
   ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt'],
 }
 
@@ -70,12 +87,6 @@ export function formatMonthDay(value: string) {
   const part = dateParts(value)
   if (!part) return value
   return `${part.month}月${part.day}日`
-}
-
-export function formatClock(value: string) {
-  const part = dateParts(value)
-  if (!part?.hour || !part.minute || part.second == null) return ''
-  return `${part.hour}:${part.minute}:${part.second}`
 }
 
 export function formatDateTime(value: string) {

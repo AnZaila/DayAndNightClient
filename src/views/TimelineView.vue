@@ -9,7 +9,7 @@ import WaveLink from '@/components/common/WaveLink.vue'
 import { usePaged } from '@/composables/usePaged'
 import { fetchPosts } from '@/api/post'
 import { useSessionStore } from '@/stores/session'
-import { formatClock, formatMonthDay } from '@/utils/text'
+import { formatMonthDay } from '@/utils/text'
 
 const router = useRouter()
 const session = useSessionStore()
@@ -46,10 +46,6 @@ function showYear(index: number) {
   if (!current) return false
   return !previous || yearOf(current.happenedAt) !== yearOf(previous.happenedAt)
 }
-
-function monthDay(value: string) {
-  return formatMonthDay(value)
-}
 </script>
 
 <template>
@@ -82,10 +78,7 @@ function monthDay(value: string) {
         <div class="rail">
           <time :datetime="post.happenedAt">
             <span v-if="showYear(index)" class="year">{{ yearOf(post.happenedAt) }}</span>
-            <span>{{ monthDay(post.happenedAt) }}</span>
-            <span v-if="formatClock(post.happenedAt)" class="clock">{{
-              formatClock(post.happenedAt)
-            }}</span>
+            <span>{{ formatMonthDay(post.happenedAt) }}</span>
           </time>
           <span class="dot" />
         </div>
@@ -191,14 +184,14 @@ time {
   text-align: center;
 }
 
+.year,
+.rail time span {
+  white-space: nowrap;
+}
+
 .year {
   color: var(--heading);
   font-weight: 600;
-}
-
-.clock {
-  color: var(--faint);
-  font-size: 12px;
 }
 
 .dot {
@@ -248,11 +241,11 @@ time {
 
 @media (max-width: 640px) {
   .timeline li {
-    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-columns: 4.6rem minmax(0, 1fr);
     gap: 10px;
 
     &::before {
-      left: 31px;
+      left: calc(2.3rem - 1px);
     }
   }
 }
