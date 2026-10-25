@@ -27,7 +27,8 @@ const editing = computed(() => route.params.id !== undefined)
 const postId = computed(() => Number(route.params.id))
 
 const content = ref('')
-const happenedAt = ref(localToday())
+const happenedDate = ref('')
+const happenedTime = ref('00:00:00')
 const mood = ref('none')
 const weather = ref('none')
 const location = ref('')
@@ -74,16 +75,34 @@ function chosen(value: string) {
   return value === 'none' ? '' : value
 }
 
-function localToday() {
+function pad(value: number) {
+  return String(value).padStart(2, '0')
+}
+
+function applyNow() {
   const now = new Date()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${now.getFullYear()}-${month}-${day}`
+  happenedDate.value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+  happenedTime.value = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+}
+
+function applyWhen(value: string) {
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2})(?::(\d{2}))?)?/)
+  if (!match) {
+    applyNow()
+    return
+  }
+  happenedDate.value = match[1]
+  happenedTime.value = match[2] ? `${match[2]}:${match[3] ?? '00'}` : '00:00:00'
+}
+
+function happenedAtValue() {
+  const time = happenedTime.value.length === 5 ? `${happenedTime.value}:00` : happenedTime.value
+  return happenedDate.value && time ? `${happenedDate.value}T${time}` : ''
 }
 
 function reset() {
   content.value = ''
-  happenedAt.value = localToday()
+  applyNow()
   mood.value = 'none'
   weather.value = 'none'
   location.value = ''
@@ -111,7 +130,7 @@ async function load() {
     return
   }
   content.value = toEditorHtml(post.content)
-  happenedAt.value = post.happenedAt
+  applyWhen(post.happenedAt)
   mood.value = post.mood || 'none'
   weather.value = post.weather || 'none'
   location.value = post.location ?? ''
@@ -147,8 +166,8 @@ function clearCover() {
 watch(() => route.params.id, () => void load(), { immediate: true })
 
 async function save() {
-  if (!happenedAt.value) {
-    pushToast('选一个日期', 'error')
+  if (!happenedDate.value || !happenedTime.value) {
+    pushToast('选一个日期和时间', 'error')
     return
   }
   if (isBlankHtml(content.value)) {
@@ -159,7 +178,7 @@ async function save() {
   error.value = null
   const input = {
     content: content.value,
-    happenedAt: happenedAt.value,
+    happenedAt: happenedAtValue(),
     mood: chosen(mood.value),
     weather: chosen(weather.value),
     location: location.value,
@@ -231,7 +250,10 @@ async function removeMedia(mediaId: number) {
       <h1 class="page-title">{{ editing ? '改一笔' : '写一笔' }}</h1>
       <div class="field">
         <span>发生在</span>
-        <AppDatePicker v-model="happenedAt" />
+        <div class="when">
+          <AppDatePicker v-model="happenedDate" />
+          <input v-model="happenedTime" class="clock" type="time" step="1" aria-label="时间" />
+        </div>
       </div>
       <div class="field">
         <span>正文</span>
@@ -297,7 +319,7 @@ async function removeMedia(mediaId: number) {
     </form>
     <aside class="card preview">
       <p class="kicker">预览</p>
-      <time>{{ formatDate(happenedAt) }}</time>
+      <time>{{ formatDate(happenedAtValue()) }}</time>
       <div class="author">
         <UserAvatar :src="session.user?.avatarUrl" :name="session.user?.displayName" :size="36" />
         <h2>{{ session.user?.displayName || '你' }}写下的这一天</h2>
@@ -377,6 +399,22 @@ h2 {
   margin-top: 8px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.when {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+
+  :deep(.picker) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  input.clock {
+    width: 9.5rem;
+    flex: none;
+  }
 }
 
 .chips {

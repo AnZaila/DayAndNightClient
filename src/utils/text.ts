@@ -45,12 +45,43 @@ export function isBlankHtml(value: string) {
   return plainText(value).length === 0
 }
 
+function dateParts(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/)
+  if (!match) return null
+  return {
+    year: match[1],
+    month: Number(match[2]),
+    day: Number(match[3]),
+    hour: match[4],
+    minute: match[5],
+    second: match[6] ?? (match[4] ? '00' : undefined),
+  }
+}
+
 export function formatDate(value: string) {
-  const [year, month, day] = value.split('-')
-  if (!year || !month || !day) return value
-  return `${year}年${Number(month)}月${Number(day)}日`
+  const part = dateParts(value)
+  if (!part) return value
+  const day = `${part.year}年${part.month}月${part.day}日`
+  if (!part.hour || !part.minute || part.second == null) return day
+  return `${day} ${part.hour}:${part.minute}:${part.second}`
+}
+
+export function formatMonthDay(value: string) {
+  const part = dateParts(value)
+  if (!part) return value
+  return `${part.month}月${part.day}日`
+}
+
+export function formatClock(value: string) {
+  const part = dateParts(value)
+  if (!part?.hour || !part.minute || part.second == null) return ''
+  return `${part.hour}:${part.minute}:${part.second}`
 }
 
 export function formatDateTime(value: string) {
-  return value.slice(0, 16).replace('T', ' ')
+  const part = dateParts(value)
+  if (!part) return value
+  const day = `${part.year}-${String(part.month).padStart(2, '0')}-${String(part.day).padStart(2, '0')}`
+  if (!part.hour || !part.minute || part.second == null) return day
+  return `${day} ${part.hour}:${part.minute}:${part.second}`
 }

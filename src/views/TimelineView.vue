@@ -6,7 +6,7 @@ import PostCard from '@/components/post/PostCard.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
 import { usePostList } from '@/composables/usePostList'
 import { useSessionStore } from '@/stores/session'
-import { formatDate } from '@/utils/text'
+import { formatClock, formatMonthDay } from '@/utils/text'
 
 const router = useRouter()
 const session = useSessionStore()
@@ -36,7 +36,7 @@ function showYear(index: number) {
 }
 
 function monthDay(value: string) {
-  return formatDate(value).replace(/^\d+年/, '')
+  return formatMonthDay(value)
 }
 </script>
 
@@ -69,6 +69,7 @@ function monthDay(value: string) {
           <time :datetime="post.happenedAt">
             <span v-if="showYear(index)" class="year">{{ yearOf(post.happenedAt) }}</span>
             <span>{{ monthDay(post.happenedAt) }}</span>
+            <span v-if="formatClock(post.happenedAt)" class="clock">{{ formatClock(post.happenedAt) }}</span>
           </time>
           <span class="dot" />
         </div>
@@ -175,6 +176,11 @@ time {
 .year {
   color: var(--heading);
   font-weight: 600;
+}
+
+.clock {
+  color: var(--faint);
+  font-size: 12px;
 }
 
 .dot {
