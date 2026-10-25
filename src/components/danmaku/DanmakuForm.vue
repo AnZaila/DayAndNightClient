@@ -45,14 +45,11 @@ async function submit() {
       placeholder="昵称"
       aria-label="昵称"
     />
-    <input
-      v-model="content"
-      maxlength="40"
-      placeholder="飞一句过去"
-      aria-label="弹幕"
-    />
-    <AppButton variant="quiet" type="button" @click="toggle">{{ shown ? '关掉弹幕' : '打开弹幕' }}</AppButton>
-    <AppButton type="submit" :disabled="sending">发送</AppButton>
+    <input v-model="content" maxlength="40" placeholder="飞一句过去" aria-label="弹幕" />
+    <AppButton variant="quiet" type="button" @click="toggle">{{
+      shown ? '关掉弹幕' : '打开弹幕'
+    }}</AppButton>
+    <AppButton type="submit" :loading="sending">发送</AppButton>
   </form>
 </template>
 

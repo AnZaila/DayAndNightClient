@@ -227,7 +227,10 @@ async function exportAvatar(root: HTMLElement, current: AvatarOption) {
     paintBackground(ctx, current.background.color, EXPORT_SIZE)
     ctx.drawImage(image, 0, 0, EXPORT_SIZE, EXPORT_SIZE)
     const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((data) => (data ? resolve(data) : reject(new Error('头像导出失败'))), 'image/png')
+      canvas.toBlob(
+        (data) => (data ? resolve(data) : reject(new Error('头像导出失败'))),
+        'image/png',
+      )
     })
     return new File([blob], 'avatar.png', { type: 'image/png' })
   } finally {
@@ -282,9 +285,25 @@ watch(
             <div class="block">
               <span>形象</span>
               <div class="choices">
-                <button type="button" :class="{ on: genderPref === 'any' }" @click="genderPref = 'any'">不限</button>
-                <button type="button" :class="{ on: genderPref === 'male' }" @click="genderPref = 'male'">男性</button>
-                <button type="button" :class="{ on: genderPref === 'female' }" @click="genderPref = 'female'">
+                <button
+                  type="button"
+                  :class="{ on: genderPref === 'any' }"
+                  @click="genderPref = 'any'"
+                >
+                  不限
+                </button>
+                <button
+                  type="button"
+                  :class="{ on: genderPref === 'male' }"
+                  @click="genderPref = 'male'"
+                >
+                  男性
+                </button>
+                <button
+                  type="button"
+                  :class="{ on: genderPref === 'female' }"
+                  @click="genderPref = 'female'"
+                >
                   女性
                 </button>
               </div>
@@ -292,9 +311,13 @@ watch(
             <div class="parts">
               <div v-for="item in widgetControls" :key="item.type" class="part">
                 <span>{{ item.label }}</span>
-                <button type="button" @click="cycleWidget(item.type, -1)"><ChevronLeft :size="16" /></button>
+                <button type="button" @click="cycleWidget(item.type, -1)">
+                  <ChevronLeft :size="16" />
+                </button>
                 <strong>{{ shapeLabel(item.type) }}</strong>
-                <button type="button" @click="cycleWidget(item.type, 1)"><ChevronRight :size="16" /></button>
+                <button type="button" @click="cycleWidget(item.type, 1)">
+                  <ChevronRight :size="16" />
+                </button>
               </div>
             </div>
             <div class="block">
@@ -303,7 +326,7 @@ watch(
                 <button
                   v-for="color in SETTINGS.skinColors"
                   :key="color"
- type="button"
+                  type="button"
                   class="swatch"
                   :class="{ on: option.widgets.face?.fillColor === color }"
                   :style="{ background: color }"
@@ -317,7 +340,7 @@ watch(
                 <button
                   v-for="color in SETTINGS.commonColors"
                   :key="`hair-${color}`"
- type="button"
+                  type="button"
                   class="swatch"
                   :class="{ on: option.widgets.tops?.fillColor === color }"
                   :style="{ background: color }"
@@ -331,7 +354,7 @@ watch(
                 <button
                   v-for="color in SETTINGS.commonColors"
                   :key="`clothes-${color}`"
- type="button"
+                  type="button"
                   class="swatch"
                   :class="{ on: option.widgets.clothes?.fillColor === color }"
                   :style="{ background: color }"
@@ -345,7 +368,7 @@ watch(
                 <button
                   v-for="color in SETTINGS.backgroundColor"
                   :key="color"
- type="button"
+                  type="button"
                   class="swatch"
                   :class="{ on: option.background.color === color }"
                   :style="{ background: color === 'transparent' ? '#fff' : color }"
@@ -356,8 +379,10 @@ watch(
           </div>
         </div>
         <div class="actions">
-          <AppButton variant="quiet" type="button" @click="emit('update:open', false)">取消</AppButton>
-          <AppButton type="button" :disabled="busy" @click="confirm">用这张</AppButton>
+          <AppButton variant="quiet" type="button" @click="emit('update:open', false)"
+            >取消</AppButton
+          >
+          <AppButton type="button" :loading="busy" @click="confirm">用这张</AppButton>
         </div>
       </DialogContent>
     </DialogPortal>

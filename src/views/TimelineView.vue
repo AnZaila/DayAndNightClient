@@ -4,6 +4,7 @@ import { PenLine } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import PostCard from '@/components/post/PostCard.vue'
 import ScrollSentinel from '@/components/common/ScrollSentinel.vue'
+import Skeleton from '@/components/common/Skeleton.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
 import { usePaged } from '@/composables/usePaged'
 import { fetchPosts } from '@/api/post'
@@ -60,9 +61,11 @@ function monthDay(value: string) {
       <button type="button" :class="{ on: !mineOnly }" @click="showMine(false)">全部</button>
       <button type="button" :class="{ on: mineOnly }" @click="showMine(true)">只看我的</button>
     </div>
-    <p v-if="posts.length === 0 && !error && (loading || page === 0)" class="muted">
-      正在把日子排开。
-    </p>
+    <Skeleton
+      v-if="posts.length === 0 && !error && (loading || page === 0)"
+      preset="timeline"
+      :count="3"
+    />
     <p v-else-if="error && posts.length === 0" class="error">{{ error }}</p>
     <div v-else-if="posts.length === 0" class="card empty">
       <h2>{{ mineOnly ? '你还没有写过' : '还没有记下的日子' }}</h2>
@@ -89,7 +92,7 @@ function monthDay(value: string) {
         <PostCard :post="post" :index="index" @open="openPost" />
       </li>
     </ol>
-    <p v-if="loading && posts.length" class="muted">正在往下翻。</p>
+    <Skeleton v-if="loading && posts.length" preset="timeline" />
     <ScrollSentinel v-if="hasMore" :key="page" @visible="more" />
   </section>
 </template>

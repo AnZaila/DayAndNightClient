@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Globe, Lock, MapPin } from '@lucide/vue'
 import { createPost, deletePostMedia, fetchPost, updatePost, uploadPostCover } from '@/api/post'
 import AppButton from '@/components/common/AppButton.vue'
+import Skeleton from '@/components/common/Skeleton.vue'
 import AppCheckbox from '@/components/common/AppCheckbox.vue'
 import AppDatePicker from '@/components/common/AppDatePicker.vue'
 import AppFilePicker from '@/components/common/AppFilePicker.vue'
@@ -163,7 +164,11 @@ function clearCover() {
   pickerKey.value += 1
 }
 
-watch(() => route.params.id, () => void load(), { immediate: true })
+watch(
+  () => route.params.id,
+  () => void load(),
+  { immediate: true },
+)
 
 async function save() {
   if (!happenedDate.value || !happenedTime.value) {
@@ -188,7 +193,11 @@ async function save() {
   }
   try {
     const saved = editing.value
-      ? await updatePost(postId.value, { ...input, status: status.value, commentsOpen: commentsOpen.value })
+      ? await updatePost(postId.value, {
+          ...input,
+          status: status.value,
+          commentsOpen: commentsOpen.value,
+        })
       : await createPost(input)
     if (file.value) {
       try {
@@ -258,6 +267,7 @@ async function removeMedia(mediaId: number) {
       <div class="field">
         <span>正文</span>
         <RichEditor v-if="ready" v-model="content" />
+        <Skeleton v-else preset="editor" />
       </div>
       <div class="split">
         <div class="field">
@@ -311,11 +321,13 @@ async function removeMedia(mediaId: number) {
       <div v-else-if="existing.length" class="photos">
         <figure v-for="media in existing" :key="media.id">
           <img :src="media.url" alt="" />
-          <AppButton variant="quiet" type="button" @click="askRemoveMedia(media.id)">移除</AppButton>
+          <AppButton variant="quiet" type="button" @click="askRemoveMedia(media.id)"
+            >移除</AppButton
+          >
         </figure>
       </div>
       <p v-if="error" class="error">{{ error }}</p>
-      <AppButton type="submit" :disabled="saving">{{ saving ? '保存中' : '放进时间轴' }}</AppButton>
+      <AppButton type="submit" :loading="saving">放进时间轴</AppButton>
     </form>
     <aside class="card preview">
       <p class="kicker">预览</p>
@@ -326,7 +338,9 @@ async function removeMedia(mediaId: number) {
       </div>
       <div class="chips">
         <span v-if="mood !== 'none'"><DiaryIcon kind="mood" :value="mood" /> {{ mood }}</span>
-        <span v-if="weather !== 'none'"><DiaryIcon kind="weather" :value="weather" /> {{ weather }}</span>
+        <span v-if="weather !== 'none'"
+          ><DiaryIcon kind="weather" :value="weather" /> {{ weather }}</span
+        >
         <span v-if="location"><MapPin :size="14" /> {{ location }}</span>
         <span v-if="visibility === 'PRIVATE'"><Lock :size="14" /> 仅双方</span>
         <span v-else><Globe :size="14" /> 公开</span>

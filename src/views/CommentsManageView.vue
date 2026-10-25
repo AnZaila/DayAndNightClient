@@ -6,6 +6,7 @@ import AppButton from '@/components/common/AppButton.vue'
 import CommentList from '@/components/comment/CommentList.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import Pager from '@/components/common/Pager.vue'
+import Skeleton from '@/components/common/Skeleton.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
 import { usePaged } from '@/composables/usePaged'
 import { pushToast } from '@/composables/useToast'
@@ -64,9 +65,11 @@ async function confirmRemoveNote() {
     <section class="card">
       <h1 class="page-title">评论管理</h1>
       <p class="lede">别人留下的。</p>
-      <p v-if="thread.loading.value && thread.items.value.length === 0" class="muted">
-        正在读取评论。
-      </p>
+      <Skeleton
+        v-if="thread.loading.value && thread.items.value.length === 0"
+        preset="comment"
+        :count="4"
+      />
       <p v-else-if="thread.error.value && thread.items.value.length === 0" class="error">
         {{ thread.error.value }}
       </p>
@@ -91,9 +94,11 @@ async function confirmRemoveNote() {
     <section class="card">
       <h2>弹幕</h2>
       <p class="lede">包括自己发的。先审后发时，从这里放出来。</p>
-      <p v-if="notes.loading.value && notes.items.value.length === 0" class="muted">
-        正在读取弹幕。
-      </p>
+      <Skeleton
+        v-if="notes.loading.value && notes.items.value.length === 0"
+        preset="note"
+        :count="4"
+      />
       <p v-else-if="notes.error.value && notes.items.value.length === 0" class="error">
         {{ notes.error.value }}
       </p>

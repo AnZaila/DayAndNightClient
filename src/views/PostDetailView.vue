@@ -20,6 +20,7 @@ import DanmakuForm from '@/components/danmaku/DanmakuForm.vue'
 import DanmakuStage from '@/components/danmaku/DanmakuStage.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import ScrollSentinel from '@/components/common/ScrollSentinel.vue'
+import Skeleton from '@/components/common/Skeleton.vue'
 import MapPoint from '@/components/common/MapPoint.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
@@ -206,7 +207,13 @@ onMounted(load)
           <template v-else-if="!post.commentsOpen">评论已关闭。</template>
           <template v-else>这篇不开放评论。</template>
         </p>
+        <Skeleton
+          v-if="thread.loading.value && thread.page.value === 0"
+          preset="comment"
+          :count="3"
+        />
         <CommentList
+          v-else
           threaded
           :comments="thread.items.value"
           :can-moderate="Boolean(session.user)"
@@ -216,10 +223,16 @@ onMounted(load)
           @like="likeOne"
           @reply="replyTarget = $event"
         />
-        <p v-if="thread.page.value > 0 && thread.items.value.length === 0" class="muted empty-note">
+        <p v-if="thread.error.value && thread.items.value.length === 0" class="error">
+          {{ thread.error.value }}
+        </p>
+        <p
+          v-else-if="thread.page.value > 0 && thread.items.value.length === 0"
+          class="muted empty-note"
+        >
           还没有留言。
         </p>
-        <p v-if="thread.loading.value && thread.items.value.length" class="muted">正在往下翻。</p>
+        <Skeleton v-if="thread.loading.value && thread.items.value.length" preset="comment" />
         <ScrollSentinel
           v-if="thread.hasMore.value && thread.page.value > 0"
           :key="thread.page.value"
@@ -243,7 +256,7 @@ onMounted(load)
       <ImageLightbox v-model:open="lightboxOpen" :src="active?.url || ''" :alt="alt" />
     </div>
     <p v-else-if="error" class="shell error">{{ error }}。如果这是仅双方的帖子，需要先登录。</p>
-    <p v-else class="shell muted">正在翻开这一页。</p>
+    <Skeleton v-else class="shell" preset="detail" />
   </div>
 </template>
 

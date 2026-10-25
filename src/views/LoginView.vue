@@ -50,7 +50,7 @@ async function submit() {
       <input v-model="password" type="password" autocomplete="current-password" />
     </label>
     <p v-if="error" class="error">{{ error }}</p>
-    <AppButton type="submit" :disabled="sending">进入</AppButton>
+    <AppButton type="submit" :loading="sending">进入</AppButton>
   </form>
 </template>
 

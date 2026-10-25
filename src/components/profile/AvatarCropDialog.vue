@@ -36,7 +36,9 @@ const props = withDefaults(
 const cropWidth = computed(() => (props.aspect[0] >= props.aspect[1] ? 320 : 220))
 const cropHeight = computed(() => Math.round((cropWidth.value * props.aspect[1]) / props.aspect[0]))
 const previewWidth = computed(() => (props.aspect[0] > props.aspect[1] ? 148 : 96))
-const previewHeight = computed(() => Math.round((previewWidth.value * props.aspect[1]) / props.aspect[0]))
+const previewHeight = computed(() =>
+  Math.round((previewWidth.value * props.aspect[1]) / props.aspect[0]),
+)
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
@@ -143,11 +145,19 @@ watch(
           </div>
         </div>
         <div class="actions">
-          <AppButton variant="quiet" type="button" @click="cropperRef?.changeScale(-1)">缩小</AppButton>
-          <AppButton variant="quiet" type="button" @click="cropperRef?.changeScale(1)">放大</AppButton>
-          <AppButton variant="quiet" type="button" @click="cropperRef?.rotateLeft()">左转</AppButton>
-          <AppButton variant="quiet" type="button" @click="emit('update:open', false)">取消</AppButton>
-          <AppButton type="button" :disabled="loading" @click="confirm">用这张</AppButton>
+          <AppButton variant="quiet" type="button" @click="cropperRef?.changeScale(-1)"
+            >缩小</AppButton
+          >
+          <AppButton variant="quiet" type="button" @click="cropperRef?.changeScale(1)"
+            >放大</AppButton
+          >
+          <AppButton variant="quiet" type="button" @click="cropperRef?.rotateLeft()"
+            >左转</AppButton
+          >
+          <AppButton variant="quiet" type="button" @click="emit('update:open', false)"
+            >取消</AppButton
+          >
+          <AppButton type="button" :loading="loading" @click="confirm">用这张</AppButton>
         </div>
       </DialogContent>
     </DialogPortal>

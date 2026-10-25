@@ -6,6 +6,7 @@ import { createMapDanmaku, fetchMapDanmaku, likeDanmaku } from '@/api/danmaku'
 import { fetchPlaces } from '@/api/post'
 import { usePaged } from '@/composables/usePaged'
 import AppButton from '@/components/common/AppButton.vue'
+import Skeleton from '@/components/common/Skeleton.vue'
 import MapPoint from '@/components/common/MapPoint.vue'
 import DanmakuForm from '@/components/danmaku/DanmakuForm.vue'
 import DanmakuStage from '@/components/danmaku/DanmakuStage.vue'
@@ -87,10 +88,11 @@ async function likeNote(id: number) {
       <p class="lede">标过地点的日子，点一下就能打开。</p>
     </div>
     <p v-if="error" class="error">{{ error }}</p>
-    <div v-else class="board card">
-      <MapPoint :tall="!filled" :fill="filled" :markers="markers" @open="openPost" />
-      <DanmakuStage :items="flying" @like="likeNote" @need-more="notes.more" />
-      <div class="dock">
+    <div v-else class="board card" :class="{ wait: !ready }">
+      <Skeleton v-if="!ready" preset="map" />
+      <MapPoint v-else :tall="!filled" :fill="filled" :markers="markers" @open="openPost" />
+      <DanmakuStage v-if="ready" :items="flying" @like="likeNote" @need-more="notes.more" />
+      <div v-if="ready" class="dock">
         <AppButton variant="quiet" type="button" @click="toggleFullscreen">
           <Minimize2 v-if="filled" :size="16" />
           <Maximize2 v-else :size="16" />
@@ -124,6 +126,22 @@ async function likeNote(id: number) {
   position: relative;
   padding: 0;
   overflow: hidden;
+}
+
+.board.wait {
+  display: flex;
+  min-height: 70vh;
+}
+
+.page.fill .board.wait {
+  min-height: 0;
+  flex: 1;
+}
+
+.page.fill .board.wait :deep(.map),
+.page.fill .board.wait :deep(.map-bone) {
+  min-height: 0;
+  height: 100%;
 }
 
 :global(html.map-fill),

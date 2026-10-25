@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { CalendarDays } from '@lucide/vue'
 import { createAnniversary, deleteAnniversary, fetchAnniversaries } from '@/api/anniversary'
 import AppButton from '@/components/common/AppButton.vue'
+import Skeleton from '@/components/common/Skeleton.vue'
 import AppDatePicker from '@/components/common/AppDatePicker.vue'
 import AppSelect from '@/components/common/AppSelect.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
@@ -15,6 +16,8 @@ import { useSessionStore } from '@/stores/session'
 
 const session = useSessionStore()
 const items = ref<Anniversary[]>([])
+const loading = ref(true)
+const adding = ref(false)
 const error = ref<string | null>(null)
 const title = ref('')
 const date = ref('')
@@ -57,7 +60,11 @@ function daysUntil(value: string) {
 }
 
 async function load() {
-  items.value = await fetchAnniversaries()
+  try {
+    items.value = await fetchAnniversaries()
+  } finally {
+    loading.value = false
+  }
 }
 
 async function add() {
@@ -70,6 +77,7 @@ async function add() {
     pushToast('选一个日期', 'error')
     return
   }
+  adding.value = true
   try {
     await createAnniversary({
       title: title.value,
@@ -86,6 +94,8 @@ async function add() {
   } catch (cause) {
     error.value = cause instanceof ApiError ? cause.message : '保存失败'
     if (!(cause instanceof ApiError)) pushToast(error.value, 'error')
+  } finally {
+    adding.value = false
   }
 }
 
@@ -119,7 +129,8 @@ onMounted(load)
       <h1 class="page-title">纪念日</h1>
       <p class="lede">每年都会再来的日子。</p>
       <p v-if="nextUp" class="hint">最近的一个是「{{ nextUp.title }}」，{{ nextUp.countdown }}。</p>
-      <p v-if="listed.length === 0" class="muted">还没有纪念日。下面可以先记一个。</p>
+      <Skeleton v-if="loading && listed.length === 0" preset="anniversary" :count="3" />
+      <p v-else-if="listed.length === 0" class="muted">还没有纪念日。下面可以先记一个。</p>
       <ul v-else>
         <li v-for="item in listed" :key="item.id">
           <div>
@@ -131,7 +142,9 @@ onMounted(load)
             <p v-if="item.note">{{ item.note }}</p>
             <p v-if="item.visibility === 'PRIVATE'" class="muted">仅双方可见</p>
           </div>
-          <AppButton v-if="session.user" variant="quiet" type="button" @click="askRemove(item.id)">删除</AppButton>
+          <AppButton v-if="session.user" variant="quiet" type="button" @click="askRemove(item.id)"
+            >删除</AppButton
+          >
         </li>
       </ul>
     </div>
@@ -154,7 +167,7 @@ onMounted(load)
         <AppSelect v-model="visibility" :options="visibilityOptions" />
       </div>
       <p v-if="error" class="error">{{ error }}</p>
-      <AppButton type="submit">记下</AppButton>
+      <AppButton type="submit" :loading="adding">记下</AppButton>
     </form>
     <p v-else class="card muted">登录之后才能添加或删除纪念日。公开的那些，现在就可以看。</p>
     <ConfirmDialog

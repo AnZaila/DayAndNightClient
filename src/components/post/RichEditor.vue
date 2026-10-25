@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { QuillEditor } from '@vueup/vue-quill'
 import { uploadContentImage } from '@/api/post'
+import Spinner from '@/components/common/Spinner.vue'
 import { pushToast } from '@/composables/useToast'
 import { bindWave } from '@/utils/wave'
 import { ApiError } from '@/utils/request'
@@ -50,7 +51,9 @@ function localize() {
   bar.querySelectorAll('button, .ql-picker-label, .ql-picker-item').forEach((node) => {
     if (node instanceof HTMLElement) bindWave(node)
     if (!(node instanceof HTMLButtonElement)) return
-    const format = [...node.classList].find((name) => name.startsWith('ql-') && name !== 'ql-active')
+    const format = [...node.classList].find(
+      (name) => name.startsWith('ql-') && name !== 'ql-active',
+    )
     if (!format) return
     const name = format.slice(3)
     const value = node.getAttribute('value')
@@ -115,7 +118,7 @@ function onUpdate(value: string | null | undefined) {
 </script>
 
 <template>
-  <div class="editor">
+  <div class="editor" :aria-busy="uploading || undefined">
     <input
       ref="fileInput"
       class="sr-only"
@@ -134,5 +137,29 @@ function onUpdate(value: string | null | undefined) {
       @update:content="onUpdate"
       @ready="localize"
     />
+    <p v-if="uploading" class="wait" role="status">
+      <Spinner />
+      正在放入图片
+    </p>
   </div>
 </template>
+
+<style scoped lang="scss">
+.editor {
+  position: relative;
+}
+
+.wait {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  color: var(--heading);
+}
+</style>

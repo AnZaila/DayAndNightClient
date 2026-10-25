@@ -79,7 +79,15 @@ async function submit() {
     <div class="field anchor">
       <span class="label-line">
         <span>评论</span>
-        <button ref="emojiButton" v-wave type="button" class="emoji" @click="emojiOpen = !emojiOpen">表情</button>
+        <button
+          ref="emojiButton"
+          v-wave
+          type="button"
+          class="emoji"
+          @click="emojiOpen = !emojiOpen"
+        >
+          表情
+        </button>
       </span>
       <EmojiPicker
         v-if="emojiOpen"
@@ -94,7 +102,7 @@ async function submit() {
         :placeholder="replyTo ? `回复 ${replyTo.nickname}` : '留下一句就好'"
       />
     </div>
-    <AppButton type="submit" :disabled="sending">{{ replyTo ? '回复' : '留下' }}</AppButton>
+    <AppButton type="submit" :loading="sending">{{ replyTo ? '回复' : '留下' }}</AppButton>
   </form>
 </template>
 

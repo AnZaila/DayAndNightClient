@@ -10,6 +10,7 @@ import AvatarCropDialog from '@/components/profile/AvatarCropDialog.vue'
 import AvatarGenerateDialog from '@/components/profile/AvatarGenerateDialog.vue'
 import CommentList from '@/components/comment/CommentList.vue'
 import Pager from '@/components/common/Pager.vue'
+import Skeleton from '@/components/common/Skeleton.vue'
 import { pushToast } from '@/composables/useToast'
 import { useSessionStore } from '@/stores/session'
 import type { CommentStatus } from '@/types/comment'
@@ -164,15 +165,17 @@ async function removeComment(id: number) {
         <span>签名</span>
         <textarea v-model="signature" maxlength="120" placeholder="一句话就好" />
       </label>
-      <AppButton type="submit" :disabled="saving">保存</AppButton>
+      <AppButton type="submit" :loading="saving">保存</AppButton>
     </form>
 
     <section class="card">
       <h2>我的评论</h2>
       <p class="lede">你留下的。</p>
-      <p v-if="thread.loading.value && thread.items.value.length === 0" class="muted">
-        正在读取评论。
-      </p>
+      <Skeleton
+        v-if="thread.loading.value && thread.items.value.length === 0"
+        preset="comment"
+        :count="3"
+      />
       <p v-else-if="thread.error.value && thread.items.value.length === 0" class="error">
         {{ thread.error.value }}
       </p>
