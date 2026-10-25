@@ -1,24 +1,35 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { PenLine } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import PostCard from '@/components/post/PostCard.vue'
+import ScrollSentinel from '@/components/common/ScrollSentinel.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
-import { usePostList } from '@/composables/usePostList'
+import { usePaged } from '@/composables/usePaged'
+import { fetchPosts } from '@/api/post'
 import { useSessionStore } from '@/stores/session'
 import { formatClock, formatMonthDay } from '@/utils/text'
 
 const router = useRouter()
 const session = useSessionStore()
-const { posts, loading, error, load } = usePostList()
 const mineOnly = ref(false)
+const {
+  items: posts,
+  loading,
+  error,
+  hasMore,
+  page,
+  total,
+  more,
+  reset,
+} = usePaged((next) => fetchPosts(next, 10, mineOnly.value))
 
-const visible = computed(() => {
-  if (!mineOnly.value || !session.user) return posts.value
-  return posts.value.filter((post) => post.authorId === session.user?.id)
-})
-
-onMounted(load)
+function showMine(value: boolean) {
+  if (mineOnly.value === value) return
+  mineOnly.value = value
+  reset()
+  void more()
+}
 
 function openPost(id: number) {
   router.push({ name: 'post', params: { id } })
@@ -29,8 +40,8 @@ function yearOf(value: string) {
 }
 
 function showYear(index: number) {
-  const current = visible.value[index]
-  const previous = visible.value[index - 1]
+  const current = posts.value[index]
+  const previous = posts.value[index - 1]
   if (!current) return false
   return !previous || yearOf(current.happenedAt) !== yearOf(previous.happenedAt)
 }
@@ -44,38 +55,42 @@ function monthDay(value: string) {
   <section class="shell">
     <h1 class="page-title">时间轴</h1>
     <p class="lede">从最近往下读。</p>
-    <p v-if="!loading && !error" class="hint tally">{{ visible.length }} 篇</p>
+    <p v-if="page > 0" class="hint tally">{{ total }} 篇</p>
     <div v-if="session.user" class="filters">
-      <button type="button" :class="{ on: !mineOnly }" @click="mineOnly = false">全部</button>
-      <button type="button" :class="{ on: mineOnly }" @click="mineOnly = true">只看我的</button>
+      <button type="button" :class="{ on: !mineOnly }" @click="showMine(false)">全部</button>
+      <button type="button" :class="{ on: mineOnly }" @click="showMine(true)">只看我的</button>
     </div>
-    <p v-if="loading" class="muted">正在把日子排开。</p>
-    <p v-else-if="error" class="error">{{ error }}</p>
-    <div v-else-if="visible.length === 0" class="card empty">
+    <p v-if="posts.length === 0 && !error && (loading || page === 0)" class="muted">
+      正在把日子排开。
+    </p>
+    <p v-else-if="error && posts.length === 0" class="error">{{ error }}</p>
+    <div v-else-if="posts.length === 0" class="card empty">
       <h2>{{ mineOnly ? '你还没有写过' : '还没有记下的日子' }}</h2>
       <p>
-        {{
-          mineOnly ? '对方写的在「全部」里。' : '从今天写起，也可以补以前的日子。'
-        }}
+        {{ mineOnly ? '对方写的在「全部」里。' : '从今天写起，也可以补以前的日子。' }}
       </p>
       <WaveLink v-if="session.user" class="btn solid" :to="{ name: 'write' }">
         <PenLine :size="16" />
         写第一笔
       </WaveLink>
     </div>
-    <ol v-else class="timeline">
-      <li v-for="(post, index) in visible" :key="post.id">
+    <ol v-if="posts.length" class="timeline">
+      <li v-for="(post, index) in posts" :key="post.id">
         <div class="rail">
           <time :datetime="post.happenedAt">
             <span v-if="showYear(index)" class="year">{{ yearOf(post.happenedAt) }}</span>
             <span>{{ monthDay(post.happenedAt) }}</span>
-            <span v-if="formatClock(post.happenedAt)" class="clock">{{ formatClock(post.happenedAt) }}</span>
+            <span v-if="formatClock(post.happenedAt)" class="clock">{{
+              formatClock(post.happenedAt)
+            }}</span>
           </time>
           <span class="dot" />
         </div>
         <PostCard :post="post" :index="index" @open="openPost" />
       </li>
     </ol>
+    <p v-if="loading && posts.length" class="muted">正在往下翻。</p>
+    <ScrollSentinel v-if="hasMore" :key="page" @visible="more" />
   </section>
 </template>
 

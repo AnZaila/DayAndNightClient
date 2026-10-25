@@ -5,52 +5,41 @@ import { deleteDanmaku, fetchRecentDanmaku, updateDanmakuStatus } from '@/api/da
 import AppButton from '@/components/common/AppButton.vue'
 import CommentList from '@/components/comment/CommentList.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import Pager from '@/components/common/Pager.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
+import { usePaged } from '@/composables/usePaged'
 import { pushToast } from '@/composables/useToast'
 import type { Comment, CommentStatus } from '@/types/comment'
 import type { Danmaku } from '@/types/danmaku'
 import { formatDateTime } from '@/utils/text'
 
-const comments = ref<Comment[]>([])
-const notes = ref<Danmaku[]>([])
-const error = ref<string | null>(null)
-const loading = ref(true)
+const pageSize = 20
+const thread = usePaged<Comment>((page) => fetchRecentComments('manage', page, pageSize))
+const notes = usePaged<Danmaku>((page) => fetchRecentDanmaku(page, pageSize))
 const pendingNote = ref<number | null>(null)
 
-async function load() {
-  loading.value = true
-  error.value = null
-  try {
-    const [commentList, noteList] = await Promise.all([
-      fetchRecentComments('manage'),
-      fetchRecentDanmaku(),
-    ])
-    comments.value = commentList
-    notes.value = noteList
-  } catch {
-    error.value = '评论没有加载出来。'
-  } finally {
-    loading.value = false
-  }
-}
-
-void load()
+void thread.open(1)
+void notes.open(1)
 
 async function setStatus(id: number, status: CommentStatus) {
   const updated = await updateCommentStatus(id, status)
-  comments.value = comments.value.map((item) => (item.id === id ? updated : item))
+  thread.items.value = thread.items.value.map((item) => (item.id === id ? updated : item))
   pushToast(status === 'HIDDEN' ? '已隐藏' : '已显示')
 }
 
 async function removeComment(id: number) {
   await deleteComment(id)
-  comments.value = comments.value.filter((item) => item.id !== id)
+  const next =
+    thread.items.value.length === 1 && thread.page.value > 1
+      ? thread.page.value - 1
+      : thread.page.value
+  await thread.open(next || 1)
   pushToast('已删除')
 }
 
 async function setNoteStatus(id: number, status: Danmaku['status']) {
   const updated = await updateDanmakuStatus(id, status)
-  notes.value = notes.value.map((item) => (item.id === id ? updated : item))
+  notes.items.value = notes.items.value.map((item) => (item.id === id ? updated : item))
   pushToast(status === 'HIDDEN' ? '已隐藏' : '已显示')
 }
 
@@ -63,7 +52,9 @@ async function confirmRemoveNote() {
   pendingNote.value = null
   if (id == null) return
   await deleteDanmaku(id)
-  notes.value = notes.value.filter((item) => item.id !== id)
+  const next =
+    notes.items.value.length === 1 && notes.page.value > 1 ? notes.page.value - 1 : notes.page.value
+  await notes.open(next || 1)
   pushToast('已删除')
 }
 </script>
@@ -73,33 +64,51 @@ async function confirmRemoveNote() {
     <section class="card">
       <h1 class="page-title">评论管理</h1>
       <p class="lede">别人留下的。</p>
-      <p v-if="loading" class="muted">正在读取评论。</p>
-      <p v-else-if="error" class="error">{{ error }}</p>
-      <p v-else-if="comments.length === 0" class="muted">还没有别人的留言。</p>
+      <p v-if="thread.loading.value && thread.items.value.length === 0" class="muted">
+        正在读取评论。
+      </p>
+      <p v-else-if="thread.error.value && thread.items.value.length === 0" class="error">
+        {{ thread.error.value }}
+      </p>
+      <p v-else-if="thread.items.value.length === 0" class="muted">还没有别人的留言。</p>
       <CommentList
-        v-else
-        :comments="comments"
+        v-if="thread.items.value.length"
+        :comments="thread.items.value"
         can-moderate
         show-post
         @hide="setStatus($event, 'HIDDEN')"
         @show="setStatus($event, 'VISIBLE')"
         @remove="removeComment"
       />
+      <Pager
+        :page="thread.page.value"
+        :total="thread.total.value"
+        :size="thread.size.value || pageSize"
+        :disabled="thread.loading.value"
+        @page="thread.open"
+      />
     </section>
     <section class="card">
       <h2>弹幕</h2>
       <p class="lede">包括自己发的。先审后发时，从这里放出来。</p>
-      <p v-if="loading" class="muted">正在读取弹幕。</p>
-      <p v-else-if="!error && notes.length === 0" class="muted">还没有弹幕。</p>
-      <ul v-else-if="!error" class="notes">
-        <li v-for="note in notes" :key="note.id">
+      <p v-if="notes.loading.value && notes.items.value.length === 0" class="muted">
+        正在读取弹幕。
+      </p>
+      <p v-else-if="notes.error.value && notes.items.value.length === 0" class="error">
+        {{ notes.error.value }}
+      </p>
+      <p v-else-if="notes.items.value.length === 0" class="muted">还没有弹幕。</p>
+      <ul v-if="notes.items.value.length" class="notes">
+        <li v-for="note in notes.items.value" :key="note.id">
           <div>
             <strong>{{ note.nickname }}</strong>
             <span class="muted"> · {{ formatDateTime(note.createdAt) }}</span>
             <span v-if="note.status === 'HIDDEN'" class="muted"> · 已隐藏</span>
             <p>{{ note.content }}</p>
             <p class="muted">
-              <WaveLink v-if="note.postId" :to="{ name: 'post', params: { id: note.postId } }">看这篇</WaveLink>
+              <WaveLink v-if="note.postId" :to="{ name: 'post', params: { id: note.postId } }"
+                >看这篇</WaveLink
+              >
               <span v-else>地图</span>
             </p>
           </div>
@@ -112,13 +121,25 @@ async function confirmRemoveNote() {
             >
               隐藏
             </AppButton>
-            <AppButton v-else variant="quiet" type="button" @click="setNoteStatus(note.id, 'VISIBLE')">
+            <AppButton
+              v-else
+              variant="quiet"
+              type="button"
+              @click="setNoteStatus(note.id, 'VISIBLE')"
+            >
               显示
             </AppButton>
             <AppButton variant="quiet" type="button" @click="pendingNote = note.id">删除</AppButton>
           </div>
         </li>
       </ul>
+      <Pager
+        :page="notes.page.value"
+        :total="notes.total.value"
+        :size="notes.size.value || pageSize"
+        :disabled="notes.loading.value"
+        @page="notes.open"
+      />
     </section>
     <ConfirmDialog
       :open="pendingNote !== null"

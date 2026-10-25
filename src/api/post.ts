@@ -1,9 +1,17 @@
-import type { Media, PostDetail, PostInput, PostStatus, PostSummary, Visibility } from '@/types/post'
+import type { Page } from '@/types/page'
+import type {
+  Media,
+  PostDetail,
+  PostInput,
+  PostStatus,
+  PostSummary,
+  Visibility,
+} from '@/types/post'
 import type { PlacePin } from '@/types/place'
 import { request } from '@/utils/request'
 
-export async function fetchPosts() {
-  const { data } = await request.get<PostSummary[]>('/posts')
+export async function fetchPosts(page = 1, size = 10, mine = false) {
+  const { data } = await request.get<Page<PostSummary>>('/posts', { params: { page, size, mine } })
   return data
 }
 

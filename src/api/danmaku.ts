@@ -1,8 +1,11 @@
 import type { Danmaku } from '@/types/danmaku'
+import type { Page } from '@/types/page'
 import { request } from '@/utils/request'
 
-export async function fetchPostDanmaku(postId: number) {
-  const { data } = await request.get<Danmaku[]>(`/posts/${postId}/danmaku`)
+export async function fetchPostDanmaku(postId: number, page = 1, size = 20) {
+  const { data } = await request.get<Page<Danmaku>>(`/posts/${postId}/danmaku`, {
+    params: { page, size },
+  })
   return data
 }
 
@@ -11,8 +14,8 @@ export async function createPostDanmaku(postId: number, nickname: string | null,
   return data
 }
 
-export async function fetchMapDanmaku() {
-  const { data } = await request.get<Danmaku[]>('/danmaku/map')
+export async function fetchMapDanmaku(page = 1, size = 20) {
+  const { data } = await request.get<Page<Danmaku>>('/danmaku/map', { params: { page, size } })
   return data
 }
 
@@ -26,8 +29,8 @@ export async function likeDanmaku(id: number) {
   return data
 }
 
-export async function fetchRecentDanmaku() {
-  const { data } = await request.get<Danmaku[]>('/danmaku')
+export async function fetchRecentDanmaku(page = 1, size = 20) {
+  const { data } = await request.get<Page<Danmaku>>('/danmaku', { params: { page, size } })
   return data
 }
 

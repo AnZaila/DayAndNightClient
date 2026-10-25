@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { deleteComment, fetchRecentComments, updateCommentStatus } from '@/api/comment'
+import { usePaged } from '@/composables/usePaged'
 import { updateProfile, uploadAvatar, uploadCover } from '@/api/auth'
 import AppButton from '@/components/common/AppButton.vue'
 import ImageLightbox from '@/components/common/ImageLightbox.vue'
@@ -8,9 +9,10 @@ import UserAvatar from '@/components/common/UserAvatar.vue'
 import AvatarCropDialog from '@/components/profile/AvatarCropDialog.vue'
 import AvatarGenerateDialog from '@/components/profile/AvatarGenerateDialog.vue'
 import CommentList from '@/components/comment/CommentList.vue'
+import Pager from '@/components/common/Pager.vue'
 import { pushToast } from '@/composables/useToast'
 import { useSessionStore } from '@/stores/session'
-import type { Comment, CommentStatus } from '@/types/comment'
+import type { CommentStatus } from '@/types/comment'
 import { ApiError } from '@/utils/request'
 
 const session = useSessionStore()
@@ -24,13 +26,14 @@ const cropKind = ref<'avatar' | 'cover'>('avatar')
 const picked = ref<File | null>(null)
 const avatarInput = ref<HTMLInputElement | null>(null)
 const coverInput = ref<HTMLInputElement | null>(null)
-const comments = ref<Comment[]>([])
-const commentsError = ref<string | null>(null)
-const commentsLoading = ref(true)
+const pageSize = 20
+const thread = usePaged((page) => fetchRecentComments('mine', page, pageSize))
 const coverOpen = ref(false)
 
 const cropTitle = computed(() => (cropKind.value === 'cover' ? '裁剪背景' : '裁剪头像'))
-const cropAspect = computed(() => (cropKind.value === 'cover' ? ([16, 7] as [number, number]) : ([1, 1] as [number, number])))
+const cropAspect = computed(() =>
+  cropKind.value === 'cover' ? ([16, 7] as [number, number]) : ([1, 1] as [number, number]),
+)
 const cropOutput = computed(() => (cropKind.value === 'cover' ? 'cover.jpg' : 'avatar.jpg'))
 const coverStyle = computed(() => {
   const url = session.user?.coverUrl
@@ -46,19 +49,7 @@ watch(
   },
 )
 
-async function loadComments() {
-  commentsLoading.value = true
-  commentsError.value = null
-  try {
-    comments.value = await fetchRecentComments('mine')
-  } catch {
-    commentsError.value = '评论没有加载出来。'
-  } finally {
-    commentsLoading.value = false
-  }
-}
-
-void loadComments()
+void thread.open(1)
 
 async function saveProfile() {
   const next = name.value.trim()
@@ -103,13 +94,17 @@ async function useFile(file: File) {
 
 async function setStatus(id: number, status: CommentStatus) {
   const updated = await updateCommentStatus(id, status)
-  comments.value = comments.value.map((item) => (item.id === id ? updated : item))
+  thread.items.value = thread.items.value.map((item) => (item.id === id ? updated : item))
   pushToast(status === 'HIDDEN' ? '已隐藏' : '已显示')
 }
 
 async function removeComment(id: number) {
   await deleteComment(id)
-  comments.value = comments.value.filter((item) => item.id !== id)
+  const next =
+    thread.items.value.length === 1 && thread.page.value > 1
+      ? thread.page.value - 1
+      : thread.page.value
+  await thread.open(next || 1)
   pushToast('已删除')
 }
 </script>
@@ -125,7 +120,9 @@ async function removeComment(id: number) {
           aria-label="查看背景"
           @click="coverOpen = true"
         />
-        <AppButton class="cover-action" type="button" @click="coverInput?.click()">换背景</AppButton>
+        <AppButton class="cover-action" type="button" @click="coverInput?.click()"
+          >换背景</AppButton
+        >
         <input
           ref="coverInput"
           class="sr-only"
@@ -173,17 +170,28 @@ async function removeComment(id: number) {
     <section class="card">
       <h2>我的评论</h2>
       <p class="lede">你留下的。</p>
-      <p v-if="commentsLoading" class="muted">正在读取评论。</p>
-      <p v-else-if="commentsError" class="error">{{ commentsError }}</p>
-      <p v-else-if="comments.length === 0" class="muted">你还没有留言。</p>
+      <p v-if="thread.loading.value && thread.items.value.length === 0" class="muted">
+        正在读取评论。
+      </p>
+      <p v-else-if="thread.error.value && thread.items.value.length === 0" class="error">
+        {{ thread.error.value }}
+      </p>
+      <p v-else-if="thread.items.value.length === 0" class="muted">你还没有留言。</p>
       <CommentList
-        v-else
-        :comments="comments"
+        v-if="thread.items.value.length"
+        :comments="thread.items.value"
         can-moderate
         show-post
         @hide="setStatus($event, 'HIDDEN')"
         @show="setStatus($event, 'VISIBLE')"
         @remove="removeComment"
+      />
+      <Pager
+        :page="thread.page.value"
+        :total="thread.total.value"
+        :size="thread.size.value || pageSize"
+        :disabled="thread.loading.value"
+        @page="thread.open"
       />
     </section>
 

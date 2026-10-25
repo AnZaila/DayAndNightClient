@@ -4,19 +4,19 @@ import { useRouter } from 'vue-router'
 import { Maximize2, Minimize2 } from '@lucide/vue'
 import { createMapDanmaku, fetchMapDanmaku, likeDanmaku } from '@/api/danmaku'
 import { fetchPlaces } from '@/api/post'
+import { usePaged } from '@/composables/usePaged'
 import AppButton from '@/components/common/AppButton.vue'
 import MapPoint from '@/components/common/MapPoint.vue'
 import DanmakuForm from '@/components/danmaku/DanmakuForm.vue'
 import DanmakuStage from '@/components/danmaku/DanmakuStage.vue'
 import { pushToast } from '@/composables/useToast'
-import type { Danmaku } from '@/types/danmaku'
 import type { PlacePin } from '@/types/place'
 import { ApiError } from '@/utils/request'
 import { formatDate } from '@/utils/text'
 
 const router = useRouter()
 const places = ref<PlacePin[]>([])
-const danmaku = ref<Danmaku[]>([])
+const notes = usePaged((page) => fetchMapDanmaku(page, 20))
 const error = ref<string | null>(null)
 const ready = ref(false)
 const filled = ref(true)
@@ -30,7 +30,7 @@ const markers = computed(() =>
     coverUrl: place.coverUrl,
   })),
 )
-const flying = computed(() => danmaku.value.filter((item) => item.status === 'VISIBLE'))
+const flying = computed(() => notes.items.value.filter((item) => item.status === 'VISIBLE'))
 
 function toggleFullscreen() {
   filled.value = !filled.value
@@ -46,9 +46,8 @@ watch(
 
 onMounted(async () => {
   try {
-    const [pins, notes] = await Promise.all([fetchPlaces(), fetchMapDanmaku()])
-    places.value = pins
-    danmaku.value = notes
+    places.value = await fetchPlaces()
+    await notes.more()
   } catch {
     error.value = '地图没有加载出来。'
   } finally {
@@ -67,7 +66,7 @@ function openPost(id: number) {
 async function send(nickname: string | null, content: string) {
   try {
     const created = await createMapDanmaku(nickname, content)
-    if (created.status === 'VISIBLE') danmaku.value = [...danmaku.value, created]
+    if (created.status === 'VISIBLE') notes.items.value = [created, ...notes.items.value]
     pushToast(created.status === 'VISIBLE' ? '已飞出去' : '已提交，待显示')
   } catch (cause) {
     if (!(cause instanceof ApiError)) pushToast('弹幕没有发出去', 'error')
@@ -77,7 +76,7 @@ async function send(nickname: string | null, content: string) {
 
 async function likeNote(id: number) {
   const updated = await likeDanmaku(id)
-  danmaku.value = danmaku.value.map((item) => (item.id === id ? updated : item))
+  notes.items.value = notes.items.value.map((item) => (item.id === id ? updated : item))
 }
 </script>
 
@@ -90,7 +89,7 @@ async function likeNote(id: number) {
     <p v-if="error" class="error">{{ error }}</p>
     <div v-else class="board card">
       <MapPoint :tall="!filled" :fill="filled" :markers="markers" @open="openPost" />
-      <DanmakuStage :items="flying" @like="likeNote" />
+      <DanmakuStage :items="flying" @like="likeNote" @need-more="notes.more" />
       <div class="dock">
         <AppButton variant="quiet" type="button" @click="toggleFullscreen">
           <Minimize2 v-if="filled" :size="16" />
@@ -100,7 +99,9 @@ async function likeNote(id: number) {
         <DanmakuForm :send="send" />
       </div>
     </div>
-    <p v-if="ready && !error && places.length === 0 && !filled" class="muted">还没有标过地点的帖子。</p>
+    <p v-if="ready && !error && places.length === 0 && !filled" class="muted">
+      还没有标过地点的帖子。
+    </p>
   </section>
 </template>
 
