@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { PenLine } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import PostCard from '@/components/post/PostCard.vue'
+import WaveLink from '@/components/common/WaveLink.vue'
 import { usePostList } from '@/composables/usePostList'
 import { useSessionStore } from '@/stores/session'
 import { formatDate } from '@/utils/text'
@@ -57,10 +58,10 @@ function monthDay(value: string) {
           mineOnly ? '对方写的在「全部」里。' : '从今天写起，也可以补以前的日子。'
         }}
       </p>
-      <RouterLink v-if="session.user" class="btn solid" :to="{ name: 'write' }">
+      <WaveLink v-if="session.user" class="btn solid" :to="{ name: 'write' }">
         <PenLine :size="16" />
         写第一笔
-      </RouterLink>
+      </WaveLink>
     </div>
     <ol v-else class="timeline">
       <li v-for="(post, index) in visible" :key="post.id">

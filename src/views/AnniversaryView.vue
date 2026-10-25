@@ -5,6 +5,7 @@ import { createAnniversary, deleteAnniversary, fetchAnniversaries } from '@/api/
 import AppButton from '@/components/common/AppButton.vue'
 import AppDatePicker from '@/components/common/AppDatePicker.vue'
 import AppSelect from '@/components/common/AppSelect.vue'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import type { Anniversary } from '@/types/anniversary'
 import type { Visibility } from '@/types/post'
 import { ApiError } from '@/utils/request'
@@ -19,6 +20,7 @@ const title = ref('')
 const date = ref('')
 const note = ref('')
 const visibility = ref<Visibility>('PUBLIC')
+const pendingId = ref<number | null>(null)
 
 const visibilityOptions = [
   { value: 'PUBLIC' as const, label: '公开' },
@@ -60,6 +62,14 @@ async function load() {
 
 async function add() {
   error.value = null
+  if (!title.value.trim()) {
+    pushToast('写一个名称', 'error')
+    return
+  }
+  if (!date.value) {
+    pushToast('选一个日期', 'error')
+    return
+  }
   try {
     await createAnniversary({
       title: title.value,
@@ -75,8 +85,23 @@ async function add() {
     pushToast('已记下')
   } catch (cause) {
     error.value = cause instanceof ApiError ? cause.message : '保存失败'
-    pushToast(error.value, 'error')
+    if (!(cause instanceof ApiError)) pushToast(error.value, 'error')
   }
+}
+
+function askRemove(id: number) {
+  pendingId.value = id
+}
+
+function closeConfirm(open: boolean) {
+  if (!open) pendingId.value = null
+}
+
+async function confirmRemove() {
+  const id = pendingId.value
+  pendingId.value = null
+  if (id == null) return
+  await remove(id)
 }
 
 async function remove(id: number) {
@@ -106,19 +131,19 @@ onMounted(load)
             <p v-if="item.note">{{ item.note }}</p>
             <p v-if="item.visibility === 'PRIVATE'" class="muted">仅双方可见</p>
           </div>
-          <AppButton v-if="session.user" variant="quiet" type="button" @click="remove(item.id)">删除</AppButton>
+          <AppButton v-if="session.user" variant="quiet" type="button" @click="askRemove(item.id)">删除</AppButton>
         </li>
       </ul>
     </div>
-    <form v-if="session.user" class="card" @submit.prevent="add">
+    <form v-if="session.user" class="card" novalidate @submit.prevent="add">
       <h2>记一个新的</h2>
       <label class="field">
         <span>名称</span>
-        <input v-model="title" required maxlength="40" placeholder="例如：在一起" />
+        <input v-model="title" maxlength="40" placeholder="例如：在一起" />
       </label>
       <div class="field">
         <span>日期</span>
-        <AppDatePicker v-model="date" required />
+        <AppDatePicker v-model="date" />
       </div>
       <label class="field">
         <span>备注</span>
@@ -132,6 +157,14 @@ onMounted(load)
       <AppButton type="submit">记下</AppButton>
     </form>
     <p v-else class="card muted">登录之后才能添加或删除纪念日。公开的那些，现在就可以看。</p>
+    <ConfirmDialog
+      :open="pendingId !== null"
+      title="删除这个纪念日？"
+      description="删掉之后找不回来。"
+      confirm-label="删除"
+      @update:open="closeConfirm"
+      @confirm="confirmRemove"
+    />
   </section>
 </template>
 

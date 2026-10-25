@@ -10,7 +10,7 @@ withDefaults(
 </script>
 
 <template>
-  <button :type="type" :disabled="disabled" :class="['btn', variant]">
+  <button v-wave :type="type" :disabled="disabled" :class="['btn', variant]">
     <slot />
   </button>
 </template>

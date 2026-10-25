@@ -1,4 +1,11 @@
-import axios, { type AxiosError } from 'axios'
+import axios, { type AxiosError, type AxiosRequestConfig } from 'axios'
+import { pushToast } from '@/composables/useToast'
+
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    skipErrorToast?: boolean
+  }
+}
 
 export class ApiError extends Error {
   readonly status: number
@@ -27,6 +34,8 @@ request.interceptors.response.use(
   (error: AxiosError<Problem>) => {
     const status = error.response?.status ?? 0
     const detail = error.response?.data?.detail || error.response?.data?.title || '请求失败'
+    const config = error.config as AxiosRequestConfig | undefined
+    if (!config?.skipErrorToast) pushToast(detail, 'error')
     return Promise.reject(new ApiError(detail, status))
   },
 )

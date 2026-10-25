@@ -303,7 +303,7 @@ watch(
                 <button
                   v-for="color in SETTINGS.skinColors"
                   :key="color"
-                  type="button"
+ type="button"
                   class="swatch"
                   :class="{ on: option.widgets.face?.fillColor === color }"
                   :style="{ background: color }"
@@ -317,7 +317,7 @@ watch(
                 <button
                   v-for="color in SETTINGS.commonColors"
                   :key="`hair-${color}`"
-                  type="button"
+ type="button"
                   class="swatch"
                   :class="{ on: option.widgets.tops?.fillColor === color }"
                   :style="{ background: color }"
@@ -331,7 +331,7 @@ watch(
                 <button
                   v-for="color in SETTINGS.commonColors"
                   :key="`clothes-${color}`"
-                  type="button"
+ type="button"
                   class="swatch"
                   :class="{ on: option.widgets.clothes?.fillColor === color }"
                   :style="{ background: color }"
@@ -345,7 +345,7 @@ watch(
                 <button
                   v-for="color in SETTINGS.backgroundColor"
                   :key="color"
-                  type="button"
+ type="button"
                   class="swatch"
                   :class="{ on: option.background.color === color }"
                   :style="{ background: color === 'transparent' ? '#fff' : color }"

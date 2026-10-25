@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { VueCropper } from 'vue-cropper'
 import {
   DialogContent,
@@ -26,9 +26,17 @@ const props = withDefaults(
     open: boolean
     file: File | null
     loading?: boolean
+    title?: string
+    outputName?: string
+    aspect?: [number, number]
   }>(),
-  { loading: false },
+  { loading: false, title: '裁剪头像', outputName: 'avatar.jpg', aspect: () => [1, 1] },
 )
+
+const cropWidth = computed(() => (props.aspect[0] >= props.aspect[1] ? 320 : 220))
+const cropHeight = computed(() => Math.round((cropWidth.value * props.aspect[1]) / props.aspect[0]))
+const previewWidth = computed(() => (props.aspect[0] > props.aspect[1] ? 148 : 96))
+const previewHeight = computed(() => Math.round((previewWidth.value * props.aspect[1]) / props.aspect[0]))
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
@@ -63,7 +71,7 @@ async function confirm() {
   const blob = await new Promise<Blob>((resolve, reject) => {
     cropper.getCropBlob((data) => (data ? resolve(data) : reject(new Error('裁剪失败'))))
   })
-  emit('confirm', new File([blob], 'avatar.jpg', { type: blob.type || 'image/jpeg' }))
+  emit('confirm', new File([blob], props.outputName, { type: blob.type || 'image/jpeg' }))
 }
 
 watch(
@@ -88,8 +96,8 @@ watch(
     <DialogPortal>
       <DialogOverlay class="overlay" />
       <DialogContent class="content">
-        <DialogTitle class="title">裁剪头像</DialogTitle>
-        <DialogDescription class="sr-only">拖动或缩放，裁成正方形。</DialogDescription>
+        <DialogTitle class="title">{{ title }}</DialogTitle>
+        <DialogDescription class="sr-only">拖动或缩放后确认。</DialogDescription>
         <div class="layout">
           <div class="stage">
             <VueCropper
@@ -97,10 +105,11 @@ watch(
               ref="cropperRef"
               :img="img"
               :auto-crop="true"
-              :auto-crop-width="220"
-              :auto-crop-height="220"
+              :key="aspect.join('-')"
+              :auto-crop-width="cropWidth"
+              :auto-crop-height="cropHeight"
               :fixed="true"
-              :fixed-number="[1, 1]"
+              :fixed-number="aspect"
               :center-box="true"
               :can-move="true"
               :can-scale="true"
@@ -113,14 +122,18 @@ watch(
             />
           </div>
           <div class="side">
-            <div class="mask">
+            <div
+              class="mask"
+              :class="{ wide: aspect[0] > aspect[1] }"
+              :style="{ width: `${previewWidth}px`, height: `${previewHeight}px` }"
+            >
               <div
                 v-if="preview.width"
                 class="frame"
                 :style="{
                   width: `${preview.width}px`,
                   height: `${preview.height}px`,
-                  transform: `scale(${96 / preview.width})`,
+                  transform: `scale(${previewWidth / preview.width})`,
                 }"
               >
                 <img :src="preview.url" :style="preview.img" alt="" />
@@ -170,7 +183,7 @@ watch(
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 112px;
+  grid-template-columns: minmax(0, 1fr) 160px;
   gap: 14px;
 }
 
@@ -196,11 +209,13 @@ watch(
 }
 
 .mask {
-  width: 96px;
-  height: 96px;
   overflow: hidden;
-  border-radius: 22%;
+  border-radius: 50%;
   background: var(--field);
+
+  &.wide {
+    border-radius: 12px;
+  }
 }
 
 .frame {

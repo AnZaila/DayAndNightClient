@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import VWave from 'v-wave'
 
 import App from './App.vue'
 import router from './router'
@@ -24,4 +25,10 @@ try {
 const app = createApp(App)
 app.use(pinia)
 app.use(router)
+app.use(VWave, {
+  color: 'currentColor',
+  initialOpacity: 0.22,
+  finalOpacity: 0.08,
+  duration: 0.45,
+})
 app.mount('#app')

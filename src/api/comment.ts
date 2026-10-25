@@ -6,13 +6,23 @@ export async function fetchComments(postId: number) {
   return data
 }
 
-export async function createComment(postId: number, nickname: string | null, content: string) {
-  const { data } = await request.post<Comment>(`/posts/${postId}/comments`, { nickname, content })
+export async function createComment(
+  postId: number,
+  nickname: string | null,
+  content: string,
+  parentId?: number | null,
+) {
+  const { data } = await request.post<Comment>(`/posts/${postId}/comments`, { nickname, content, parentId })
   return data
 }
 
-export async function fetchRecentComments() {
-  const { data } = await request.get<Comment[]>('/comments')
+export async function likeComment(id: number) {
+  const { data } = await request.post<Comment>(`/comments/${id}/like`)
+  return data
+}
+
+export async function fetchRecentComments(scope: 'mine' | 'manage') {
+  const { data } = await request.get<Comment[]>('/comments', { params: { scope } })
   return data
 }
 

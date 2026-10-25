@@ -10,6 +10,11 @@ const router = createRouter({
       component: () => import('@/views/TimelineView.vue'),
     },
     {
+      path: '/map',
+      name: 'map',
+      component: () => import('@/views/MapView.vue'),
+    },
+    {
       path: '/posts/:id',
       name: 'post',
       component: () => import('@/views/PostDetailView.vue'),
@@ -44,7 +49,7 @@ const router = createRouter({
     {
       path: '/comments',
       name: 'comments',
-      component: () => import('@/views/CommentsView.vue'),
+      component: () => import('@/views/CommentsManageView.vue'),
       meta: { requiresAuth: true },
     },
     {

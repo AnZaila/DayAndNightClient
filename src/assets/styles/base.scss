@@ -136,6 +136,14 @@ p {
     background: color-mix(in srgb, var(--primary) 8%, var(--surface));
     color: var(--text);
   }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0.6em 0;
+    border-radius: var(--radius);
+  }
 }
 
 .muted {

@@ -26,11 +26,15 @@ onMounted(() => {
 
 async function saveSite() {
   if (!form.value) return
+  if (!form.value.title.trim() || !form.value.subtitle.trim() || !form.value.togetherSince) {
+    pushToast('名称、小字和日期都要填', 'error')
+    return
+  }
   try {
     siteStore.site = await updateSite(form.value)
     pushToast('已保存')
   } catch (cause) {
-    pushToast(cause instanceof ApiError ? cause.message : '保存失败', 'error')
+    if (!(cause instanceof ApiError)) pushToast('保存失败', 'error')
   }
 }
 </script>
@@ -39,26 +43,26 @@ async function saveSite() {
   <div>
   <section v-if="form" class="shell card form">
     <h1 class="page-title">设置</h1>
-    <p class="lede">整站的名字、日期和评论方式。</p>
-    <form @submit.prevent="saveSite">
+    <p class="lede">整站的名字、日期，以及评论和弹幕怎么放出。</p>
+    <form novalidate @submit.prevent="saveSite">
       <label class="field">
         <span>网站名称</span>
-        <input v-model="form.title" required maxlength="40" />
+        <input v-model="form.title" maxlength="40" />
       </label>
       <label class="field">
         <span>一句小字</span>
-        <input v-model="form.subtitle" required maxlength="80" />
+        <input v-model="form.subtitle" maxlength="80" />
       </label>
       <div class="field">
         <span>在一起的日期</span>
-        <AppDatePicker v-model="form.togetherSince" required />
+        <AppDatePicker v-model="form.togetherSince" />
       </div>
       <label class="field">
         <span>关于页正文</span>
         <textarea v-model="form.about" class="tall" />
       </label>
       <div class="field">
-        <span>游客评论</span>
+        <span>评论和弹幕</span>
         <AppSelect v-model="form.commentMode" :options="commentOptions" />
       </div>
       <AppButton type="submit">保存设置</AppButton>

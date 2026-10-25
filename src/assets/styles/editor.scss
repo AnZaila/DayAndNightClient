@@ -30,6 +30,14 @@
       color: var(--muted);
       font-style: normal;
     }
+
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 0.6em 0;
+      border-radius: var(--radius);
+    }
   }
 
   .ql-snow {

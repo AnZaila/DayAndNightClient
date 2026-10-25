@@ -7,9 +7,11 @@ export type PostSummary = {
   happenedAt: string
   excerpt: string
   mood: string | null
+  weather: string | null
   visibility: Visibility
   displayName: string
   coverUrl: string | null
+  authorAvatarUrl: string | null
 }
 
 export type Media = {
@@ -26,17 +28,24 @@ export type PostDetail = {
   content: string
   happenedAt: string
   mood: string | null
+  weather: string | null
   location: string | null
   visibility: Visibility
   status: PostStatus
   commentsOpen: boolean
   media: Media[]
+  authorAvatarUrl: string | null
+  latitude: number | null
+  longitude: number | null
 }
 
 export type PostInput = {
   content: string
   happenedAt: string
   mood: string
+  weather: string
   location: string
   visibility: Visibility
+  latitude: number | null
+  longitude: number | null
 }

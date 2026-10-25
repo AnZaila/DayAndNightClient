@@ -29,16 +29,20 @@ const items = useToasts()
 .toast {
   margin: 0;
   padding: 10px 14px;
+  border: 1px solid var(--ok);
   border-radius: 12px;
-  background: var(--heading);
-  color: var(--surface);
-  box-shadow: var(--shadow-hover);
-  text-align: center;
+  background: color-mix(in srgb, var(--ok) 14%, var(--surface));
+  color: var(--ok);
+  box-shadow: var(--shadow);
   font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
 
   &.error {
-    background: var(--danger);
-    color: #fff;
+    border-color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 14%, var(--surface));
+    color: var(--danger);
   }
 }
 

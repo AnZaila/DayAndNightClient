@@ -41,7 +41,7 @@ watch(source, () => {
   flex: none;
   place-items: center;
   overflow: hidden;
-  border-radius: 22%;
+  border-radius: 50%;
   background: var(--primary-soft);
   color: var(--primary);
   font-weight: 700;

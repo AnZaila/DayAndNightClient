@@ -19,10 +19,6 @@ import {
   DatePickerTrigger,
 } from 'reka-ui'
 
-defineProps<{
-  required?: boolean
-}>()
-
 const model = defineModel<string>({ required: true })
 
 const date = computed<DateValue | undefined>({
@@ -55,19 +51,25 @@ const label = computed(() => {
       prevent-deselect
       close-on-select
     >
-      <DatePickerTrigger class="soft-trigger" :data-empty="model ? undefined : ''">
-        <span class="soft-value">{{ label }}</span>
-        <svg class="soft-chevron" viewBox="0 0 16 16" aria-hidden="true">
-          <rect x="2.5" y="3.5" width="11" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
-          <path d="M2.5 6.5h11M5.5 2.5v2M10.5 2.5v2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-        </svg>
+      <DatePickerTrigger as-child>
+        <button type="button" class="soft-trigger" :data-empty="model ? undefined : ''">
+          <span class="soft-value">{{ label }}</span>
+          <svg class="soft-chevron" viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="2.5" y="3.5" width="11" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5" />
+            <path d="M2.5 6.5h11M5.5 2.5v2M10.5 2.5v2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </button>
       </DatePickerTrigger>
       <DatePickerContent class="soft-calendar" :side-offset="8">
         <DatePickerCalendar v-slot="{ weekDays, grid }">
           <DatePickerHeader class="soft-cal-header">
-            <DatePickerPrev class="soft-cal-nav" aria-label="上个月">‹</DatePickerPrev>
+            <DatePickerPrev as-child>
+              <button type="button" class="soft-cal-nav" aria-label="上个月">‹</button>
+            </DatePickerPrev>
             <DatePickerHeading class="soft-cal-heading" />
-            <DatePickerNext class="soft-cal-nav" aria-label="下个月">›</DatePickerNext>
+            <DatePickerNext as-child>
+              <button type="button" class="soft-cal-nav" aria-label="下个月">›</button>
+            </DatePickerNext>
           </DatePickerHeader>
           <DatePickerGrid v-for="month in grid" :key="month.value.toString()">
             <DatePickerGridHead>
@@ -78,7 +80,9 @@ const label = computed(() => {
             <DatePickerGridBody>
               <DatePickerGridRow v-for="(week, index) in month.rows" :key="`${month.value.toString()}-${index}`">
                 <DatePickerCell v-for="day in week" :key="day.toString()" :date="day">
-                  <DatePickerCellTrigger class="soft-cal-day" :day="day" :month="month.value" />
+                  <DatePickerCellTrigger as-child :day="day" :month="month.value">
+                    <button type="button" class="soft-cal-day">{{ day.day }}</button>
+                  </DatePickerCellTrigger>
                 </DatePickerCell>
               </DatePickerGridRow>
             </DatePickerGridBody>
@@ -86,7 +90,6 @@ const label = computed(() => {
         </DatePickerCalendar>
       </DatePickerContent>
     </DatePickerRoot>
-    <input class="sr-only" tabindex="-1" :value="model" :required="required" aria-hidden="true" />
   </div>
 </template>
 

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { motion } from 'motion-v'
+import UserAvatar from '@/components/common/UserAvatar.vue'
+import DiaryIcon from '@/components/post/DiaryIcon.vue'
 import type { PostSummary } from '@/types/post'
 import { plainText } from '@/utils/text'
 
@@ -18,21 +20,23 @@ const excerpt = computed(() => plainText(props.post.excerpt))
 </script>
 
 <template>
-  <motion.article
-    class="card post"
+  <motion.div
     :initial="reduced ? false : { opacity: 0, y: 10 }"
     :animate="{ opacity: 1, y: 0 }"
     :transition="{ duration: reduced ? 0 : 0.35, delay: reduced ? 0 : Math.min(index, 8) * 0.05 }"
-    @click="emit('open', post.id)"
   >
-    <img v-if="post.coverUrl" :src="post.coverUrl" alt="" />
-    <p>{{ excerpt || '点进去看这一篇。' }}</p>
-    <small>
-      {{ post.displayName }}
-      <span v-if="post.mood"> · {{ post.mood }}</span>
-      <span v-if="post.visibility === 'PRIVATE'"> · 仅双方</span>
-    </small>
-  </motion.article>
+    <article class="card post" @click="emit('open', post.id)">
+      <img v-if="post.coverUrl" :src="post.coverUrl" alt="" />
+      <p>{{ excerpt || '点进去看这一篇。' }}</p>
+      <small>
+        <UserAvatar :src="post.authorAvatarUrl" :name="post.displayName" :size="22" />
+        <span>{{ post.displayName }}</span>
+        <span v-if="post.mood" class="mark"><DiaryIcon kind="mood" :value="post.mood" :size="13" /> {{ post.mood }}</span>
+        <span v-if="post.weather" class="mark"><DiaryIcon kind="weather" :value="post.weather" :size="13" /> {{ post.weather }}</span>
+        <span v-if="post.visibility === 'PRIVATE'"> · 仅双方</span>
+      </small>
+    </article>
+  </motion.div>
 </template>
 
 <style scoped lang="scss">
@@ -41,6 +45,7 @@ const excerpt = computed(() => plainText(props.post.excerpt))
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+  transition: transform .3s;
   cursor: pointer;
 
   &:hover {
@@ -62,8 +67,17 @@ p {
 }
 
 small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {

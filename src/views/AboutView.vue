@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CalendarDays, Heart } from '@lucide/vue'
 import { storeToRefs } from 'pinia'
+import WaveLink from '@/components/common/WaveLink.vue'
 import { useSiteStore } from '@/stores/site'
 
 const { site } = storeToRefs(useSiteStore())
@@ -17,11 +18,11 @@ const { site } = storeToRefs(useSiteStore())
     <p class="lead">{{ site.subtitle }}</p>
     <p class="body">{{ site.about || '这里还没有写介绍。' }}</p>
     <div class="row">
-      <RouterLink class="btn solid" :to="{ name: 'timeline' }">去看时间轴</RouterLink>
-      <RouterLink class="btn quiet" :to="{ name: 'anniversaries' }">
+      <WaveLink class="btn solid" :to="{ name: 'timeline' }">去看时间轴</WaveLink>
+      <WaveLink class="btn quiet" :to="{ name: 'anniversaries' }">
         <CalendarDays :size="16" />
         纪念日
-      </RouterLink>
+      </WaveLink>
     </div>
   </section>
 </template>

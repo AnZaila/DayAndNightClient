@@ -18,9 +18,11 @@ const open = defineModel<boolean>('open', { required: true })
         <DialogTitle class="sr-only">查看图片</DialogTitle>
         <DialogDescription class="sr-only">{{ alt || '帖子里的图片' }}</DialogDescription>
         <img v-if="src" :src="src" :alt="alt" />
-        <DialogClose class="btn quiet close" aria-label="关闭">
-          <X :size="16" />
-          关闭
+        <DialogClose as-child>
+          <button v-wave type="button" class="btn quiet close" aria-label="关闭">
+            <X :size="16" />
+            关闭
+          </button>
         </DialogClose>
       </DialogContent>
     </DialogPortal>

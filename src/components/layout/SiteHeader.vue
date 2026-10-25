@@ -1,22 +1,13 @@
 <script setup lang="ts">
-import {
-  CalendarDays,
-  Heart,
-  Info,
-  LogIn,
-  LogOut,
-  MessageCircle,
-  Milestone,
-  Moon,
-  PenLine,
-  Settings,
-  Sun,
-} from '@lucide/vue'
+import { CalendarDays, Heart, Info, LogIn, LogOut, Map, MessageCircle, Milestone, Moon, PenLine, Settings, Sun } from '@lucide/vue'
 import { storeToRefs } from 'pinia'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { pushToast } from '@/composables/useToast'
 import { useTheme } from '@/composables/useTheme'
+import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import WaveLink from '@/components/common/WaveLink.vue'
 import { useSessionStore } from '@/stores/session'
 import { useSiteStore } from '@/stores/site'
 
@@ -26,6 +17,7 @@ const site = useSiteStore()
 const { user } = storeToRefs(session)
 const { site: setting } = storeToRefs(site)
 const { theme, toggle } = useTheme()
+const logoutOpen = ref(false)
 
 async function logout() {
   await session.logout()
@@ -37,23 +29,28 @@ async function logout() {
 <template>
   <header class="header">
     <div class="shell bar">
-      <RouterLink class="brand" :to="{ name: 'timeline' }">{{ setting?.title || '朝暮' }}</RouterLink>
+      <WaveLink class="brand" :to="{ name: 'timeline' }">{{ setting?.title || '朝暮' }}</WaveLink>
       <nav>
-        <RouterLink :to="{ name: 'timeline' }">
+        <WaveLink :to="{ name: 'timeline' }">
           <Milestone :size="16" />
           时间轴
-        </RouterLink>
-        <RouterLink :to="{ name: 'anniversaries' }">
+        </WaveLink>
+        <WaveLink :to="{ name: 'map' }">
+          <Map :size="16" />
+          地图
+        </WaveLink>
+        <WaveLink :to="{ name: 'anniversaries' }">
           <CalendarDays :size="16" />
           纪念日
-        </RouterLink>
-        <RouterLink :to="{ name: 'about' }">
+        </WaveLink>
+        <WaveLink :to="{ name: 'about' }">
           <Info :size="16" />
           关于
-        </RouterLink>
+        </WaveLink>
       </nav>
       <div class="actions">
         <button
+          v-wave
           type="button"
           class="theme"
           :aria-label="theme === 'dark' ? '切换到亮色' : '切换到暗色'"
@@ -64,37 +61,45 @@ async function logout() {
           {{ theme === 'dark' ? '暗色' : '亮色' }}
         </button>
         <template v-if="user">
-          <RouterLink class="btn solid write" :to="{ name: 'write' }">
+          <WaveLink :to="{ name: 'write' }">
             <PenLine :size="16" />
             写一笔
-          </RouterLink>
-          <RouterLink class="me" :to="{ name: 'profile' }">
+          </WaveLink>
+          <WaveLink :to="{ name: 'comments' }">
+            <MessageCircle :size="16" />
+            评论管理
+          </WaveLink>
+          <WaveLink class="me" :to="{ name: 'profile' }">
             <UserAvatar :src="user.avatarUrl" :name="user.displayName" :size="26" />
             {{ user.displayName }}
-          </RouterLink>
-          <RouterLink :to="{ name: 'settings' }">
+          </WaveLink>
+          <WaveLink :to="{ name: 'settings' }">
             <Settings :size="16" />
             设置
-          </RouterLink>
-          <RouterLink :to="{ name: 'comments' }">
-            <MessageCircle :size="16" />
-            评论
-          </RouterLink>
-          <button type="button" @click="logout">
+          </WaveLink>
+          <button v-wave type="button" @click="logoutOpen = true">
             <LogOut :size="16" />
             退出
           </button>
         </template>
-        <RouterLink v-else :to="{ name: 'login' }">
+        <WaveLink v-else :to="{ name: 'login' }">
           <LogIn :size="16" />
           登录
-        </RouterLink>
+        </WaveLink>
         <p v-if="setting" class="days">
           <Heart :size="14" />
           第 {{ setting.daysTogether }} 天
         </p>
       </div>
     </div>
+    <ConfirmDialog
+      v-model:open="logoutOpen"
+      title="退出登录？"
+      description="退出之后，写和改都要重新登录。"
+      confirm-label="退出"
+      cancel-label="取消"
+      @confirm="logout"
+    />
   </header>
 </template>
 
@@ -152,7 +157,6 @@ nav a,
 .actions button,
 .theme,
 .days,
-.write,
 .me {
   flex: none;
   white-space: nowrap;
@@ -175,17 +179,6 @@ nav a.router-link-active,
 .actions a.router-link-active {
   color: var(--primary);
   font-weight: 600;
-}
-
-.actions a.write {
-  min-height: 36px;
-  padding: 0 16px;
-  color: var(--on-primary);
-  gap: 6px;
-
-  &.router-link-active {
-    color: var(--on-primary);
-  }
 }
 
 .me {

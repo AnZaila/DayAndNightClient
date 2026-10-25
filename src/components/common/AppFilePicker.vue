@@ -5,6 +5,7 @@ import { ImagePlus } from '@lucide/vue'
 defineProps<{
   accept?: string
   multiple?: boolean
+  label?: string
 }>()
 
 const emit = defineEmits<{
@@ -42,9 +43,9 @@ function onChange(event: Event) {
       tabindex="-1"
       @change="onChange"
     />
-    <button type="button" class="btn quiet" @click="open">
+    <button v-wave type="button" class="btn quiet" @click="open">
       <ImagePlus :size="16" />
-      选择图片
+      {{ label || '选择图片' }}
     </button>
     <p class="file-names">{{ summary }}</p>
   </div>

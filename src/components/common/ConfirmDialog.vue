@@ -10,15 +10,30 @@ import {
 } from 'reka-ui'
 import AppButton from '@/components/common/AppButton.vue'
 
-defineProps<{
-  open: boolean
-  title: string
-}>()
+withDefaults(
+  defineProps<{
+    open: boolean
+    title: string
+    description?: string
+    confirmLabel?: string
+    cancelLabel?: string
+  }>(),
+  {
+    description: '',
+    confirmLabel: '确认',
+    cancelLabel: '留下',
+  },
+)
 
 const emit = defineEmits<{
   'update:open': [open: boolean]
   confirm: []
 }>()
+
+function confirm() {
+  emit('confirm')
+  emit('update:open', false)
+}
 </script>
 
 <template>
@@ -27,12 +42,13 @@ const emit = defineEmits<{
       <DialogOverlay class="overlay" />
       <DialogContent class="content">
         <DialogTitle class="title">{{ title }}</DialogTitle>
-        <DialogDescription class="sr-only">确认后会删掉，不能恢复。</DialogDescription>
+        <DialogDescription v-if="description" class="text">{{ description }}</DialogDescription>
+        <DialogDescription v-else class="sr-only">{{ title }}</DialogDescription>
         <div class="actions">
           <DialogClose as-child>
-            <AppButton variant="quiet">留下</AppButton>
+            <AppButton variant="quiet">{{ cancelLabel }}</AppButton>
           </DialogClose>
-          <AppButton @click="emit('confirm')">确认</AppButton>
+          <AppButton @click="confirm">{{ confirmLabel }}</AppButton>
         </div>
       </DialogContent>
     </DialogPortal>
@@ -61,10 +77,15 @@ const emit = defineEmits<{
 }
 
 .title {
-  margin: 0 0 20px;
+  margin: 0 0 8px;
   color: var(--heading);
   font-size: 20px;
   font-weight: 600;
+}
+
+.text {
+  margin: 0 0 20px;
+  color: var(--text);
 }
 
 .actions {

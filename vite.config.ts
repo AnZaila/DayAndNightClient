@@ -8,8 +8,10 @@ function apiProxy(target: string): ProxyOptions {
   return {
     target,
     configure(proxy) {
-      proxy.on('proxyReq', (proxyReq) => {
+      proxy.on('proxyReq', (proxyReq, req) => {
         proxyReq.removeHeader('origin')
+        const address = req.socket.remoteAddress
+        if (address) proxyReq.setHeader('X-Forwarded-For', address)
       })
     },
   }
@@ -31,6 +33,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      host: true,
       port,
       strictPort: true,
       proxy: {

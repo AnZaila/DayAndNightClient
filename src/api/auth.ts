@@ -11,12 +11,12 @@ export async function logout() {
 }
 
 export async function fetchMe() {
-  const { data } = await request.get<CurrentUser>('/auth/me')
+  const { data } = await request.get<CurrentUser>('/auth/me', { skipErrorToast: true })
   return data
 }
 
-export async function updateProfile(displayName: string) {
-  const { data } = await request.patch<CurrentUser>('/auth/me', { displayName })
+export async function updateProfile(displayName: string, signature: string) {
+  const { data } = await request.patch<CurrentUser>('/auth/me', { displayName, signature })
   return data
 }
 
@@ -24,5 +24,12 @@ export async function uploadAvatar(file: File) {
   const form = new FormData()
   form.append('file', file)
   const { data } = await request.post<CurrentUser>('/auth/avatar', form)
+  return data
+}
+
+export async function uploadCover(file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await request.post<CurrentUser>('/auth/cover', form)
   return data
 }

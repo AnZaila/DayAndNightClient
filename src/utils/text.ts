@@ -1,8 +1,8 @@
 import DOMPurify from 'dompurify'
 
 const allowed = {
-  ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'h2', 'h3', 'ol', 'ul', 'li', 'a', 'blockquote'],
-  ALLOWED_ATTR: ['href', 'target', 'rel'],
+  ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'h2', 'h3', 'ol', 'ul', 'li', 'a', 'blockquote', 'img'],
+  ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt'],
 }
 
 export function plainText(value: string) {
@@ -41,6 +41,7 @@ export function renderHtml(value: string) {
 }
 
 export function isBlankHtml(value: string) {
+  if (/<img\b/i.test(value)) return false
   return plainText(value).length === 0
 }
 
