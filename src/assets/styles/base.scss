@@ -1,0 +1,295 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  transition:
+    background-color 0.45s ease,
+    color 0.45s ease;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+.shell {
+  width: min(var(--content), calc(100% - 28px));
+  margin: 0 auto;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  padding: 16px 18px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  transition:
+    background-color 0.45s ease,
+    box-shadow 0.45s ease,
+    color 0.45s ease;
+}
+
+.page-title {
+  margin: 0 0 6px;
+  color: var(--heading);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.lede,
+.hint {
+  max-width: 42em;
+  color: var(--muted);
+}
+
+.lede {
+  margin: 0 0 16px;
+}
+
+.hint {
+  margin: -2px 0 0;
+  font-size: 13px;
+}
+
+.field,
+.split > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.rich {
+  :where(p, ul, ol, blockquote, h2, h3) {
+    margin: 0 0 0.7em;
+  }
+
+  h2,
+  h3 {
+    color: var(--heading);
+    line-height: 1.35;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  h3 {
+    font-size: 17px;
+  }
+
+  a {
+    color: var(--primary);
+  }
+
+  ul,
+  ol {
+    padding-left: 1.25em;
+  }
+
+  blockquote {
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+    color: var(--text);
+  }
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+
+  span {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  input:not(.sr-only),
+  textarea {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    background: var(--field);
+    border: 0;
+    border-radius: var(--radius);
+    transition:
+      background var(--motion) ease-in-out,
+      box-shadow var(--motion) ease-in-out;
+  }
+
+  textarea {
+    min-height: 96px;
+    resize: vertical;
+
+    &.tall {
+      min-height: 160px;
+    }
+  }
+
+  input:not(.sr-only):focus,
+  textarea:focus {
+    outline: none;
+    background: var(--surface);
+    box-shadow: var(--ring);
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    transform var(--motion) ease-in-out,
+    box-shadow 0.45s ease,
+    background-color 0.45s ease,
+    color 0.45s ease;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  &.solid {
+    background: var(--primary-fill);
+    color: var(--on-primary);
+    box-shadow: 0 8px 16px rgb(79 70 229 / 0.2);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 12px 22px rgb(79 70 229 / 0.26);
+    }
+  }
+
+  &.quiet {
+    background: var(--surface);
+    color: var(--heading);
+    box-shadow: 0 6px 14px rgb(148 163 184 / 0.24);
+
+    &:hover:not(:disabled) {
+      box-shadow: var(--shadow-hover);
+    }
+  }
+
+  &.sm {
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.sr-only {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  .page-title {
+    font-size: 22px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .btn:hover:not(:disabled),
+  .btn:active:not(:disabled) {
+    transform: none;
+  }
+}

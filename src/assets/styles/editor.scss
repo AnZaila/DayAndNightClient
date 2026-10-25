@@ -1,0 +1,119 @@
+.editor {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--field);
+  border-radius: var(--radius);
+
+  .ql-toolbar.ql-snow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-family: var(--font-body);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ql-container.ql-snow {
+    font-family: var(--font-body);
+    font-size: 15px;
+    border: 0;
+  }
+
+  .ql-editor {
+    min-height: 180px;
+    color: var(--text);
+    line-height: 1.65;
+
+    &.ql-blank::before {
+      color: var(--muted);
+      font-style: normal;
+    }
+  }
+
+  .ql-snow {
+    .ql-stroke {
+      stroke: var(--heading);
+    }
+
+    .ql-fill {
+      fill: var(--heading);
+    }
+
+    .ql-picker {
+      color: var(--heading);
+    }
+
+    .ql-picker-options {
+      background: var(--surface);
+      border: 0;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    &.ql-toolbar button:hover,
+    .ql-toolbar button:hover,
+    .ql-picker-label:hover,
+    .ql-picker-item:hover {
+      color: var(--primary);
+    }
+
+    .ql-picker.ql-header {
+      .ql-picker-label::before,
+      .ql-picker-item::before {
+        content: '正文';
+      }
+
+      .ql-picker-label[data-value='2']::before,
+      .ql-picker-item[data-value='2']::before {
+        content: '标题';
+      }
+
+      .ql-picker-label[data-value='3']::before,
+      .ql-picker-item[data-value='3']::before {
+        content: '小标题';
+      }
+    }
+
+    .ql-tooltip {
+      left: 0 !important;
+      max-width: calc(100% - 16px);
+      color: var(--text);
+      background: var(--surface);
+      border: 0;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+  }
+}
+
+.preview {
+  min-height: 180px;
+  padding: 12px 14px;
+  background: var(--field);
+  border-radius: var(--radius);
+}
+
+.modes {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    color: var(--muted);
+    cursor: pointer;
+
+    &.on {
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 600;
+    }
+  }
+}

@@ -1,0 +1,191 @@
+.soft-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  background: var(--field);
+  border-radius: var(--radius);
+  color: var(--heading);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--motion) ease-in-out,
+    box-shadow var(--motion) ease-in-out;
+
+  &:focus-visible,
+  &[data-state='open'] {
+    outline: none;
+    background: var(--surface);
+    box-shadow: var(--ring);
+  }
+
+  &[data-empty] .soft-value {
+    color: var(--muted);
+  }
+}
+
+.soft-chevron {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+}
+
+.soft-menu {
+  z-index: 40;
+  width: var(--reka-select-trigger-width);
+  max-height: 260px;
+  padding: 6px;
+  overflow: auto;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hover);
+}
+
+.soft-item {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: var(--heading);
+  cursor: pointer;
+  outline: none;
+
+  &[data-highlighted] {
+    background: var(--primary-soft);
+  }
+
+  &[data-state='checked'] {
+    color: var(--primary);
+    font-weight: 600;
+  }
+}
+
+.soft-calendar {
+  z-index: 40;
+  width: min(300px, calc(100vw - 28px));
+  padding: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hover);
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 3px;
+  }
+
+  th {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+  }
+}
+
+.soft-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.soft-cal-heading {
+  color: var(--heading);
+  font-weight: 600;
+}
+
+.soft-cal-nav,
+.soft-cal-day {
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+  }
+}
+
+.soft-cal-nav {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--field);
+  color: var(--heading);
+  cursor: pointer;
+}
+
+.soft-cal-day {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
+  border-radius: 10px;
+  color: var(--heading);
+  cursor: pointer;
+
+  &[data-outside-view] {
+    color: var(--faint);
+  }
+
+  &[data-today] {
+    background: var(--primary-soft);
+  }
+
+  &[data-selected] {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  &[data-disabled] {
+    cursor: default;
+    opacity: 0.4;
+  }
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  color: var(--heading);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+
+    .check-box {
+      box-shadow: var(--ring);
+    }
+  }
+
+  &[data-state='checked'] .check-box {
+    background: var(--primary);
+    color: #fff;
+  }
+}
+
+.check-box {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+  background: var(--field);
+}
+
+.check-mark {
+  display: grid;
+}
+
+.file-names {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
