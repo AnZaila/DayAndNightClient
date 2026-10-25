@@ -75,7 +75,8 @@ async function submit() {
   }
 
   input:last-of-type {
-    flex: 1;
+    flex: 1 1 10rem;
+    min-width: min(100%, 10rem);
   }
 }
 </style>

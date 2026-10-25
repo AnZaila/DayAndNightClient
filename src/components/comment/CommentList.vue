@@ -72,8 +72,14 @@ function confirmRemove() {
           <div class="meta">
             <span class="muted">{{ formatDateTime(thread.root.createdAt) }}</span>
             <span v-if="thread.root.status === 'HIDDEN'" class="muted">已隐藏</span>
-            <button v-wave type="button" class="text-btn" @click="emit('reply', thread.root)">回复</button>
-            <WaveLink v-if="showPost" class="text-btn" :to="{ name: 'post', params: { id: thread.root.postId } }">
+            <button v-wave type="button" class="text-btn" @click="emit('reply', thread.root)">
+              回复
+            </button>
+            <WaveLink
+              v-if="showPost"
+              class="text-btn"
+              :to="{ name: 'post', params: { id: thread.root.postId } }"
+            >
               看这篇
             </WaveLink>
             <template v-if="canModerate">
@@ -86,7 +92,13 @@ function confirmRemove() {
               >
                 <EyeOff :size="14" /> 隐藏
               </button>
-              <button v-else v-wave type="button" class="text-btn" @click="emit('show', thread.root.id)">
+              <button
+                v-else
+                v-wave
+                type="button"
+                class="text-btn"
+                @click="emit('show', thread.root.id)"
+              >
                 <Eye :size="14" /> 显示
               </button>
               <button v-wave type="button" class="text-btn" @click="askRemove(thread.root.id)">
@@ -95,7 +107,11 @@ function confirmRemove() {
             </template>
           </div>
           <div v-if="thread.replies.length" class="replies">
-            <article v-for="reply in visibleReplies(thread.root.id, thread.replies)" :key="reply.id" class="comment">
+            <article
+              v-for="reply in visibleReplies(thread.root.id, thread.replies)"
+              :key="reply.id"
+              class="comment"
+            >
               <UserAvatar :src="reply.avatarUrl" :name="reply.nickname" :size="24" />
               <div class="body">
                 <strong>{{ reply.nickname }}</strong>
@@ -108,7 +124,9 @@ function confirmRemove() {
                 <div class="meta">
                   <span class="muted">{{ formatDateTime(reply.createdAt) }}</span>
                   <span v-if="reply.status === 'HIDDEN'" class="muted">已隐藏</span>
-                  <button v-wave type="button" class="text-btn" @click="emit('reply', reply)">回复</button>
+                  <button v-wave type="button" class="text-btn" @click="emit('reply', reply)">
+                    回复
+                  </button>
                   <template v-if="canModerate">
                     <button
                       v-if="reply.status === 'VISIBLE'"
@@ -119,8 +137,18 @@ function confirmRemove() {
                     >
                       隐藏
                     </button>
-                    <button v-else v-wave type="button" class="text-btn" @click="emit('show', reply.id)">显示</button>
-                    <button v-wave type="button" class="text-btn" @click="askRemove(reply.id)">删除</button>
+                    <button
+                      v-else
+                      v-wave
+                      type="button"
+                      class="text-btn"
+                      @click="emit('show', reply.id)"
+                    >
+                      显示
+                    </button>
+                    <button v-wave type="button" class="text-btn" @click="askRemove(reply.id)">
+                      删除
+                    </button>
                   </template>
                 </div>
               </div>
@@ -143,7 +171,11 @@ function confirmRemove() {
               class="text-btn more"
               @click="toggleThread(thread.root.id)"
             >
-              {{ openThreads.includes(thread.root.id) ? '收起回复' : `展开 ${thread.replies.length - 1} 条回复` }}
+              {{
+                openThreads.includes(thread.root.id)
+                  ? '收起回复'
+                  : `展开 ${thread.replies.length - 1} 条回复`
+              }}
             </button>
           </div>
         </div>
@@ -177,11 +209,20 @@ function confirmRemove() {
         {{ comment.content }}
       </p>
       <div v-if="canModerate || showPost" class="row">
-        <WaveLink v-if="showPost" class="btn quiet" :to="{ name: 'post', params: { id: comment.postId } }">
+        <WaveLink
+          v-if="showPost"
+          class="btn quiet"
+          :to="{ name: 'post', params: { id: comment.postId } }"
+        >
           看这篇
         </WaveLink>
         <template v-if="canModerate">
-          <AppButton v-if="comment.status === 'VISIBLE'" variant="quiet" type="button" @click="emit('hide', comment.id)">
+          <AppButton
+            v-if="comment.status === 'VISIBLE'"
+            variant="quiet"
+            type="button"
+            @click="emit('hide', comment.id)"
+          >
             <EyeOff :size="16" />
             隐藏
           </AppButton>
@@ -299,12 +340,15 @@ function confirmRemove() {
 
 .who {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 

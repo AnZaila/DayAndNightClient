@@ -176,5 +176,9 @@ async function likeNote(id: number) {
   padding: 8px;
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
+
+  :deep(.bar) {
+    width: 100%;
+  }
 }
 </style>

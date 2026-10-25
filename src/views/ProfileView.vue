@@ -267,6 +267,15 @@ async function removeComment(id: number) {
   background: var(--surface);
 }
 
+.who > div {
+  min-width: 0;
+}
+
+.sign,
+.mail {
+  overflow-wrap: anywhere;
+}
+
 .sign {
   margin: 4px 0 0;
   color: var(--text);

@@ -193,4 +193,11 @@ h2 {
   display: flex;
   gap: 8px;
 }
+
+@media (max-width: 640px) {
+  .notes li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
 </style>

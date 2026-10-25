@@ -31,8 +31,12 @@ const excerpt = computed(() => plainText(props.post.excerpt))
       <small>
         <UserAvatar :src="post.authorAvatarUrl" :name="post.displayName" :size="22" />
         <span>{{ post.displayName }}</span>
-        <span v-if="post.mood" class="mark"><DiaryIcon kind="mood" :value="post.mood" :size="13" /> {{ post.mood }}</span>
-        <span v-if="post.weather" class="mark"><DiaryIcon kind="weather" :value="post.weather" :size="13" /> {{ post.weather }}</span>
+        <span v-if="post.mood" class="mark"
+          ><DiaryIcon kind="mood" :value="post.mood" :size="13" /> {{ post.mood }}</span
+        >
+        <span v-if="post.weather" class="mark"
+          ><DiaryIcon kind="weather" :value="post.weather" :size="13" /> {{ post.weather }}</span
+        >
         <span v-if="post.visibility === 'PRIVATE'"> · 仅双方</span>
       </small>
     </article>
@@ -45,7 +49,7 @@ const excerpt = computed(() => plainText(props.post.excerpt))
   flex-direction: column;
   gap: 8px;
   min-width: 0;
-  transition: transform .3s;
+  transition: transform 0.3s;
   cursor: pointer;
 
   &:hover {
@@ -68,6 +72,7 @@ p {
 
 small {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   color: var(--muted);

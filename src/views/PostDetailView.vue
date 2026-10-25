@@ -272,6 +272,10 @@ onMounted(load)
   display: flex;
   align-items: center;
   gap: 12px;
+
+  > div {
+    min-width: 0;
+  }
 }
 
 time {
@@ -288,6 +292,7 @@ h2 {
 
 h1 {
   font-size: 24px;
+  overflow-wrap: anywhere;
 }
 
 h2 {

@@ -518,5 +518,15 @@ figure {
   .split {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .when {
+    flex-wrap: wrap;
+  }
+
+  .when :deep(.picker),
+  .when input.clock {
+    flex: 1 1 100%;
+    width: 100%;
+  }
 }
 </style>
