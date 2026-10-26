@@ -148,7 +148,7 @@ async function likeNote(id: number) {
 :global(html.map-fill body),
 :global(html.map-fill #app) {
   height: 100%;
-  overflow: hidden;
+  overflow: clip;
 }
 
 :global(html.map-fill #app) {
@@ -164,18 +164,19 @@ async function likeNote(id: number) {
 }
 
 .dock {
+  width: 50%;
   position: absolute;
-  right: 12px;
   bottom: 12px;
-  left: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 5;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-xs);
   align-items: flex-start;
-  padding: 8px;
+  padding: var(--space-xs);
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
 
   :deep(.bar) {
     width: 100%;

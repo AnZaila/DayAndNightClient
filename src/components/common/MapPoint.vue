@@ -529,7 +529,7 @@ onBeforeUnmount(() => {
   display: grid;
   place-items: center;
   margin: 0;
-  padding: 16px;
+  padding: var(--space-md);
   color: var(--muted);
   text-align: center;
 }
@@ -543,16 +543,16 @@ onBeforeUnmount(() => {
 .here {
   width: 16px;
   height: 16px;
-  border: 2px solid #fff;
+  border: 2px solid var(--color-paper-2);
   border-radius: 50%;
-  background: #4338ca;
-  box-shadow: 0 0 0 5px rgb(67 56 202 / 28%);
+  background: var(--primary-fill);
+  box-shadow: 0 0 0 var(--space-2xs) var(--primary-soft);
   pointer-events: none;
 }
 
 .jump {
   max-width: 160px;
-  padding: 4px 8px;
+  padding: var(--space-2xs) var(--space-xs);
   border-radius: 999px;
   background: var(--surface);
   color: var(--heading);
@@ -561,6 +561,11 @@ onBeforeUnmount(() => {
   box-shadow: var(--shadow);
   cursor: pointer;
   white-space: nowrap;
+
+  &:hover,
+  &:focus-visible {
+    z-index: 4;
+  }
 
   span {
     display: block;
@@ -571,10 +576,10 @@ onBeforeUnmount(() => {
   &.photo {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--space-2xs);
     width: 148px;
     max-width: 148px;
-    padding: 4px 4px 6px;
+    padding: var(--space-2xs) var(--space-2xs) var(--space-xs);
     border-radius: 14px;
     white-space: normal;
     transform: translate(-50%, calc(-100% - 8px));
@@ -596,7 +601,7 @@ onBeforeUnmount(() => {
   z-index: 3;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-xs);
 
   button {
     width: 32px;
@@ -609,7 +614,8 @@ onBeforeUnmount(() => {
 
     &:disabled {
       cursor: default;
-      opacity: 0.45;
+      background: var(--field);
+      color: var(--muted);
     }
   }
 }

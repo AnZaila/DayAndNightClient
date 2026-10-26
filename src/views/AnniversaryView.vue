@@ -128,7 +128,11 @@ onMounted(load)
     <div class="card">
       <h1 class="page-title">纪念日</h1>
       <p class="lede">每年都会再来的日子。</p>
-      <p v-if="nextUp" class="hint">最近的一个是「{{ nextUp.title }}」，{{ nextUp.countdown }}。</p>
+      <p v-if="nextUp" class="next">
+        最近的一个是「<span class="name">{{ nextUp.title }}</span
+        >」，<span class="when">{{ nextUp.countdown }}</span
+        >。
+      </p>
       <Skeleton v-if="loading && listed.length === 0" preset="anniversary" :count="3" />
       <p v-else-if="listed.length === 0" class="muted">还没有纪念日。下面可以先记一个。</p>
       <ul v-else>
@@ -138,7 +142,10 @@ onMounted(load)
               <CalendarDays :size="16" />
               {{ item.title }}
             </strong>
-            <p class="muted">{{ formatDate(item.date) }} · {{ item.countdown }}</p>
+            <p class="muted facts">
+              <span>{{ formatDate(item.date) }}</span>
+              <span>{{ item.countdown }}</span>
+            </p>
             <p v-if="item.note">{{ item.note }}</p>
             <p v-if="item.visibility === 'PRIVATE'" class="muted">仅双方可见</p>
           </div>
@@ -188,17 +195,32 @@ onMounted(load)
 </template>
 
 <style scoped lang="scss">
-h2 {
-  margin-bottom: 16px;
+.next {
+  margin: 0 0 var(--space-md);
+  color: var(--muted);
+}
+
+.name,
+.when {
   color: var(--heading);
-  font-size: 22px;
-  font-weight: 600;
+  font-family: var(--font-display);
+}
+
+.when {
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+h2 {
+  margin-bottom: var(--space-md);
+  color: var(--heading);
+  font-size: var(--text-xl);
 }
 
 ul {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -208,7 +230,9 @@ li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  border-top: var(--rule-hair) solid var(--line);
 }
 
 @media (max-width: 640px) {
@@ -221,7 +245,7 @@ li {
 strong {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-xs);
   color: var(--heading);
 }
 </style>
