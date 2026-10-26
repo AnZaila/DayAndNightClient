@@ -371,7 +371,7 @@ watch(
                   type="button"
                   class="swatch"
                   :class="{ on: option.background.color === color }"
-                  :style="{ background: color === 'transparent' ? '#fff' : color }"
+                  :style="{ background: color === 'transparent' ? 'var(--color-paper-2)' : color }"
                   @click="setBackground(color)"
                 />
               </div>
@@ -393,19 +393,19 @@ watch(
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
-  background: rgb(30 41 59 / 0.28);
+  z-index: var(--z-modal);
+  background: var(--scrim);
 }
 
 .content {
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 41;
+  z-index: calc(var(--z-modal) + 1);
   width: min(820px, calc(100% - 24px));
   max-height: calc(100vh - 32px);
   overflow: auto;
-  padding: 18px;
+  padding: var(--space-md);
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-hover);
@@ -413,7 +413,7 @@ watch(
 }
 
 .title {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-sm);
   color: var(--heading);
   font-size: 18px;
 }
@@ -421,19 +421,19 @@ watch(
 .layout {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
-  gap: 16px;
+  gap: var(--space-md);
   align-items: start;
 }
 
 .preview {
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: var(--space-sm);
 }
 
 .controls {
   display: grid;
-  gap: 10px;
+  gap: var(--space-sm);
   max-height: 62vh;
   overflow: auto;
 }
@@ -443,7 +443,7 @@ watch(
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-xs);
 }
 
 .block > span,
@@ -455,11 +455,11 @@ watch(
 
 .choices {
   display: flex;
-  gap: 6px;
+  gap: var(--space-xs);
 
   button {
     min-height: 30px;
-    padding: 0 10px;
+    padding: 0 var(--space-sm);
     border-radius: 999px;
     background: var(--field);
     color: var(--muted);
@@ -475,8 +475,8 @@ watch(
 
 .parts {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-2xs) var(--space-sm);
 }
 
 .part {
@@ -502,7 +502,7 @@ watch(
 .swatches {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--space-xs);
 }
 
 .swatch {
@@ -511,7 +511,7 @@ watch(
   padding: 0;
   border: 2px solid transparent;
   border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 12%);
+  box-shadow: inset 0 0 0 var(--rule-hair) var(--line);
   cursor: pointer;
 
   &.on {
@@ -522,14 +522,14 @@ watch(
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 14px;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
 }
 
 @media (max-width: 720px) {
   .layout,
   .parts {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .controls {

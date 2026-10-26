@@ -23,7 +23,7 @@ const model = defineModel<T>({ required: true })
     <SelectTrigger as-child>
       <button type="button" class="soft-trigger">
         <SelectValue :placeholder="placeholder ?? '请选择'" />
-        <svg class="soft-chevron" viewBox="0 0 16 16" aria-hidden="true">
+        <svg class="soft-chevron caret" viewBox="0 0 16 16" aria-hidden="true">
           <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         </svg>
       </button>

@@ -176,7 +176,7 @@ function onUpdate(value: string | null | undefined) {
   inset: 0;
   z-index: 2;
   display: flex;
-  gap: 8px;
+  gap: var(--space-xs);
   align-items: center;
   justify-content: center;
   margin: 0;

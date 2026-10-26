@@ -10,21 +10,25 @@ const { site } = storeToRefs(useSiteStore())
 
 <template>
   <div>
-    <section v-if="site" class="shell card wide about">
-      <p class="kicker">
-        <Heart :size="16" />
-        在一起
-      </p>
-      <p class="count">第 {{ site.daysTogether }} 天</p>
-      <h1>{{ site.title }}</h1>
-      <p class="lead">{{ site.subtitle }}</p>
-      <p class="body">{{ site.about || '这里还没有写介绍。' }}</p>
-      <div class="row">
-        <WaveLink class="btn solid" :to="{ name: 'timeline' }">去看时间轴</WaveLink>
-        <WaveLink class="btn quiet" :to="{ name: 'anniversaries' }">
-          <CalendarDays :size="16" />
-          纪念日
-        </WaveLink>
+    <section v-if="site" class="shell wide about">
+      <div class="days">
+        <p class="count">第 {{ site.daysTogether }} 天</p>
+        <p class="together">
+          <Heart :size="16" />
+          在一起
+        </p>
+      </div>
+      <div class="copy card">
+        <h1>{{ site.title }}</h1>
+        <p class="lead">{{ site.subtitle }}</p>
+        <p class="body">{{ site.about || '这里还没有写介绍。' }}</p>
+        <div class="row">
+          <WaveLink class="btn solid" :to="{ name: 'timeline' }">去看时间轴</WaveLink>
+          <WaveLink class="btn quiet" :to="{ name: 'anniversaries' }">
+            <CalendarDays :size="16" />
+            纪念日
+          </WaveLink>
+        </div>
       </div>
     </section>
     <Skeleton v-else class="shell wide" preset="about" />
@@ -33,32 +37,70 @@ const { site } = storeToRefs(useSiteStore())
 
 <style scoped lang="scss">
 .about {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: var(--space-xl);
+  align-items: center;
 }
 
-.kicker,
+.days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.together,
 .lead {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2xs);
   color: var(--muted);
 }
 
 .count {
-  color: var(--primary);
-  font-size: 13px;
-  font-weight: 600;
+  margin: 0;
+  color: var(--heading);
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  animation: rise var(--dur-long) var(--ease-out) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-sm));
+  }
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
 }
 
 h1 {
   color: var(--heading);
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 500;
-  line-height: 1.2;
+  font-size: var(--text-2xl);
+  line-height: 1.15;
+  overflow-wrap: break-word;
+  min-width: 0;
+  text-wrap: balance;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .count {
+    animation: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .about {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-md);
+  }
 }
 
 .body {

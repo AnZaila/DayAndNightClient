@@ -168,17 +168,17 @@ watch(
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
-  background: rgb(30 41 59 / 0.28);
+  z-index: var(--z-modal);
+  background: var(--scrim);
 }
 
 .content {
   position: fixed;
   top: 50%;
   left: 50%;
-  z-index: 41;
+  z-index: calc(var(--z-modal) + 1);
   width: min(720px, calc(100% - 24px));
-  padding: 18px;
+  padding: var(--space-md);
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-hover);
@@ -186,7 +186,7 @@ watch(
 }
 
 .title {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-sm);
   color: var(--heading);
   font-size: 18px;
 }
@@ -194,20 +194,20 @@ watch(
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 160px;
-  gap: 14px;
+  gap: var(--space-md);
 }
 
 .stage {
   height: 320px;
   overflow: hidden;
   border-radius: var(--radius);
-  background: #111827;
+  background: var(--color-ink);
 }
 
 .side {
   display: grid;
   justify-items: center;
-  gap: 8px;
+  gap: var(--space-xs);
   align-content: start;
 
   p {
@@ -236,13 +236,13 @@ watch(
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 14px;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
 }
 
 @media (max-width: 720px) {
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>

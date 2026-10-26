@@ -37,12 +37,12 @@ const pages = computed(() => Math.max(1, Math.ceil(props.total / Math.max(props.
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-top: 16px;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
 
   button {
     min-height: 34px;
-    padding: 0 12px;
+    padding: 0 var(--space-sm);
     border-radius: 999px;
     background: var(--field);
     color: var(--heading);

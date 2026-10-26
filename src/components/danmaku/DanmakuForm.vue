@@ -59,16 +59,20 @@ async function submit() {
 .bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-xs);
   align-items: center;
 
   input {
     min-width: 0;
     min-height: 40px;
-    padding: 8px 12px;
+    padding: var(--space-xs) var(--space-sm);
     background: var(--field);
     border: 0;
     border-radius: var(--radius);
+    transition:
+      background-color var(--dur-short) var(--ease-out),
+      box-shadow var(--dur-short) var(--ease-out),
+      outline-color var(--dur-short) var(--ease-out);
   }
 
   input[aria-label='昵称'] {

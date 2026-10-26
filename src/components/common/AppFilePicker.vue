@@ -57,7 +57,7 @@ function onChange(event: Event) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-sm);
   max-width: 100%;
 }
 </style>

@@ -10,25 +10,33 @@ import {
 } from 'reka-ui'
 import { X } from '@lucide/vue'
 
-defineProps<{
-  src: string
-  alt: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    src: string
+    alt: string
+    closeOnOutside?: boolean
+  }>(),
+  { closeOnOutside: true },
+)
 
 const open = defineModel<boolean>('open', { required: true })
+
+function onOutside(event: Event) {
+  if (!props.closeOnOutside) event.preventDefault()
+}
 </script>
 
 <template>
   <DialogRoot :open="open" @update:open="open = $event">
     <DialogPortal>
-      <DialogOverlay class="overlay" />
-      <DialogContent class="frame">
+      <DialogOverlay class="overlay" :class="{ away: closeOnOutside }" />
+      <DialogContent class="frame" @pointer-down-outside="onOutside">
         <DialogTitle class="sr-only">查看图片</DialogTitle>
         <DialogDescription class="sr-only">{{ alt || '帖子里的图片' }}</DialogDescription>
         <img v-if="src" :src="src" :alt="alt" />
         <DialogClose as-child>
-          <button v-wave type="button" class="btn quiet close" aria-label="关闭">
-            <X :size="16" />
+          <button v-wave type="button" class="close">
+            <X :size="18" />
             关闭
           </button>
         </DialogClose>
@@ -41,31 +49,47 @@ const open = defineModel<boolean>('open', { required: true })
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
-  background: rgb(15 20 28 / 0.72);
+  z-index: var(--z-modal);
+  background: var(--scrim-strong);
+
+  &.away {
+    cursor: pointer;
+  }
 }
 
 .frame {
   position: fixed;
-  inset: 16px;
-  z-index: 41;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
+  z-index: calc(var(--z-modal) + 1);
+  top: 50%;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100% - var(--space-xl));
   background: transparent;
+  transform: translate(-50%, -50%);
 }
 
 img {
-  max-width: min(1100px, 100%);
-  max-height: calc(100vh - 120px);
+  max-width: 100%;
+  max-height: calc(100vh - 96px);
   object-fit: contain;
   border-radius: var(--radius);
   box-shadow: var(--shadow-hover);
 }
 
 .close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 40px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-pill);
   background: var(--surface);
+  color: var(--heading);
+  box-shadow: var(--shadow-hover), inset 0 0 0 1px var(--line);
+  cursor: pointer;
 }
 </style>

@@ -106,9 +106,11 @@ async function confirmRemoveNote() {
       <ul v-if="notes.items.value.length" class="notes">
         <li v-for="note in notes.items.value" :key="note.id">
           <div>
-            <strong>{{ note.nickname }}</strong>
-            <span class="muted"> · {{ formatDateTime(note.createdAt) }}</span>
-            <span v-if="note.status === 'HIDDEN'" class="muted"> · 已隐藏</span>
+            <p class="facts">
+              <strong>{{ note.nickname }}</strong>
+              <span class="muted">{{ formatDateTime(note.createdAt) }}</span>
+              <span v-if="note.status === 'HIDDEN'" class="muted">已隐藏</span>
+            </p>
             <p>{{ note.content }}</p>
             <p class="muted">
               <WaveLink v-if="note.postId" :to="{ name: 'post', params: { id: note.postId } }"
@@ -164,7 +166,7 @@ async function confirmRemoveNote() {
 
 <style scoped lang="scss">
 h2 {
-  margin: 0 0 6px;
+  margin: 0 0 var(--space-xs);
   color: var(--heading);
   font-size: 22px;
   font-weight: 600;
@@ -173,8 +175,8 @@ h2 {
 .notes {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin: 16px 0 0;
+  gap: var(--space-md);
+  margin: var(--space-md) 0 0;
   padding: 0;
   list-style: none;
 
@@ -182,17 +184,17 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
+    gap: var(--space-md);
   }
 
   p {
-    margin: 4px 0 0;
+    margin: var(--space-2xs) 0 0;
   }
 }
 
 .row {
   display: flex;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 @media (max-width: 640px) {

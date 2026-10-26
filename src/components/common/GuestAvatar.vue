@@ -37,14 +37,15 @@ async function confirm(file: File) {
 .guest {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-xs);
   align-items: center;
 
   button {
     min-height: 32px;
-    padding: 0 8px;
+    padding: 0 var(--space-xs);
     border-radius: 999px;
     color: var(--primary);
+    white-space: nowrap;
     cursor: pointer;
   }
 }

@@ -30,6 +30,7 @@ const emojiOpen = ref(false)
 const box = ref<HTMLTextAreaElement | null>(null)
 const emojiButton = ref<HTMLButtonElement | null>(null)
 const signedIn = computed(() => Boolean(session.user))
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 function insertEmoji(emoji: string) {
   const el = box.value
@@ -109,12 +110,14 @@ async function submit() {
           表情
         </button>
       </span>
-      <EmojiPicker
-        v-if="emojiOpen"
-        :ignore="emojiButton"
-        @pick="insertEmoji"
-        @close="emojiOpen = false"
-      />
+      <Transition :name="reduced ? undefined : 'pop'">
+        <EmojiPicker
+          v-if="emojiOpen"
+          :ignore="emojiButton"
+          @pick="insertEmoji"
+          @close="emojiOpen = false"
+        />
+      </Transition>
       <textarea
         ref="box"
         v-model="content"
@@ -128,15 +131,15 @@ async function submit() {
 
 <style scoped lang="scss">
 .form {
-  margin-top: 8px;
+  margin-top: var(--space-xs);
 }
 
 .identity,
 .reply {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
 }
 
 .reply button {
@@ -156,14 +159,14 @@ async function submit() {
 
 .emoji {
   min-height: 28px;
-  padding: 0 8px;
+  padding: 0 var(--space-xs);
   border-radius: 999px;
   color: var(--primary);
   cursor: pointer;
 }
 
 .optional {
-  margin: 6px 0 0;
+  margin: var(--space-xs) 0 0;
   color: var(--muted);
   font-size: 12px;
 }

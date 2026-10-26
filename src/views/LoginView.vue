@@ -38,9 +38,12 @@ async function submit() {
 </script>
 
 <template>
-  <form class="shell card narrow" novalidate @submit.prevent="submit">
-    <h1 class="page-title">登录</h1>
-    <p class="lede">朝暮只给两个人登录。看的人不用账号。</p>
+  <div class="shell wide gate">
+    <div class="intro">
+      <h1 class="page-title">登录</h1>
+      <p class="lede">朝暮只给两个人登录。看的人不用账号。</p>
+    </div>
+    <form class="card narrow" novalidate @submit.prevent="submit">
     <label class="field">
       <span>邮箱</span>
       <input v-model="email" type="text" inputmode="email" autocomplete="username" />
@@ -51,11 +54,30 @@ async function submit() {
     </label>
     <p v-if="error" class="error">{{ error }}</p>
     <AppButton type="submit" :loading="sending">进入</AppButton>
-  </form>
+    </form>
+  </div>
 </template>
 
 <style scoped lang="scss">
+.gate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 440px);
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+.intro .lede {
+  margin: 0;
+}
+
 .narrow {
-  max-width: 440px;
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .gate {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-md);
+  }
 }
 </style>

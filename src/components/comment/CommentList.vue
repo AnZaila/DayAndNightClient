@@ -218,13 +218,13 @@ function confirmRemove() {
         <ProfileLink :user-id="comment.userId">
           <UserAvatar :src="comment.avatarUrl" :name="comment.nickname" :size="32" />
         </ProfileLink>
-        <div>
+        <div class="facts">
           <ProfileLink :user-id="comment.userId">
             <strong>{{ comment.nickname }}</strong>
           </ProfileLink>
-          <span class="muted"> · {{ formatDateTime(comment.createdAt) }}</span>
-          <span v-if="comment.status === 'HIDDEN'" class="muted"> · 已隐藏</span>
-          <span v-if="comment.likeCount" class="muted"> · {{ comment.likeCount }} 赞</span>
+          <span class="muted">{{ formatDateTime(comment.createdAt) }}</span>
+          <span v-if="comment.status === 'HIDDEN'" class="muted">已隐藏</span>
+          <span v-if="comment.likeCount" class="muted">{{ comment.likeCount }} 赞</span>
         </div>
       </div>
       <p class="text">
@@ -283,16 +283,16 @@ function confirmRemove() {
 .list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-md);
   list-style: none;
-  margin: 0 0 24px;
+  margin: 0 0 var(--space-lg);
   padding: 0;
 }
 
 .comment {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--space-sm);
 }
 
 .body {
@@ -301,7 +301,7 @@ function confirmRemove() {
 }
 
 .text {
-  margin: 2px 0 0;
+  margin: var(--space-3xs) 0 0;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -310,8 +310,8 @@ function confirmRemove() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  margin-top: 4px;
+  gap: var(--space-sm);
+  margin-top: var(--space-2xs);
   color: var(--muted);
   font-size: 12px;
 }
@@ -319,9 +319,9 @@ function confirmRemove() {
 .replies {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 10px;
-  padding: 10px 10px 8px;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-sm) var(--space-xs);
   border-radius: 12px;
   background: color-mix(in srgb, var(--field) 70%, transparent);
 
@@ -337,9 +337,10 @@ function confirmRemove() {
 .text-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-2xs);
   padding: 0;
   color: var(--muted);
+  white-space: nowrap;
   font-size: 12px;
   cursor: pointer;
 
@@ -375,11 +376,12 @@ function confirmRemove() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: var(--space-3xs);
   min-width: 28px;
-  margin-top: 2px;
+  margin-top: var(--space-3xs);
   color: var(--muted);
   font-size: 12px;
+  white-space: nowrap;
   cursor: pointer;
 
   &.on {
@@ -391,14 +393,14 @@ function confirmRemove() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-sm);
   min-width: 0;
 }
 
 .row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 strong {

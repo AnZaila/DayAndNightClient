@@ -130,13 +130,13 @@ const rows = computed(() => Array.from({ length: Math.max(props.count, 1) }, (_,
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-md);
 }
 
 .piece {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-sm);
 
   &.side {
     flex-direction: row;
@@ -158,22 +158,22 @@ const rows = computed(() => Array.from({ length: Math.max(props.count, 1) }, (_,
 .timeline {
   display: grid;
   grid-template-columns: 80px minmax(0, 1fr);
-  gap: 14px;
+  gap: var(--space-md);
 }
 
 .rail {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding-top: 18px;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
 }
 
 .person,
 .byline,
 .note {
   display: flex;
-  gap: 10px;
+  gap: var(--space-sm);
 }
 
 .person {
@@ -189,7 +189,7 @@ const rows = computed(() => Array.from({ length: Math.max(props.count, 1) }, (_,
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-xs);
   min-width: 0;
 }
 
@@ -211,7 +211,7 @@ const rows = computed(() => Array.from({ length: Math.max(props.count, 1) }, (_,
 @media (max-width: 640px) {
   .timeline {
     grid-template-columns: 4.6rem minmax(0, 1fr);
-    gap: 10px;
+    gap: var(--space-sm);
   }
 }
 </style>

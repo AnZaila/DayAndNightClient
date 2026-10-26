@@ -17,39 +17,30 @@ const items = useToasts()
   position: fixed;
   top: 64px;
   left: 50%;
-  z-index: 80;
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-xs);
   width: min(360px, calc(100% - 32px));
   transform: translateX(-50%);
   pointer-events: none;
 }
 
 .toast {
-  --toast: #34d399;
+  --toast: var(--color-success);
   margin: 0;
-  padding: 10px 14px;
-  border: 1px solid var(--toast);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--toast) 22%, var(--surface));
+  padding: var(--space-xs) var(--space-sm);
+  border: var(--rule-hair) solid var(--toast);
+  border-radius: var(--radius);
+  background: color-mix(in oklab, var(--toast) 22%, var(--surface));
   color: var(--toast);
-  box-shadow: var(--shadow);
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 600;
   line-height: 1.5;
   text-align: center;
 
   &.error {
-    --toast: #fda4af;
-  }
-}
-
-:global([data-theme='dark']) .toast {
-  --toast: #d1fae5;
-
-  &.error {
-    --toast: #ffe4e6;
+    --toast: var(--color-error);
   }
 }
 

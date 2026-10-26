@@ -126,7 +126,7 @@ async function load() {
     return
   }
   ready.value = false
-  const post = await fetchPost(postId.value)
+  const post = await fetchPost(postId.value, false)
   if (session.user?.id !== post.authorId) {
     await router.replace({ name: 'post', params: { id: post.id } })
     return
@@ -331,7 +331,7 @@ async function removeMedia(mediaId: number) {
       <AppButton type="submit" :loading="saving">放进时间轴</AppButton>
     </form>
     <aside class="card preview">
-      <p class="kicker">预览</p>
+      <p class="preview-label">预览</p>
       <time>{{ formatDate(happenedAtValue()) }}</time>
       <div class="author">
         <ProfileLink :user-id="session.user?.id">
@@ -378,9 +378,9 @@ async function removeMedia(mediaId: number) {
 .compose {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 16px;
+  gap: var(--space-md);
   align-items: start;
-  width: min(1640px, calc(100% - 28px));
+  width: min(var(--measure-write), calc(100% - var(--space-lg) - var(--space-2xs)));
   margin: 0 auto;
 }
 
@@ -389,11 +389,11 @@ async function removeMedia(mediaId: number) {
   top: 72px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-sm);
   background: var(--surface);
 }
 
-.kicker,
+.preview-label,
 time {
   color: var(--muted);
   font-size: 13px;
@@ -402,7 +402,12 @@ time {
 .author {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-xs);
+
+  h2 {
+    overflow-wrap: break-word;
+    min-width: 0;
+  }
 }
 
 h2 {
@@ -414,15 +419,15 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
   color: var(--muted);
   font-size: 13px;
 }
 
 .when {
   display: flex;
-  gap: 8px;
+  gap: var(--space-xs);
   min-width: 0;
 
   :deep(.picker) {
@@ -439,14 +444,14 @@ h2 {
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--space-xs);
 
   span {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-2xs);
     min-height: 28px;
-    padding: 0 8px;
+    padding: 0 var(--space-xs);
     border-radius: 999px;
     background: var(--field);
     color: var(--heading);
@@ -456,7 +461,7 @@ h2 {
 
 .gallery {
   display: grid;
-  gap: 8px;
+  gap: var(--space-xs);
 
   img {
     width: 100%;
@@ -469,15 +474,15 @@ h2 {
 .split {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
+  gap: var(--space-sm);
 }
 
 .pending {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-xs);
   max-width: 280px;
-  margin: 0 0 16px;
+  margin: 0 0 var(--space-md);
 
   img {
     width: 100%;
@@ -490,14 +495,14 @@ h2 {
 .photos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 12px;
-  margin: 8px 0 16px;
+  gap: var(--space-sm);
+  margin: var(--space-xs) 0 var(--space-md);
 }
 
 figure {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-xs);
   margin: 0;
   min-width: 0;
 
