@@ -45,6 +45,7 @@ export function usePaged<T>(load: (page: number) => Promise<Page<T>>) {
     size.value = 0
     hasMore.value = true
     error.value = null
+    loading.value = false
   }
 
   return { items, page, total, size, hasMore, loading, error, more, open, reset }

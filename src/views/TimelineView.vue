@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { PenLine } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import PostCard from '@/components/post/PostCard.vue'
@@ -14,6 +14,7 @@ import { formatMonthDay } from '@/utils/text'
 const router = useRouter()
 const session = useSessionStore()
 const mineOnly = ref(false)
+const ascending = ref(false)
 const {
   items: posts,
   loading,
@@ -23,7 +24,7 @@ const {
   total,
   more,
   reset,
-} = usePaged((next) => fetchPosts(next, 10, mineOnly.value))
+} = usePaged((next) => fetchPosts(next, 10, mineOnly.value, ascending.value))
 
 function showMine(value: boolean) {
   if (mineOnly.value === value) return
@@ -32,9 +33,33 @@ function showMine(value: boolean) {
   void more()
 }
 
+function showOrder(value: boolean) {
+  if (ascending.value === value) return
+  ascending.value = value
+  reset()
+  void more()
+}
+
+function onPin() {
+  reset()
+  void more()
+}
+
 function openPost(id: number) {
   router.push({ name: 'post', params: { id } })
 }
+
+watch(
+  () => session.user?.id ?? null,
+  (id, previous) => {
+    if (id === previous) return
+    if (id == null) mineOnly.value = false
+    reset()
+    void more()
+  },
+)
+
+void more()
 
 function yearOf(value: string) {
   return value.slice(0, 4)
@@ -50,12 +75,22 @@ function showYear(index: number) {
 
 <template>
   <section class="shell wide">
-    <h1 class="page-title">时间轴</h1>
-    <p class="lede">从最近往下读。</p>
-    <p v-if="page > 0" class="hint tally">{{ total }} 篇</p>
-    <div v-if="session.user" class="filters">
-      <button type="button" :class="{ on: !mineOnly }" @click="showMine(false)">全部</button>
-      <button type="button" :class="{ on: mineOnly }" @click="showMine(true)">只看我的</button>
+    <header class="mast">
+      <div>
+        <h1 class="page-title">时间轴</h1>
+        <p class="lede">{{ ascending ? '从最早往下读。置顶的仍在最上面。' : '从最近往下读。置顶的仍在最上面。' }}</p>
+      </div>
+      <p v-if="page > 0" class="count">{{ total }} 篇</p>
+    </header>
+    <div class="filters">
+      <div v-if="session.user" class="group">
+        <button type="button" :class="{ on: !mineOnly }" @click="showMine(false)">全部</button>
+        <button type="button" :class="{ on: mineOnly }" @click="showMine(true)">只看我的</button>
+      </div>
+      <div class="group">
+        <button type="button" :class="{ on: !ascending }" @click="showOrder(false)">从近到远</button>
+        <button type="button" :class="{ on: ascending }" @click="showOrder(true)">从远到近</button>
+      </div>
     </div>
     <Skeleton
       v-if="posts.length === 0 && !error && (loading || page === 0)"
@@ -74,15 +109,16 @@ function showYear(index: number) {
       </WaveLink>
     </div>
     <ol v-if="posts.length" class="timeline">
-      <li v-for="(post, index) in posts" :key="post.id">
+      <li v-for="(post, index) in posts" :key="post.id" :class="{ lead: index === 0 }">
         <div class="rail">
           <time :datetime="post.happenedAt">
-            <span v-if="showYear(index)" class="year">{{ yearOf(post.happenedAt) }}</span>
+            <span v-if="post.pinned" class="year">置顶</span>
+            <span v-else-if="showYear(index)" class="year">{{ yearOf(post.happenedAt) }}</span>
             <span>{{ formatMonthDay(post.happenedAt) }}</span>
           </time>
-          <span class="dot" />
+          <span class="node" />
         </div>
-        <PostCard :post="post" :index="index" @open="openPost" />
+        <PostCard :post="post" :index="index" @open="openPost" @pin="onPin" />
       </li>
     </ol>
     <Skeleton v-if="loading && posts.length" preset="timeline" />
@@ -91,26 +127,48 @@ function showYear(index: number) {
 </template>
 
 <style scoped lang="scss">
-.tally {
-  margin-top: -8px;
+.mast {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.count {
+  margin: 0;
+  color: var(--heading);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .filters {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  border-bottom: var(--rule-hair) solid var(--line);
+}
+
+.group {
+  display: flex;
+  gap: var(--space-md);
 
   button {
-    min-height: 34px;
-    padding: 0 12px;
-    border-radius: 999px;
-    background: var(--surface);
+    min-height: 36px;
+    padding: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
     color: var(--muted);
-    box-shadow: var(--shadow);
     cursor: pointer;
+    transition:
+      color var(--dur-short) var(--ease-out),
+      border-color var(--dur-short) var(--ease-out);
 
     &.on {
-      background: var(--primary-soft);
+      border-bottom-color: var(--primary);
       color: var(--primary);
       font-weight: 600;
     }
@@ -121,7 +179,7 @@ function showYear(index: number) {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--space-sm);
 
   h2 {
     color: var(--heading);
@@ -137,7 +195,7 @@ function showYear(index: number) {
 .timeline {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-md);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -146,20 +204,20 @@ function showYear(index: number) {
     position: relative;
     display: grid;
     grid-template-columns: 80px minmax(0, 1fr);
-    gap: 14px;
+    gap: var(--space-sm);
 
     &::before {
       content: '';
       position: absolute;
-      top: 32px;
-      bottom: -18px;
+      top: 46px;
+      bottom: calc(var(--space-md) * -1);
       left: 39px;
       width: 2px;
-      background: var(--line);
+      background: linear-gradient(var(--primary-soft), var(--line));
     }
 
     &:last-child::before {
-      bottom: 12px;
+      display: none;
     }
   }
 }
@@ -168,8 +226,8 @@ function showYear(index: number) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding-top: 8px;
+  gap: var(--space-sm);
+  padding-top: var(--space-xs);
   position: relative;
   z-index: 1;
 }
@@ -179,7 +237,8 @@ time {
   flex-direction: column;
   align-items: center;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
   line-height: 1.4;
   text-align: center;
 }
@@ -194,55 +253,48 @@ time {
   font-weight: 600;
 }
 
-.dot {
-  position: relative;
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
+.node {
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-pill);
+  background: var(--bg);
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+.lead .node {
   background: var(--primary-fill);
-  box-shadow: 0 0 0 4px var(--bg);
-  animation: dot-in 0.45s ease both;
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: -5px;
-    border: 2px solid var(--primary-fill);
-    border-radius: 999px;
-    opacity: 0;
-    animation: dot-ping 2.4s ease-out infinite;
-  }
+  border-color: var(--primary-fill);
+  animation: live 2.6s var(--ease-out) infinite;
 }
 
-@for $i from 1 through 10 {
-  li:nth-child(#{$i}) .dot {
-    animation-delay: #{($i - 1) * 0.07}s;
-  }
+li:hover .node {
+  transform: scale(1.25);
 }
 
-@keyframes dot-in {
-  from {
-    opacity: 0;
-    transform: scale(0.4);
-  }
-}
-
-@keyframes dot-ping {
+@keyframes live {
   0% {
-    opacity: 0.55;
-    transform: scale(0.7);
+    box-shadow: 0 0 0 0 var(--primary-soft);
   }
 
+  70%,
   100% {
-    opacity: 0;
-    transform: scale(1.7);
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lead .node,
+  li:hover .node {
+    animation: none;
+    transform: none;
   }
 }
 
 @media (max-width: 640px) {
   .timeline li {
     grid-template-columns: 4.6rem minmax(0, 1fr);
-    gap: 10px;
+    gap: var(--space-sm);
 
     &::before {
       left: calc(2.3rem - 1px);

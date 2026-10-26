@@ -12,7 +12,7 @@ import {
 } from '@/api/comment'
 import { createPostDanmaku, fetchPostDanmaku, likeDanmaku } from '@/api/danmaku'
 import { usePaged } from '@/composables/usePaged'
-import { deletePost, fetchPost } from '@/api/post'
+import { deletePost, fetchPost, likePost, pinPost } from '@/api/post'
 import { pushToast } from '@/composables/useToast'
 import CommentForm from '@/components/comment/CommentForm.vue'
 import CommentList from '@/components/comment/CommentList.vue'
@@ -29,6 +29,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import ImageLightbox from '@/components/common/ImageLightbox.vue'
 import DiaryIcon from '@/components/post/DiaryIcon.vue'
 import PostBody from '@/components/post/PostBody.vue'
+import PostStats from '@/components/post/PostStats.vue'
 import type { Comment } from '@/types/comment'
 import type { Danmaku } from '@/types/danmaku'
 import type { Media, PostDetail } from '@/types/post'
@@ -87,6 +88,9 @@ async function submitComment(nickname: string | null, content: string, avatarUrl
       replyTarget.value?.id,
       avatarUrl,
     )
+    if (created.status === 'VISIBLE' && post.value) {
+      post.value.commentCount += 1
+    }
     if (created.status === 'VISIBLE' || session.user) {
       if (created.parentId == null) {
         thread.items.value = [created, ...thread.items.value]
@@ -115,20 +119,49 @@ async function sendDanmaku(nickname: string | null, content: string, avatarUrl: 
 }
 
 async function setStatus(id: number, status: 'VISIBLE' | 'HIDDEN') {
+  const before = thread.items.value.find((item) => item.id === id)
   const updated = await updateCommentStatus(id, status)
   thread.items.value = thread.items.value.map((item) => (item.id === id ? updated : item))
+  if (post.value && before && before.status !== status) {
+    post.value.commentCount += status === 'VISIBLE' ? 1 : -1
+    if (post.value.commentCount < 0) post.value.commentCount = 0
+  }
   pushToast(status === 'HIDDEN' ? '已隐藏' : '已显示')
 }
 
 async function removeComment(id: number) {
+  const gone = thread.items.value.filter((item) => item.id === id || item.parentId === id)
   await deleteComment(id)
   thread.items.value = thread.items.value.filter((item) => item.id !== id && item.parentId !== id)
+  if (post.value) {
+    const lost = gone.filter((item) => item.status === 'VISIBLE').length
+    post.value.commentCount = Math.max(0, post.value.commentCount - lost)
+  }
   pushToast('已删除')
 }
 
 async function likeOne(id: number) {
   const updated = await likeComment(id)
   thread.items.value = thread.items.value.map((item) => (item.id === id ? updated : item))
+}
+
+async function likeThis() {
+  if (!post.value) return
+  try {
+    post.value = await likePost(post.value.id)
+  } catch (cause) {
+    pushToast(cause instanceof ApiError ? cause.message : '没有点上', 'error')
+  }
+}
+
+async function pinThis() {
+  if (!post.value) return
+  try {
+    post.value = await pinPost(post.value.id)
+    pushToast(post.value.pinned ? '已置顶' : '已放下')
+  } catch (cause) {
+    pushToast(cause instanceof ApiError ? cause.message : '没有置上', 'error')
+  }
 }
 
 async function likeNote(id: number) {
@@ -149,6 +182,22 @@ onMounted(load)
   <div>
     <div v-if="post" class="shell stack wide">
       <article class="card detail">
+        <div v-if="post.media.length" class="gallery">
+          <button
+            v-for="media in post.media"
+            :key="media.id"
+            type="button"
+            class="shot"
+            @click="active = media"
+          >
+            <motion.img
+              :src="media.url"
+              :alt="alt"
+              :layout-id="media.id === post.media[0]?.id ? `cover-${post.id}` : undefined"
+            />
+            <span class="zoom"><Maximize2 :size="16" /> 放大</span>
+          </button>
+        </div>
         <div class="author">
           <ProfileLink :user-id="post.authorId">
             <UserAvatar :src="post.authorAvatarUrl" :name="post.displayName" :size="42" />
@@ -170,37 +219,35 @@ onMounted(load)
           <span v-if="post.visibility === 'PRIVATE'"><Lock :size="14" /> 仅双方</span>
           <span v-else><Globe :size="14" /> 公开</span>
           <span v-if="post.status === 'HIDDEN'">时间轴上已隐藏</span>
+          <span v-if="post.pinned">置顶</span>
         </div>
+        <PostStats
+          :view-count="post.viewCount"
+          :like-count="post.likeCount"
+          :comment-count="post.commentCount"
+          :liked="post.liked"
+          comment-href="#comments"
+          @like="likeThis"
+        />
         <MapPoint
           v-if="post.latitude != null && post.longitude != null"
           :key="`${post.id}-${post.latitude}-${post.longitude}`"
           :latitude="post.latitude"
           :longitude="post.longitude"
         />
-        <div v-if="post.media.length" class="gallery">
-          <button
-            v-for="media in post.media"
-            :key="media.id"
-            type="button"
-            class="shot"
-            @click="active = media"
-          >
-            <motion.img
-              :src="media.url"
-              :alt="alt"
-              :layout-id="media.id === post.media[0]?.id ? `cover-${post.id}` : undefined"
-            />
-            <span class="zoom"><Maximize2 :size="16" /> 放大</span>
-          </button>
-        </div>
         <PostBody class="body" :content="post.content" />
-        <div v-if="mine" class="row">
-          <WaveLink class="btn quiet" :to="{ name: 'write', params: { id: post.id } }"
-            >修改这篇</WaveLink
-          >
-          <AppButton variant="plain" tone="danger" type="button" @click="confirmOpen = true"
-            >删除这篇</AppButton
-          >
+        <div v-if="session.user" class="row">
+          <AppButton variant="plain" type="button" @click="pinThis">{{
+            post.pinned ? '取消置顶' : '置顶'
+          }}</AppButton>
+          <template v-if="mine">
+            <WaveLink class="btn quiet" :to="{ name: 'write', params: { id: post.id } }"
+              >修改这篇</WaveLink
+            >
+            <AppButton variant="plain" tone="danger" type="button" @click="confirmOpen = true"
+              >删除这篇</AppButton
+            >
+          </template>
         </div>
         <DanmakuStage :items="flying" @like="likeNote" @need-more="notes.more" />
       </article>
@@ -209,9 +256,9 @@ onMounted(load)
         <p class="lede">短短一句，从画面上飞过去。鼠标停在上面会暂停。</p>
         <DanmakuForm :send="sendDanmaku" />
       </section>
-      <section class="card">
+      <section id="comments" class="card">
         <h2>
-          评论<span v-if="thread.total.value" class="count">{{ thread.total.value }}</span>
+          评论<span v-if="post.commentCount" class="count">{{ post.commentCount }}</span>
         </h2>
         <p class="lede">
           <template v-if="canComment && session.user"
@@ -282,13 +329,13 @@ onMounted(load)
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-sm);
 }
 
 .author {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-sm);
 
   > div {
     min-width: 0;
@@ -305,20 +352,22 @@ h2 {
   color: var(--heading);
   font-weight: 600;
   line-height: 1.3;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 h1 {
-  font-size: 24px;
+  font-size: var(--text-xl);
   overflow-wrap: anywhere;
 }
 
 h2 {
-  margin-bottom: 6px;
+  margin-bottom: var(--space-xs);
   font-size: 18px;
 }
 
 .count {
-  margin-left: 6px;
+  margin-left: var(--space-xs);
   color: var(--muted);
   font-size: 14px;
   font-weight: 500;
@@ -327,30 +376,29 @@ h2 {
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 .chips span {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2xs);
   min-height: 32px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: var(--field);
   color: var(--heading);
-  font-size: 14px;
+  font-size: var(--text-sm);
 }
 
 .gallery {
   display: grid;
-  gap: 12px;
+  gap: var(--space-sm);
 }
 
 .shot {
   position: relative;
   width: 100%;
   padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
   cursor: zoom-in;
 }
 
@@ -358,7 +406,17 @@ img {
   width: 100%;
   max-height: 420px;
   object-fit: cover;
-  border-radius: var(--radius);
+  transition: transform var(--dur-long) var(--ease-out);
+}
+
+.shot:hover img {
+  transform: scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shot:hover img {
+    transform: none;
+  }
 }
 
 .zoom {
@@ -367,16 +425,16 @@ img {
   bottom: 12px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border-radius: 999px;
+  gap: var(--space-2xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius);
   background: var(--surface);
   color: var(--heading);
-  font-size: 13px;
-  box-shadow: var(--shadow);
+  font-size: var(--text-sm);
+  border: var(--rule-hair) solid var(--line);
 }
 
 .empty-note {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-md);
 }
 </style>

@@ -12,6 +12,11 @@ export type PostSummary = {
   displayName: string
   coverUrl: string | null
   authorAvatarUrl: string | null
+  viewCount: number
+  likeCount: number
+  commentCount: number
+  liked: boolean
+  pinned: boolean
 }
 
 export type Media = {
@@ -37,6 +42,11 @@ export type PostDetail = {
   authorAvatarUrl: string | null
   latitude: number | null
   longitude: number | null
+  viewCount: number
+  likeCount: number
+  commentCount: number
+  liked: boolean
+  pinned: boolean
 }
 
 export type PostInput = {

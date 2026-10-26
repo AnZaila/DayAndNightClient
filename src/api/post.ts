@@ -10,8 +10,10 @@ import type {
 import type { PlacePin } from '@/types/place'
 import { request } from '@/utils/request'
 
-export async function fetchPosts(page = 1, size = 10, mine = false) {
-  const { data } = await request.get<Page<PostSummary>>('/posts', { params: { page, size, mine } })
+export async function fetchPosts(page = 1, size = 10, mine = false, ascending = false) {
+  const { data } = await request.get<Page<PostSummary>>('/posts', {
+    params: { page, size, mine, ascending },
+  })
   return data
 }
 
@@ -20,8 +22,20 @@ export async function fetchPlaces() {
   return data
 }
 
-export async function fetchPost(id: number) {
-  const { data } = await request.get<PostDetail>(`/posts/${id}`)
+export async function fetchPost(id: number, countView = true) {
+  const { data } = await request.get<PostDetail>(`/posts/${id}`, {
+    params: countView ? undefined : { countView: false },
+  })
+  return data
+}
+
+export async function likePost(id: number) {
+  const { data } = await request.post<PostDetail>(`/posts/${id}/like`)
+  return data
+}
+
+export async function pinPost(id: number) {
+  const { data } = await request.post<PostDetail>(`/posts/${id}/pin`)
   return data
 }
 

@@ -160,7 +160,10 @@ function finish(id: number) {
 <style scoped lang="scss">
 .stage {
   position: fixed;
-  inset: 0;
+  top: var(--header-height);
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 35;
   overflow: hidden;
   pointer-events: none;
@@ -171,12 +174,12 @@ function finish(id: number) {
   left: 100%;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-xs);
   max-width: 70%;
-  padding: 3px 10px;
+  padding: var(--space-2xs) var(--space-sm);
   border-radius: 999px;
-  background: rgb(15 23 42 / 72%);
-  color: #fff;
+  background: var(--scrim-strong);
+  color: var(--color-accent-ink);
   font-size: 14px;
   line-height: 1.4;
   white-space: nowrap;
@@ -194,18 +197,19 @@ function finish(id: number) {
 .tools {
   display: none;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-xs);
 
   button {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    color: #fff;
+    gap: var(--space-2xs);
+    color: var(--color-accent-ink);
     font-size: 12px;
+    white-space: nowrap;
     cursor: pointer;
 
     &.on {
-      color: #fda4af;
+      color: var(--danger);
     }
   }
 }
@@ -229,8 +233,8 @@ function finish(id: number) {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
-    padding: 10px;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
   }
 
   .bullet {
