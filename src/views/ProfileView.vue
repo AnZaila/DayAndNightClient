@@ -1,23 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { deleteComment, fetchRecentComments, updateCommentStatus } from '@/api/comment'
-import { usePaged } from '@/composables/usePaged'
 import { updateProfile, uploadAvatar, uploadCover } from '@/api/auth'
 import AppButton from '@/components/common/AppButton.vue'
 import AppSelect from '@/components/common/AppSelect.vue'
 import AppSwitch from '@/components/common/AppSwitch.vue'
-import ImageLightbox from '@/components/common/ImageLightbox.vue'
-import UserAvatar from '@/components/common/UserAvatar.vue'
-import WaveLink from '@/components/common/WaveLink.vue'
 import AvatarCropDialog from '@/components/profile/AvatarCropDialog.vue'
 import AvatarGenerateDialog from '@/components/profile/AvatarGenerateDialog.vue'
-import CommentList from '@/components/comment/CommentList.vue'
-import Pager from '@/components/common/Pager.vue'
-import Skeleton from '@/components/common/Skeleton.vue'
+import ProfileHero from '@/components/profile/ProfileHero.vue'
+import ProfileShelf from '@/components/profile/ProfileShelf.vue'
 import { pushToast } from '@/composables/useToast'
 import { useSessionStore } from '@/stores/session'
 import type { ProfileVisibility } from '@/types/auth'
-import type { CommentStatus } from '@/types/comment'
 import { ApiError } from '@/utils/request'
 
 const session = useSessionStore()
@@ -36,9 +29,6 @@ const cropKind = ref<'avatar' | 'cover'>('avatar')
 const picked = ref<File | null>(null)
 const avatarInput = ref<HTMLInputElement | null>(null)
 const coverInput = ref<HTMLInputElement | null>(null)
-const pageSize = 20
-const thread = usePaged((page) => fetchRecentComments('mine', page, pageSize))
-const coverOpen = ref(false)
 
 const visibilityOptions = [
   { value: 'PUBLIC' as const, label: '公开' },
@@ -50,11 +40,6 @@ const cropAspect = computed(() =>
   cropKind.value === 'cover' ? ([16, 7] as [number, number]) : ([1, 1] as [number, number]),
 )
 const cropOutput = computed(() => (cropKind.value === 'cover' ? 'cover.jpg' : 'avatar.jpg'))
-const coverStyle = computed(() => {
-  const url = session.user?.coverUrl
-  return url ? { backgroundImage: `url("${url}")` } : undefined
-})
-
 watch(
   () => session.user,
   (user) => {
@@ -68,8 +53,6 @@ watch(
     showComments.value = user.showComments
   },
 )
-
-void thread.open(1)
 
 async function saveProfile() {
   const next = name.value.trim()
@@ -120,37 +103,19 @@ async function useFile(file: File) {
   }
 }
 
-async function setStatus(id: number, status: CommentStatus) {
-  const updated = await updateCommentStatus(id, status)
-  thread.items.value = thread.items.value.map((item) => (item.id === id ? updated : item))
-  pushToast(status === 'HIDDEN' ? '已隐藏' : '已显示')
-}
-
-async function removeComment(id: number) {
-  await deleteComment(id)
-  const next =
-    thread.items.value.length === 1 && thread.page.value > 1
-      ? thread.page.value - 1
-      : thread.page.value
-  await thread.open(next || 1)
-  pushToast('已删除')
-}
 </script>
 
 <template>
   <div v-if="session.user" class="shell stack wide">
-    <section class="card hero">
-      <div class="cover" :style="coverStyle">
-        <button
-          v-if="session.user.coverUrl"
-          type="button"
-          class="cover-view"
-          aria-label="查看背景"
-          @click="coverOpen = true"
-        />
-        <AppButton class="cover-action" type="button" @click="coverInput?.click()"
-          >换背景</AppButton
-        >
+    <ProfileHero
+      :name="session.user.displayName"
+      :avatar-url="session.user.avatarUrl"
+      :cover-url="session.user.coverUrl"
+      :signature="session.user.signature || '还没有签名'"
+      :email="session.user.email"
+    >
+      <template #cover>
+        <AppButton type="button" @click="coverInput?.click()">换背景</AppButton>
         <input
           ref="coverInput"
           class="sr-only"
@@ -158,23 +123,19 @@ async function removeComment(id: number) {
           accept="image/jpeg,image/png,image/webp"
           @change="chooseFile($event, 'cover')"
         />
-      </div>
-      <div class="who">
-        <div class="portrait">
-          <UserAvatar
-            :src="session.user.avatarUrl"
-            :name="session.user.displayName"
-            :size="84"
-            preview
-          />
-        </div>
-        <div class="meta">
-          <h1>{{ session.user.displayName }}</h1>
-          <p class="sign">{{ session.user.signature || '还没有签名' }}</p>
-          <p class="mail">{{ session.user.email }}</p>
-        </div>
-      </div>
-    </section>
+      </template>
+      <template v-if="session.user.profileVisibility !== 'PUBLIC'" #meta>
+        <p class="closed">
+          {{
+            session.user.profileVisibility === 'SELF'
+              ? '其他人打开这里，只会看到名字和头像。'
+              : '没有登录的人打开这里，只会看到名字和头像。'
+          }}
+        </p>
+      </template>
+    </ProfileHero>
+
+    <ProfileShelf :user-id="session.user.id" can-moderate />
 
     <form class="card" novalidate @submit.prevent="saveProfile">
       <h2>资料</h2>
@@ -210,41 +171,8 @@ async function removeComment(id: number) {
       <p class="hint">
         公开时访客也能看，仅双方要登录，仅自己只有你能看。上面四项可以再单独收起。名字和头像仍会出现在帖子上。
       </p>
-      <p class="hint">
-        <WaveLink :to="{ name: 'user', params: { id: session.user.id } }">看看这份主页</WaveLink>
-      </p>
       <AppButton type="submit" :loading="saving">保存</AppButton>
     </form>
-
-    <section class="card">
-      <h2>我的评论</h2>
-      <p class="lede">你留下的。</p>
-      <Skeleton
-        v-if="thread.loading.value && thread.items.value.length === 0"
-        preset="comment"
-        :count="3"
-      />
-      <p v-else-if="thread.error.value && thread.items.value.length === 0" class="error">
-        {{ thread.error.value }}
-      </p>
-      <p v-else-if="thread.items.value.length === 0" class="muted">你还没有留言。</p>
-      <CommentList
-        v-if="thread.items.value.length"
-        :comments="thread.items.value"
-        can-moderate
-        show-post
-        @hide="setStatus($event, 'HIDDEN')"
-        @show="setStatus($event, 'VISIBLE')"
-        @remove="removeComment"
-      />
-      <Pager
-        :page="thread.page.value"
-        :total="thread.total.value"
-        :size="thread.size.value || pageSize"
-        :disabled="thread.loading.value"
-        @page="thread.open"
-      />
-    </section>
 
     <AvatarCropDialog
       v-model:open="cropOpen"
@@ -256,98 +184,32 @@ async function removeComment(id: number) {
       @confirm="useFile"
     />
     <AvatarGenerateDialog v-model:open="generateOpen" :loading="uploading" @confirm="useFile" />
-    <ImageLightbox v-model:open="coverOpen" :src="session.user.coverUrl || ''" alt="背景" />
   </div>
 </template>
 
 <style scoped lang="scss">
-.hero {
-  padding: 0 0 18px;
-  overflow: hidden;
-}
-
-.cover {
-  position: relative;
-  height: 188px;
-  background-color: var(--primary-soft);
-  background-image: linear-gradient(120deg, var(--primary-soft), var(--field));
-  background-position: center;
-  background-size: cover;
-}
-
-.cover-view {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.cover-action {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  z-index: 1;
-}
-
-.who {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 0 18px;
-
-  h1 {
-    margin: 0;
-    color: var(--heading);
-    font-size: 22px;
-  }
-}
-
-.portrait {
-  z-index: 1;
-  flex: none;
-  margin-top: -46px;
-  padding: 4px;
-  border-radius: 50%;
-  background: var(--surface);
-}
-
-.meta {
-  min-width: 0;
-  padding-top: 14px;
-}
-
-.sign,
-.mail {
+.closed {
+  margin: var(--space-3xs) 0 0;
+  color: var(--muted);
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 
-.sign {
-  margin: 4px 0 0;
-  color: var(--text);
-}
-
-.mail {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-}
-
 h2 {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-sm);
   color: var(--heading);
   font-size: 18px;
 }
 
 .row {
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-md);
 }
 
 .priv {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 22px;
-  margin-bottom: 12px;
+  gap: var(--space-sm) var(--space-lg);
+  margin-bottom: var(--space-sm);
 }
 </style>
