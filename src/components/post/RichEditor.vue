@@ -65,6 +65,28 @@ function localize() {
   quill.root.dataset.imageBound = '1'
   quill.getModule('toolbar').addHandler('image', () => fileInput.value?.click())
   quill.root.addEventListener('paste', onPaste)
+  bindComposition(quill)
+}
+
+function bindComposition(quill: QuillLike) {
+  const root = quill.root
+  if (root.dataset.imeBound === '1') return
+  root.dataset.imeBound = '1'
+  const mark = () => {
+    root.dataset.composing = '1'
+    root.classList.remove('ql-blank')
+  }
+  const finish = () => {
+    delete root.dataset.composing
+    queueMicrotask(() => {
+      if (root.dataset.composing === '1') return
+      const text = (root.textContent || '').replace(/\u200b/g, '').trim()
+      root.classList.toggle('ql-blank', text.length === 0)
+    })
+  }
+  root.addEventListener('compositionstart', mark)
+  root.addEventListener('compositionupdate', mark)
+  root.addEventListener('compositionend', finish)
 }
 
 function onPaste(event: ClipboardEvent) {

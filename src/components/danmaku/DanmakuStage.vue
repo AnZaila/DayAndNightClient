@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { Heart } from '@lucide/vue'
+import UserAvatar from '@/components/common/UserAvatar.vue'
+import ProfileLink from '@/components/common/ProfileLink.vue'
 import { useDanmakuVisible } from '@/composables/useDanmakuVisible'
 import type { Danmaku } from '@/types/danmaku'
 
@@ -22,6 +24,7 @@ const queued = ref<number[]>([])
 const seen = new Set<number>()
 const timers = new Map<number, number>()
 let laneCursor = 0
+let flight = 0
 
 watch(
   () => props.items,
@@ -36,8 +39,17 @@ watch(
   { immediate: true },
 )
 
+watch(shown, (value) => {
+  flight += 1
+  clearTimers()
+  if (!value || reduceMotion) return
+  const token = flight
+  for (const item of flying.value) schedule(item, token)
+  if (seen.size > 0 && queued.value.length < 4) emit('needMore')
+})
+
 onBeforeUnmount(() => {
-  for (const timer of timers.values()) window.clearTimeout(timer)
+  clearTimers()
 })
 
 function source(id: number) {
@@ -61,17 +73,41 @@ function pump() {
       duration,
       delay,
     })
-    if (!reduceMotion) {
-      timers.set(
-        id,
-        window.setTimeout(() => finish(id), (duration + delay) * 1000 + 500),
-      )
+    if (shown.value && !reduceMotion) {
+      schedule({ id, duration, delay }, flight)
     }
   }
-  if (!reduceMotion && seen.size > 0 && queued.value.length < 4) emit('needMore')
+  if (shown.value && !reduceMotion && seen.size > 0 && queued.value.length < 4) emit('needMore')
+}
+
+function schedule(item: { id: number; duration: number; delay: number }, token: number) {
+  timers.set(
+    item.id,
+    window.setTimeout(
+      () => {
+        if (token !== flight || !shown.value) return
+        finish(item.id)
+      },
+      (item.duration + item.delay) * 1000 + 500,
+    ),
+  )
+}
+
+function clearTimers() {
+  for (const timer of timers.values()) window.clearTimeout(timer)
+  timers.clear()
+}
+
+function onEnd(id: number, event: AnimationEvent) {
+  const current = event.currentTarget
+  if (event.target !== current || !(current instanceof Element) || !current.isConnected) return
+  const item = flying.value.find((entry) => entry.id === id)
+  if (!item || event.elapsedTime + 0.05 < item.duration) return
+  finish(id)
 }
 
 function finish(id: number) {
+  if (!shown.value) return
   const timer = timers.get(id)
   if (timer != null) {
     window.clearTimeout(timer)
@@ -95,8 +131,15 @@ function finish(id: number) {
           animationDuration: `${item.duration}s`,
           animationDelay: `${item.delay}s`,
         }"
-        @animationend="finish(item.id)"
+        @animationend="onEnd(item.id, $event)"
       >
+        <ProfileLink v-if="source(item.id)?.avatarUrl" :user-id="source(item.id)?.userId">
+          <UserAvatar
+            :src="source(item.id)?.avatarUrl"
+            :name="source(item.id)?.nickname"
+            :size="22"
+          />
+        </ProfileLink>
         {{ label(item.id) }}
         <span v-if="source(item.id)" class="tools">
           <button
@@ -121,7 +164,6 @@ function finish(id: number) {
   z-index: 35;
   overflow: hidden;
   pointer-events: none;
-  container-type: size;
 }
 
 .bullet {
@@ -178,7 +220,7 @@ function finish(id: number) {
   }
 
   to {
-    transform: translateX(calc(-100cqw - 100%));
+    transform: translateX(calc(-100vw - 100%));
   }
 }
 

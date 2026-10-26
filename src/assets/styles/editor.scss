@@ -31,6 +31,10 @@
       font-style: normal;
     }
 
+    &.ql-blank[data-composing]::before {
+      content: none;
+    }
+
     img {
       display: block;
       max-width: 100%;
