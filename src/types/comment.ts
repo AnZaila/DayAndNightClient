@@ -12,4 +12,5 @@ export type Comment = {
   replyToNickname: string | null
   likeCount: number
   liked: boolean
+  userId: number | null
 }

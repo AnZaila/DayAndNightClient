@@ -56,6 +56,13 @@ export async function uploadContentImage(file: File) {
   return data
 }
 
+export async function uploadGuestAvatar(file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await request.post<{ url: string }>('/media/avatar', form)
+  return data
+}
+
 export async function deletePostMedia(id: number, mediaId: number) {
   await request.delete(`/posts/${id}/media/${mediaId}`)
 }

@@ -4,8 +4,11 @@ import { deleteComment, fetchRecentComments, updateCommentStatus } from '@/api/c
 import { usePaged } from '@/composables/usePaged'
 import { updateProfile, uploadAvatar, uploadCover } from '@/api/auth'
 import AppButton from '@/components/common/AppButton.vue'
+import AppSelect from '@/components/common/AppSelect.vue'
+import AppSwitch from '@/components/common/AppSwitch.vue'
 import ImageLightbox from '@/components/common/ImageLightbox.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import WaveLink from '@/components/common/WaveLink.vue'
 import AvatarCropDialog from '@/components/profile/AvatarCropDialog.vue'
 import AvatarGenerateDialog from '@/components/profile/AvatarGenerateDialog.vue'
 import CommentList from '@/components/comment/CommentList.vue'
@@ -13,12 +16,18 @@ import Pager from '@/components/common/Pager.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import { pushToast } from '@/composables/useToast'
 import { useSessionStore } from '@/stores/session'
+import type { ProfileVisibility } from '@/types/auth'
 import type { CommentStatus } from '@/types/comment'
 import { ApiError } from '@/utils/request'
 
 const session = useSessionStore()
 const name = ref(session.user?.displayName ?? '')
 const signature = ref(session.user?.signature ?? '')
+const visibility = ref<ProfileVisibility>(session.user?.profileVisibility ?? 'PUBLIC')
+const showSignature = ref(session.user?.showSignature ?? true)
+const showCover = ref(session.user?.showCover ?? true)
+const showEmail = ref(session.user?.showEmail ?? false)
+const showComments = ref(session.user?.showComments ?? false)
 const saving = ref(false)
 const uploading = ref(false)
 const cropOpen = ref(false)
@@ -31,6 +40,11 @@ const pageSize = 20
 const thread = usePaged((page) => fetchRecentComments('mine', page, pageSize))
 const coverOpen = ref(false)
 
+const visibilityOptions = [
+  { value: 'PUBLIC' as const, label: '公开' },
+  { value: 'PRIVATE' as const, label: '仅双方' },
+  { value: 'SELF' as const, label: '仅自己' },
+]
 const cropTitle = computed(() => (cropKind.value === 'cover' ? '裁剪背景' : '裁剪头像'))
 const cropAspect = computed(() =>
   cropKind.value === 'cover' ? ([16, 7] as [number, number]) : ([1, 1] as [number, number]),
@@ -47,6 +61,11 @@ watch(
     if (!user) return
     name.value = user.displayName
     signature.value = user.signature ?? ''
+    visibility.value = user.profileVisibility ?? 'PUBLIC'
+    showSignature.value = user.showSignature
+    showCover.value = user.showCover
+    showEmail.value = user.showEmail
+    showComments.value = user.showComments
   },
 )
 
@@ -60,7 +79,15 @@ async function saveProfile() {
   }
   saving.value = true
   try {
-    session.user = await updateProfile(next, signature.value.trim())
+    session.user = await updateProfile(
+      next,
+      signature.value.trim(),
+      visibility.value,
+      showSignature.value,
+      showCover.value,
+      showEmail.value,
+      showComments.value,
+    )
     pushToast('资料已保存')
   } catch (cause) {
     if (!(cause instanceof ApiError)) pushToast('保存失败', 'error')
@@ -111,7 +138,7 @@ async function removeComment(id: number) {
 </script>
 
 <template>
-  <div v-if="session.user" class="shell stack page">
+  <div v-if="session.user" class="shell stack wide">
     <section class="card hero">
       <div class="cover" :style="coverStyle">
         <button
@@ -134,9 +161,14 @@ async function removeComment(id: number) {
       </div>
       <div class="who">
         <div class="portrait">
-          <UserAvatar :src="session.user.avatarUrl" :name="session.user.displayName" :size="84" />
+          <UserAvatar
+            :src="session.user.avatarUrl"
+            :name="session.user.displayName"
+            :size="84"
+            preview
+          />
         </div>
-        <div>
+        <div class="meta">
           <h1>{{ session.user.displayName }}</h1>
           <p class="sign">{{ session.user.signature || '还没有签名' }}</p>
           <p class="mail">{{ session.user.email }}</p>
@@ -165,6 +197,22 @@ async function removeComment(id: number) {
         <span>签名</span>
         <textarea v-model="signature" maxlength="120" placeholder="一句话就好" />
       </label>
+      <div class="field">
+        <span>谁可以看</span>
+        <AppSelect v-model="visibility" :options="visibilityOptions" />
+      </div>
+      <div class="priv">
+        <AppSwitch v-model="showSignature">签名</AppSwitch>
+        <AppSwitch v-model="showCover">背景</AppSwitch>
+        <AppSwitch v-model="showEmail">邮箱</AppSwitch>
+        <AppSwitch v-model="showComments">留言</AppSwitch>
+      </div>
+      <p class="hint">
+        公开时访客也能看，仅双方要登录，仅自己只有你能看。上面四项可以再单独收起。名字和头像仍会出现在帖子上。
+      </p>
+      <p class="hint">
+        <WaveLink :to="{ name: 'user', params: { id: session.user.id } }">看看这份主页</WaveLink>
+      </p>
       <AppButton type="submit" :loading="saving">保存</AppButton>
     </form>
 
@@ -213,10 +261,6 @@ async function removeComment(id: number) {
 </template>
 
 <style scoped lang="scss">
-.page {
-  width: min(760px, calc(100% - 28px));
-}
-
 .hero {
   padding: 0 0 18px;
   overflow: hidden;
@@ -248,9 +292,8 @@ async function removeComment(id: number) {
 
 .who {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 14px;
-  margin-top: -42px;
   padding: 0 18px;
 
   h1 {
@@ -261,14 +304,17 @@ async function removeComment(id: number) {
 }
 
 .portrait {
-  z-index: 9;
+  z-index: 1;
+  flex: none;
+  margin-top: -46px;
   padding: 4px;
   border-radius: 50%;
   background: var(--surface);
 }
 
-.who > div {
+.meta {
   min-width: 0;
+  padding-top: 14px;
 }
 
 .sign,
@@ -296,5 +342,12 @@ h2 {
 .row {
   position: relative;
   margin-bottom: 16px;
+}
+
+.priv {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  margin-bottom: 12px;
 }
 </style>

@@ -9,4 +9,6 @@ export type Danmaku = {
   replyToNickname: string | null
   likeCount: number
   liked: boolean
+  avatarUrl: string | null
+  userId: number | null
 }

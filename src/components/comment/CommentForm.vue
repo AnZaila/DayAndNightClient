@@ -2,12 +2,18 @@
 import { computed, ref } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import AppButton from '@/components/common/AppButton.vue'
+import GuestAvatar from '@/components/common/GuestAvatar.vue'
+import ProfileLink from '@/components/common/ProfileLink.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import EmojiPicker from '@/components/comment/EmojiPicker.vue'
 import { pushToast } from '@/composables/useToast'
 
 const props = defineProps<{
-  submitComment: (nickname: string | null, content: string) => Promise<void>
+  submitComment: (
+    nickname: string | null,
+    content: string,
+    avatarUrl: string | null,
+  ) => Promise<void>
   replyTo?: { nickname: string } | null
 }>()
 
@@ -17,6 +23,7 @@ const emit = defineEmits<{
 
 const session = useSessionStore()
 const nickname = ref('')
+const avatarUrl = ref<string | null>(null)
 const content = ref('')
 const sending = ref(false)
 const emojiOpen = ref(false)
@@ -53,7 +60,11 @@ async function submit() {
   }
   sending.value = true
   try {
-    await props.submitComment(signedIn.value ? null : nickname.value.trim(), content.value)
+    await props.submitComment(
+      signedIn.value ? null : nickname.value.trim(),
+      content.value,
+      signedIn.value ? null : avatarUrl.value,
+    )
     content.value = ''
     if (props.replyTo) emit('cancelReply')
   } finally {
@@ -69,13 +80,22 @@ async function submit() {
       <button v-wave type="button" @click="emit('cancelReply')">取消</button>
     </p>
     <p v-if="session.user" class="hint identity">
-      <UserAvatar :src="session.user.avatarUrl" :name="session.user.displayName" :size="22" />
+      <ProfileLink :user-id="session.user.id">
+        <UserAvatar :src="session.user.avatarUrl" :name="session.user.displayName" :size="22" />
+      </ProfileLink>
       以 {{ session.user.displayName }} 留言。
     </p>
-    <label v-else class="field">
-      <span>昵称</span>
-      <input v-model="nickname" maxlength="20" placeholder="怎么称呼你" />
-    </label>
+    <template v-else>
+      <label class="field">
+        <span>昵称</span>
+        <input v-model="nickname" maxlength="20" placeholder="怎么称呼你" />
+      </label>
+      <div class="field">
+        <span>头像</span>
+        <GuestAvatar v-model="avatarUrl" />
+        <p class="optional">可以生成一张，也可以不选。</p>
+      </div>
+    </template>
     <div class="field anchor">
       <span class="label-line">
         <span>评论</span>
@@ -140,5 +160,11 @@ async function submit() {
   border-radius: 999px;
   color: var(--primary);
   cursor: pointer;
+}
+
+.optional {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 </style>

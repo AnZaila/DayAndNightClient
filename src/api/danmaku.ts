@@ -9,8 +9,17 @@ export async function fetchPostDanmaku(postId: number, page = 1, size = 20) {
   return data
 }
 
-export async function createPostDanmaku(postId: number, nickname: string | null, content: string) {
-  const { data } = await request.post<Danmaku>(`/posts/${postId}/danmaku`, { nickname, content })
+export async function createPostDanmaku(
+  postId: number,
+  nickname: string | null,
+  content: string,
+  avatarUrl?: string | null,
+) {
+  const { data } = await request.post<Danmaku>(`/posts/${postId}/danmaku`, {
+    nickname,
+    content,
+    avatarUrl,
+  })
   return data
 }
 
@@ -19,8 +28,12 @@ export async function fetchMapDanmaku(page = 1, size = 20) {
   return data
 }
 
-export async function createMapDanmaku(nickname: string | null, content: string) {
-  const { data } = await request.post<Danmaku>('/danmaku', { nickname, content })
+export async function createMapDanmaku(
+  nickname: string | null,
+  content: string,
+  avatarUrl?: string | null,
+) {
+  const { data } = await request.post<Danmaku>('/danmaku', { nickname, content, avatarUrl })
   return data
 }
 

@@ -64,9 +64,9 @@ function openPost(id: number) {
   void router.push({ name: 'post', params: { id } })
 }
 
-async function send(nickname: string | null, content: string) {
+async function send(nickname: string | null, content: string, avatarUrl: string | null) {
   try {
-    const created = await createMapDanmaku(nickname, content)
+    const created = await createMapDanmaku(nickname, content, avatarUrl)
     if (created.status === 'VISIBLE') notes.items.value = [created, ...notes.items.value]
     pushToast(created.status === 'VISIBLE' ? '已飞出去' : '已提交，待显示')
   } catch (cause) {

@@ -14,11 +14,13 @@ export async function createComment(
   nickname: string | null,
   content: string,
   parentId?: number | null,
+  avatarUrl?: string | null,
 ) {
   const { data } = await request.post<Comment>(`/posts/${postId}/comments`, {
     nickname,
     content,
     parentId,
+    avatarUrl,
   })
   return data
 }

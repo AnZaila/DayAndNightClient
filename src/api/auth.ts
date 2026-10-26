@@ -1,4 +1,4 @@
-import type { CurrentUser } from '@/types/auth'
+import type { CurrentUser, ProfileVisibility } from '@/types/auth'
 import { request } from '@/utils/request'
 
 export async function login(email: string, password: string) {
@@ -7,7 +7,7 @@ export async function login(email: string, password: string) {
 }
 
 export async function logout() {
-  await request.post('/auth/logout')
+  await request.post('/auth/logout', null, { skipErrorToast: true })
 }
 
 export async function fetchMe() {
@@ -15,8 +15,24 @@ export async function fetchMe() {
   return data
 }
 
-export async function updateProfile(displayName: string, signature: string) {
-  const { data } = await request.patch<CurrentUser>('/auth/me', { displayName, signature })
+export async function updateProfile(
+  displayName: string,
+  signature: string,
+  profileVisibility: ProfileVisibility,
+  showSignature: boolean,
+  showCover: boolean,
+  showEmail: boolean,
+  showComments: boolean,
+) {
+  const { data } = await request.patch<CurrentUser>('/auth/me', {
+    displayName,
+    signature,
+    profileVisibility,
+    showSignature,
+    showCover,
+    showEmail,
+    showComments,
+  })
   return data
 }
 
