@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   CalendarDays,
+  ChartColumn,
   Heart,
   Info,
   LogIn,
@@ -16,7 +17,7 @@ import {
   X,
 } from '@lucide/vue'
 import { storeToRefs } from 'pinia'
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { pushToast } from '@/composables/useToast'
 import { useTheme } from '@/composables/useTheme'
@@ -35,6 +36,24 @@ const { site: setting } = storeToRefs(site)
 const { theme, toggle } = useTheme()
 const logoutOpen = ref(false)
 const menuOpen = ref(false)
+const headerEl = useTemplateRef('headerEl')
+let headerSize: ResizeObserver | null = null
+
+onMounted(() => {
+  const el = headerEl.value
+  if (!el) return
+  const apply = () => {
+    document.documentElement.style.setProperty('--header-height', `${el.offsetHeight}px`)
+  }
+  headerSize = new ResizeObserver(apply)
+  headerSize.observe(el)
+  apply()
+})
+
+onBeforeUnmount(() => {
+  headerSize?.disconnect()
+  document.documentElement.style.removeProperty('--header-height')
+})
 
 watch(
   () => route.fullPath,
@@ -56,12 +75,13 @@ async function logout() {
 </script>
 
 <template>
-  <header class="header">
+  <header ref="headerEl" class="header" :class="{ open: menuOpen }">
     <button
-      v-if="menuOpen"
       class="backdrop"
       type="button"
       aria-label="关闭菜单"
+      :tabindex="menuOpen ? 0 : -1"
+      :aria-hidden="!menuOpen"
       @click="menuOpen = false"
     />
     <div class="shell bar" :class="{ open: menuOpen }">
@@ -83,6 +103,10 @@ async function logout() {
           <WaveLink :to="{ name: 'about' }">
             <Info :size="16" />
             关于
+          </WaveLink>
+          <WaveLink :to="{ name: 'stats' }">
+            <ChartColumn :size="16" />
+            统计
           </WaveLink>
         </nav>
         <div class="actions">
@@ -156,16 +180,14 @@ async function logout() {
 .header {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: var(--z-sticky);
   background: var(--surface);
-  box-shadow: 0 6px 18px rgb(148 163 184 / 0.14);
-  transition:
-    background-color 0.45s ease,
-    box-shadow 0.45s ease;
+  border-bottom: var(--rule-hair) solid var(--line);
+  transition: background-color var(--dur-long) var(--ease-out);
 }
 
 .header .shell {
-  width: min(1120px, calc(100% - 28px));
+  width: min(var(--container), calc(100% - var(--space-lg) - var(--space-2xs)));
 }
 
 .bar {
@@ -174,8 +196,9 @@ async function logout() {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  min-height: 56px;
+  gap: var(--space-xs) var(--space-sm);
+  min-height: var(--header-bar-min);
+  border: 0;
 }
 
 .sheet {
@@ -183,7 +206,7 @@ async function logout() {
   flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
+  gap: var(--space-xs) var(--space-sm);
   min-width: 0;
 }
 
@@ -205,7 +228,7 @@ nav,
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 nav {
@@ -232,39 +255,70 @@ nav a,
 .actions button {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-2xs);
   min-height: 36px;
-  padding: 0 8px;
+  padding: 0 var(--space-xs);
   color: var(--muted);
   cursor: pointer;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+
+  &:hover {
+    color: var(--heading);
+  }
+}
+
+nav a,
+.actions a {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: var(--space-xs);
+    bottom: 0;
+    left: var(--space-xs);
+    height: 2px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transform-origin: left center;
+    pointer-events: none;
+    transition: transform var(--dur-short) var(--ease-out);
+  }
 }
 
 nav a.router-link-active,
 .actions a.router-link-active {
   color: var(--primary);
   font-weight: 600;
+
+  &::after {
+    transform: scaleX(1);
+  }
 }
 
 .me {
-  gap: 6px;
+  gap: var(--space-xs);
 }
 
 .days {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-2xs);
   margin: 0;
-  padding: 4px 10px;
-  border-radius: 999px;
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-pill);
   background: var(--primary-soft);
   color: var(--primary);
-  font-size: 13px;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 720px) {
   .header .shell {
-    width: min(1120px, calc(100% - 20px));
+    width: min(var(--container), calc(100% - var(--space-md) - var(--space-2xs)));
   }
 
   .days {
@@ -277,13 +331,14 @@ nav a.router-link-active,
     justify-content: center;
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border-radius: var(--radius);
     color: var(--heading);
     cursor: pointer;
   }
 
   .sheet {
-    display: none;
+    display: flex;
+    visibility: hidden;
     position: absolute;
     top: 100%;
     right: -10px;
@@ -291,16 +346,35 @@ nav a.router-link-active,
     z-index: 1;
     flex-direction: column;
     align-items: stretch;
-    gap: 4px;
+    gap: var(--space-2xs);
     max-height: calc(100dvh - 64px);
-    padding: 8px 10px 14px;
+    padding: var(--space-xs) var(--space-sm) var(--space-md);
     overflow: auto;
     background: var(--surface);
-    box-shadow: 0 16px 28px rgb(15 23 42 / 0.16);
+    border-bottom: var(--rule-hair) solid var(--line);
+    opacity: 0;
+    translate: 0 -10px;
+    scale: 0.98;
+    transform-origin: 50% 0;
+    pointer-events: none;
+    transition:
+      opacity var(--dur-short) var(--ease-out),
+      translate var(--dur-short) var(--ease-out),
+      scale var(--dur-short) var(--ease-out),
+      visibility 0s linear var(--dur-short);
   }
 
   .bar.open .sheet {
-    display: flex;
+    visibility: visible;
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+    pointer-events: auto;
+    transition:
+      opacity var(--dur-short) var(--ease-out),
+      translate var(--dur-short) var(--ease-out),
+      scale var(--dur-short) var(--ease-out),
+      visibility 0s linear 0s;
   }
 
   nav,
@@ -315,17 +389,46 @@ nav a.router-link-active,
   .actions button,
   .theme {
     min-height: 44px;
-    padding: 0 8px;
+    padding: 0 var(--space-xs);
     font-size: 15px;
   }
 
   .backdrop {
     display: block;
+    visibility: hidden;
     position: fixed;
     inset: 0;
     z-index: 0;
-    background: rgb(15 23 42 / 0.28);
+    background: color-mix(in oklab, var(--color-ink) 28%, transparent);
+    opacity: 0;
+    pointer-events: none;
     cursor: pointer;
+    transition:
+      opacity var(--dur-short) var(--ease-out),
+      visibility 0s linear var(--dur-short);
+  }
+
+  .header.open .backdrop {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition:
+      opacity var(--dur-short) var(--ease-out),
+      visibility 0s linear 0s;
+  }
+}
+
+@media (max-width: 720px) and (prefers-reduced-motion: reduce) {
+  .sheet,
+  .bar.open .sheet,
+  .backdrop,
+  .header.open .backdrop {
+    transition: none;
+  }
+
+  .sheet {
+    translate: none;
+    scale: none;
   }
 }
 </style>

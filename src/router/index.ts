@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { setupProgress } from '@/plugins/progress'
 import { useSessionStore } from '@/stores/session'
 
 const router = createRouter({
@@ -34,6 +35,11 @@ const router = createRouter({
       path: '/about',
       name: 'about',
       component: () => import('@/views/AboutView.vue'),
+    },
+    {
+      path: '/stats',
+      name: 'stats',
+      component: () => import('@/views/StatsView.vue'),
     },
     {
       path: '/anniversaries',
@@ -80,7 +86,13 @@ router.beforeEach(async (to) => {
   if (to.name === 'login' && session.user) {
     return typeof to.query.redirect === 'string' ? to.query.redirect : { name: 'timeline' }
   }
+  if (to.name === 'user' && session.user) {
+    const id = Number(Array.isArray(to.params.id) ? to.params.id[0] : to.params.id)
+    if (id === session.user.id) return { name: 'profile' }
+  }
   return true
 })
+
+setupProgress(router)
 
 export default router
