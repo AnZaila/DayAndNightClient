@@ -8,7 +8,7 @@ import { useSessionStore } from '@/stores/session'
 import { useSiteStore } from '@/stores/site'
 import { setUnauthorizedHandler } from '@/utils/request'
 
-import '@/assets/styles/tokens.scss'
+import '@/assets/styles/tokens.css'
 import '@/assets/styles/base.scss'
 import '@/assets/styles/controls.scss'
 import '@/assets/styles/page.scss'

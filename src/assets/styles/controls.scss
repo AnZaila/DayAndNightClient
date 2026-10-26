@@ -2,10 +2,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--space-sm);
   width: 100%;
   min-height: 40px;
-  padding: 8px 12px;
+  padding: var(--space-xs) var(--space-sm);
   background: var(--field);
   border-radius: var(--radius);
   color: var(--heading);
@@ -34,11 +34,19 @@
   color: var(--muted);
 }
 
+.caret {
+  transition: rotate var(--dur-short) var(--ease-out);
+}
+
+.soft-trigger[data-state='open'] .caret {
+  rotate: 180deg;
+}
+
 .soft-menu {
-  z-index: 40;
+  z-index: calc(var(--z-sticky) + 1);
   width: var(--reka-select-trigger-width);
   max-height: 260px;
-  padding: 6px;
+  padding: var(--space-xs);
   overflow: auto;
   background: var(--surface);
   border-radius: var(--radius);
@@ -49,7 +57,7 @@
   display: flex;
   align-items: center;
   min-height: 36px;
-  padding: 6px 10px;
+  padding: var(--space-xs) var(--space-sm);
   border-radius: 10px;
   color: var(--heading);
   cursor: pointer;
@@ -65,25 +73,44 @@
   }
 }
 
+[data-reka-popper-content-wrapper]:has(.soft-calendar) {
+  width: 320px;
+  min-width: 0 !important;
+}
+
+@media (max-width: 360px) {
+  [data-reka-popper-content-wrapper]:has(.soft-calendar),
+  .soft-calendar {
+    width: 288px;
+  }
+}
+
 .soft-calendar {
-  z-index: 40;
-  width: min(300px, calc(100vw - 28px));
-  padding: 12px;
+  z-index: calc(var(--z-sticky) + 1);
+  width: 320px;
+  padding: var(--space-sm);
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-hover);
 
   table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: separate;
-    border-spacing: 3px;
+    border-spacing: 0;
+  }
+
+  th,
+  td {
+    width: calc(100% / 7);
+    padding: 2px;
+    text-align: center;
   }
 
   th {
     color: var(--muted);
     font-size: 12px;
     font-weight: 500;
-    text-align: center;
   }
 }
 
@@ -91,13 +118,54 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
 }
 
 .soft-cal-heading {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 var(--space-2xs);
+  border-radius: 10px;
   color: var(--heading);
   font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--field);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.soft-cal-pick {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2xs);
+}
+
+.soft-cal-chip {
+  min-height: 44px;
+  border-radius: 10px;
+  color: var(--heading);
+  cursor: pointer;
+
+  &[data-outside] {
+    color: var(--faint);
+  }
+
+  &[data-selected] {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+  }
 }
 
 .soft-cal-nav,
@@ -122,9 +190,10 @@
 .soft-cal-day {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  margin: 0 auto;
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  margin: 0;
   border-radius: 10px;
   color: var(--heading);
   cursor: pointer;
@@ -151,7 +220,7 @@
 .check {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-xs);
   min-height: 36px;
   color: var(--heading);
   cursor: pointer;
@@ -186,7 +255,7 @@
 .switch {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-xs);
   min-height: 36px;
   color: var(--heading);
   cursor: pointer;
@@ -197,7 +266,7 @@
   flex: none;
   width: 40px;
   height: 22px;
-  padding: 2px;
+  padding: var(--space-3xs);
   border-radius: 999px;
   background: var(--field);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -234,9 +303,160 @@
   }
 }
 
+.overlay[data-state='open'],
+.overlay[data-state='closed'],
+.soft-menu[data-state='open'],
+.soft-menu[data-state='closed'],
+.soft-calendar[data-state='open'],
+.soft-calendar[data-state='closed'],
+.content[data-state='open'],
+.content[data-state='closed'],
+.frame[data-state='open'],
+.frame[data-state='closed'] {
+  animation-duration: var(--dur-short);
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+
+.overlay[data-state='open'] {
+  animation-name: veil-in;
+}
+
+.overlay[data-state='closed'] {
+  animation-name: veil-out;
+}
+
+.soft-menu,
+.soft-calendar {
+  transform-origin: var(--reka-select-content-transform-origin, var(--reka-popover-content-transform-origin, top));
+}
+
+.soft-menu[data-state='open'],
+.soft-calendar[data-state='open'] {
+  animation-name: lift-in;
+}
+
+.soft-menu[data-state='closed'],
+.soft-calendar[data-state='closed'] {
+  animation-name: lift-out;
+}
+
+.content[data-state='open'] {
+  animation-name: rise-in;
+}
+
+.content[data-state='closed'] {
+  animation-name: rise-out;
+}
+
+.frame[data-state='open'] {
+  animation-name: frame-in;
+}
+
+.frame[data-state='closed'] {
+  animation-name: frame-out;
+}
+
+@keyframes veil-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes veil-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes lift-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+    scale: 0.98;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes lift-out {
+  from {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+
+  to {
+    opacity: 0;
+    translate: 0 6px;
+    scale: 0.98;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes rise-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.98);
+  }
+}
+
+@keyframes frame-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes frame-out {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+
+  to {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .switch-track,
-  .switch-thumb {
+  .switch-thumb,
+  .caret {
     transition: none;
   }
 }

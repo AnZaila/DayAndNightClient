@@ -17,6 +17,6 @@ import AppToast from '@/components/common/AppToast.vue'
 
 <style scoped lang="scss">
 main {
-  padding: 20px 0 56px;
+  padding: var(--space-lg) 0 var(--space-2xl);
 }
 </style>

@@ -1,0 +1,189 @@
+.soft-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  background: var(--field);
+  border-radius: var(--radius);
+  color: var(--heading);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--motion) ease-in-out,
+    box-shadow var(--motion) ease-in-out;
+}
+
+.soft-trigger:focus-visible,
+.soft-trigger[data-state='open'] {
+  outline: none;
+  background: var(--surface);
+  box-shadow: var(--ring);
+}
+
+.soft-trigger[data-empty] .soft-value {
+  color: var(--muted);
+}
+
+.soft-chevron {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--muted);
+}
+
+.soft-menu {
+  z-index: 40;
+  width: var(--reka-select-trigger-width);
+  max-height: 280px;
+  overflow: auto;
+  padding: 8px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hover);
+}
+
+.soft-item {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  color: var(--heading);
+  cursor: pointer;
+  outline: none;
+}
+
+.soft-item[data-highlighted] {
+  background: var(--primary-soft);
+}
+
+.soft-item[data-state='checked'] {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.soft-calendar {
+  z-index: 40;
+  width: min(320px, calc(100vw - 32px));
+  padding: 16px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-hover);
+}
+
+.soft-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.soft-cal-heading {
+  color: var(--heading);
+  font-weight: 600;
+}
+
+.soft-cal-nav {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--field);
+  color: var(--heading);
+  cursor: pointer;
+}
+
+.soft-cal-nav:focus-visible,
+.soft-cal-day:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.soft-calendar table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 4px;
+}
+
+.soft-calendar th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.soft-cal-day {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto;
+  border-radius: 12px;
+  color: var(--heading);
+  cursor: pointer;
+}
+
+.soft-cal-day[data-outside-view] {
+  color: var(--faint);
+}
+
+.soft-cal-day[data-today] {
+  background: var(--primary-soft);
+}
+
+.soft-cal-day[data-selected] {
+  background: var(--primary);
+  color: #fff;
+}
+
+.soft-cal-day[data-disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--heading);
+  cursor: pointer;
+}
+
+.check:focus-visible {
+  outline: none;
+}
+
+.check:focus-visible .check-box {
+  box-shadow: var(--ring);
+}
+
+.check-box {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  background: var(--field);
+}
+
+.check[data-state='checked'] .check-box {
+  background: var(--primary);
+  color: #fff;
+}
+
+.check-mark {
+  display: grid;
+}
+
+.file-names {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}

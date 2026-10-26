@@ -37,3 +37,8 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Hallmark redesign records
+.hallmark/before/
+.hallmark/compare.html
+.hallmark/lint.json
