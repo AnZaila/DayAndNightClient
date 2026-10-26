@@ -32,13 +32,16 @@ const rows = computed(() => Array.from({ length: Math.max(props.count, 1) }, (_,
           <SkeletonBone width="52px" height="12px" />
           <SkeletonBone width="12px" height="12px" circle />
         </div>
-        <article class="card piece">
-          <SkeletonBone height="148px" radius="12px" />
-          <SkeletonBone height="14px" />
-          <SkeletonBone width="68%" height="14px" />
-          <div class="byline">
-            <SkeletonBone width="22px" height="22px" circle />
-            <SkeletonBone width="56px" height="12px" />
+        <article class="card piece side">
+          <SkeletonBone class="shot" width="132px" height="100px" radius="12px" />
+          <div class="lines">
+            <SkeletonBone width="42%" height="12px" />
+            <SkeletonBone height="14px" />
+            <SkeletonBone width="68%" height="14px" />
+            <div class="byline">
+              <SkeletonBone width="22px" height="22px" circle />
+              <SkeletonBone width="56px" height="12px" />
+            </div>
           </div>
         </article>
       </div>
@@ -134,6 +137,22 @@ const rows = computed(() => Array.from({ length: Math.max(props.count, 1) }, (_,
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  &.side {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.shot {
+  flex: none;
+}
+
+@media (max-width: 640px) {
+  .shot {
+    width: 92px !important;
+    height: 76px !important;
+  }
 }
 
 .timeline {

@@ -46,7 +46,7 @@ async function saveSite() {
 
 <template>
   <div>
-    <section v-if="form" class="shell card form">
+    <section v-if="form" class="shell card wide">
       <h1 class="page-title">设置</h1>
       <p class="lede">整站的名字、日期，以及评论和弹幕怎么放出。</p>
       <form novalidate @submit.prevent="saveSite">
@@ -73,12 +73,6 @@ async function saveSite() {
         <AppButton type="submit" :loading="saving">保存设置</AppButton>
       </form>
     </section>
-    <Skeleton v-else class="shell" preset="fields" />
+    <Skeleton v-else class="shell wide" preset="fields" />
   </div>
 </template>
-
-<style scoped lang="scss">
-.form {
-  max-width: 680px;
-}
-</style>

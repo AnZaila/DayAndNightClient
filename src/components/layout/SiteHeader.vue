@@ -220,17 +220,16 @@ nav {
 nav a,
 .actions a,
 .actions button,
-.theme,
 .days,
-.me {
+.me,
+.theme {
   flex: none;
   white-space: nowrap;
 }
 
 nav a,
 .actions a,
-.actions button,
-.theme {
+.actions button {
   display: inline-flex;
   align-items: center;
   gap: 4px;

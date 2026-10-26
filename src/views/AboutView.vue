@@ -10,7 +10,7 @@ const { site } = storeToRefs(useSiteStore())
 
 <template>
   <div>
-    <section v-if="site" class="shell card about">
+    <section v-if="site" class="shell card wide about">
       <p class="kicker">
         <Heart :size="16" />
         在一起
@@ -27,7 +27,7 @@ const { site } = storeToRefs(useSiteStore())
         </WaveLink>
       </div>
     </section>
-    <Skeleton v-else class="shell" preset="about" />
+    <Skeleton v-else class="shell wide" preset="about" />
   </div>
 </template>
 
@@ -37,7 +37,6 @@ const { site } = storeToRefs(useSiteStore())
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-  max-width: 640px;
 }
 
 .kicker,
@@ -63,7 +62,6 @@ h1 {
 }
 
 .body {
-  max-width: 38em;
   white-space: pre-wrap;
 }
 </style>

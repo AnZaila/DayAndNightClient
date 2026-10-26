@@ -49,7 +49,7 @@ function showYear(index: number) {
 </script>
 
 <template>
-  <section class="shell">
+  <section class="shell wide">
     <h1 class="page-title">时间轴</h1>
     <p class="lede">从最近往下读。</p>
     <p v-if="page > 0" class="hint tally">{{ total }} 篇</p>
