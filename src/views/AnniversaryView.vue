@@ -124,7 +124,7 @@ onMounted(load)
 </script>
 
 <template>
-  <section class="shell stack">
+  <section class="shell stack wide">
     <div class="card">
       <h1 class="page-title">纪念日</h1>
       <p class="lede">每年都会再来的日子。</p>
@@ -142,7 +142,12 @@ onMounted(load)
             <p v-if="item.note">{{ item.note }}</p>
             <p v-if="item.visibility === 'PRIVATE'" class="muted">仅双方可见</p>
           </div>
-          <AppButton v-if="session.user" variant="quiet" type="button" @click="askRemove(item.id)"
+          <AppButton
+            v-if="session.user"
+            variant="plain"
+            tone="danger"
+            type="button"
+            @click="askRemove(item.id)"
             >删除</AppButton
           >
         </li>
@@ -175,6 +180,7 @@ onMounted(load)
       title="删除这个纪念日？"
       description="删掉之后找不回来。"
       confirm-label="删除"
+      tone="danger"
       @update:open="closeConfirm"
       @confirm="confirmRemove"
     />

@@ -4,6 +4,7 @@ import { Eye, EyeOff, Heart, Trash2 } from '@lucide/vue'
 import AppButton from '@/components/common/AppButton.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import ProfileLink from '@/components/common/ProfileLink.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
 import type { Comment } from '@/types/comment'
 import { formatDateTime } from '@/utils/text'
@@ -65,9 +66,13 @@ function confirmRemove() {
   <ul v-if="comments.length && threaded" class="list">
     <li v-for="thread in threads" :key="thread.root.id" class="thread">
       <article class="comment">
-        <UserAvatar :src="thread.root.avatarUrl" :name="thread.root.nickname" :size="36" />
+        <ProfileLink :user-id="thread.root.userId">
+          <UserAvatar :src="thread.root.avatarUrl" :name="thread.root.nickname" :size="36" />
+        </ProfileLink>
         <div class="body">
-          <strong>{{ thread.root.nickname }}</strong>
+          <ProfileLink :user-id="thread.root.userId">
+            <strong>{{ thread.root.nickname }}</strong>
+          </ProfileLink>
           <p class="text">{{ thread.root.content }}</p>
           <div class="meta">
             <span class="muted">{{ formatDateTime(thread.root.createdAt) }}</span>
@@ -87,7 +92,7 @@ function confirmRemove() {
                 v-if="thread.root.status === 'VISIBLE'"
                 v-wave
                 type="button"
-                class="text-btn"
+                class="text-btn warn"
                 @click="emit('hide', thread.root.id)"
               >
                 <EyeOff :size="14" /> 隐藏
@@ -96,12 +101,17 @@ function confirmRemove() {
                 v-else
                 v-wave
                 type="button"
-                class="text-btn"
+                class="text-btn ok"
                 @click="emit('show', thread.root.id)"
               >
                 <Eye :size="14" /> 显示
               </button>
-              <button v-wave type="button" class="text-btn" @click="askRemove(thread.root.id)">
+              <button
+                v-wave
+                type="button"
+                class="text-btn danger"
+                @click="askRemove(thread.root.id)"
+              >
                 <Trash2 :size="14" /> 删除
               </button>
             </template>
@@ -112,9 +122,13 @@ function confirmRemove() {
               :key="reply.id"
               class="comment"
             >
-              <UserAvatar :src="reply.avatarUrl" :name="reply.nickname" :size="24" />
+              <ProfileLink :user-id="reply.userId">
+                <UserAvatar :src="reply.avatarUrl" :name="reply.nickname" :size="24" />
+              </ProfileLink>
               <div class="body">
-                <strong>{{ reply.nickname }}</strong>
+                <ProfileLink :user-id="reply.userId">
+                  <strong>{{ reply.nickname }}</strong>
+                </ProfileLink>
                 <p class="text">
                   <template v-if="reply.replyToNickname">
                     回复 <span class="at">{{ reply.replyToNickname }}</span>
@@ -132,7 +146,7 @@ function confirmRemove() {
                       v-if="reply.status === 'VISIBLE'"
                       v-wave
                       type="button"
-                      class="text-btn"
+                      class="text-btn warn"
                       @click="emit('hide', reply.id)"
                     >
                       隐藏
@@ -141,12 +155,17 @@ function confirmRemove() {
                       v-else
                       v-wave
                       type="button"
-                      class="text-btn"
+                      class="text-btn ok"
                       @click="emit('show', reply.id)"
                     >
                       显示
                     </button>
-                    <button v-wave type="button" class="text-btn" @click="askRemove(reply.id)">
+                    <button
+                      v-wave
+                      type="button"
+                      class="text-btn danger"
+                      @click="askRemove(reply.id)"
+                    >
                       删除
                     </button>
                   </template>
@@ -196,9 +215,13 @@ function confirmRemove() {
   <ul v-else-if="comments.length" class="list">
     <li v-for="comment in comments" :key="comment.id">
       <div class="who">
-        <UserAvatar :src="comment.avatarUrl" :name="comment.nickname" :size="32" />
+        <ProfileLink :user-id="comment.userId">
+          <UserAvatar :src="comment.avatarUrl" :name="comment.nickname" :size="32" />
+        </ProfileLink>
         <div>
-          <strong>{{ comment.nickname }}</strong>
+          <ProfileLink :user-id="comment.userId">
+            <strong>{{ comment.nickname }}</strong>
+          </ProfileLink>
           <span class="muted"> · {{ formatDateTime(comment.createdAt) }}</span>
           <span v-if="comment.status === 'HIDDEN'" class="muted"> · 已隐藏</span>
           <span v-if="comment.likeCount" class="muted"> · {{ comment.likeCount }} 赞</span>
@@ -219,18 +242,25 @@ function confirmRemove() {
         <template v-if="canModerate">
           <AppButton
             v-if="comment.status === 'VISIBLE'"
-            variant="quiet"
+            variant="plain"
+            tone="warning"
             type="button"
             @click="emit('hide', comment.id)"
           >
             <EyeOff :size="16" />
             隐藏
           </AppButton>
-          <AppButton v-else variant="quiet" type="button" @click="emit('show', comment.id)">
+          <AppButton
+            v-else
+            variant="plain"
+            tone="success"
+            type="button"
+            @click="emit('show', comment.id)"
+          >
             <Eye :size="16" />
             显示
           </AppButton>
-          <AppButton variant="quiet" type="button" @click="askRemove(comment.id)">
+          <AppButton variant="plain" tone="danger" type="button" @click="askRemove(comment.id)">
             <Trash2 :size="16" />
             删除
           </AppButton>
@@ -243,6 +273,7 @@ function confirmRemove() {
     title="删除这条评论？"
     description="删掉之后找不回来。"
     confirm-label="删除"
+    tone="danger"
     @update:open="closeConfirm"
     @confirm="confirmRemove"
   />
@@ -314,6 +345,24 @@ function confirmRemove() {
 
   &:hover {
     color: var(--heading);
+  }
+
+  &.warn {
+    color: var(--warning);
+  }
+
+  &.ok {
+    color: var(--ok);
+  }
+
+  &.danger {
+    color: var(--danger);
+  }
+
+  &.warn:hover,
+  &.ok:hover,
+  &.danger:hover {
+    filter: brightness(1.08);
   }
 }
 

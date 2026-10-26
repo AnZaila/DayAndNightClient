@@ -23,6 +23,7 @@ import ScrollSentinel from '@/components/common/ScrollSentinel.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import MapPoint from '@/components/common/MapPoint.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import ProfileLink from '@/components/common/ProfileLink.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import ImageLightbox from '@/components/common/ImageLightbox.vue'
@@ -76,10 +77,16 @@ async function load() {
   }
 }
 
-async function submitComment(nickname: string | null, content: string) {
+async function submitComment(nickname: string | null, content: string, avatarUrl: string | null) {
   commentError.value = null
   try {
-    const created = await createComment(postId.value, nickname, content, replyTarget.value?.id)
+    const created = await createComment(
+      postId.value,
+      nickname,
+      content,
+      replyTarget.value?.id,
+      avatarUrl,
+    )
     if (created.status === 'VISIBLE' || session.user) {
       if (created.parentId == null) {
         thread.items.value = [created, ...thread.items.value]
@@ -96,9 +103,9 @@ async function submitComment(nickname: string | null, content: string) {
   }
 }
 
-async function sendDanmaku(nickname: string | null, content: string) {
+async function sendDanmaku(nickname: string | null, content: string, avatarUrl: string | null) {
   try {
-    const created = await createPostDanmaku(postId.value, nickname, content)
+    const created = await createPostDanmaku(postId.value, nickname, content, avatarUrl)
     if (created.status === 'VISIBLE') notes.items.value = [created, ...notes.items.value]
     pushToast(created.status === 'VISIBLE' ? '已飞出去' : '已提交，待显示')
   } catch (cause) {
@@ -140,12 +147,17 @@ onMounted(load)
 
 <template>
   <div>
-    <div v-if="post" class="shell stack">
+    <div v-if="post" class="shell stack wide">
       <article class="card detail">
         <div class="author">
-          <UserAvatar :src="post.authorAvatarUrl" :name="post.displayName" :size="42" />
+          <ProfileLink :user-id="post.authorId">
+            <UserAvatar :src="post.authorAvatarUrl" :name="post.displayName" :size="42" />
+          </ProfileLink>
           <div>
-            <h1>{{ post.displayName }}写下的这一天</h1>
+            <h1>
+              <ProfileLink :user-id="post.authorId">{{ post.displayName }}</ProfileLink
+              >写下的这一天
+            </h1>
             <time :datetime="post.happenedAt">{{ formatDate(post.happenedAt) }}</time>
           </div>
         </div>
@@ -186,7 +198,9 @@ onMounted(load)
           <WaveLink class="btn quiet" :to="{ name: 'write', params: { id: post.id } }"
             >修改这篇</WaveLink
           >
-          <AppButton variant="quiet" type="button" @click="confirmOpen = true">删除这篇</AppButton>
+          <AppButton variant="plain" tone="danger" type="button" @click="confirmOpen = true"
+            >删除这篇</AppButton
+          >
         </div>
         <DanmakuStage :items="flying" @like="likeNote" @need-more="notes.more" />
       </article>
@@ -251,12 +265,15 @@ onMounted(load)
         title="删除这篇？"
         description="删掉之后找不回来。"
         confirm-label="删除"
+        tone="danger"
         @confirm="removePost"
       />
       <ImageLightbox v-model:open="lightboxOpen" :src="active?.url || ''" :alt="alt" />
     </div>
-    <p v-else-if="error" class="shell error">{{ error }}。如果这是仅双方的帖子，需要先登录。</p>
-    <Skeleton v-else class="shell" preset="detail" />
+    <p v-else-if="error" class="shell wide error">
+      {{ error }}。如果这是仅双方的帖子，需要先登录。
+    </p>
+    <Skeleton v-else class="shell wide" preset="detail" />
   </div>
 </template>
 

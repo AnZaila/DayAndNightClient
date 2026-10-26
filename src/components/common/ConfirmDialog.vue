@@ -17,11 +17,13 @@ withDefaults(
     description?: string
     confirmLabel?: string
     cancelLabel?: string
+    tone?: 'primary' | 'success' | 'warning' | 'danger'
   }>(),
   {
     description: '',
     confirmLabel: '确认',
     cancelLabel: '留下',
+    tone: 'primary',
   },
 )
 
@@ -48,7 +50,7 @@ function confirm() {
           <DialogClose as-child>
             <AppButton variant="quiet">{{ cancelLabel }}</AppButton>
           </DialogClose>
-          <AppButton @click="confirm">{{ confirmLabel }}</AppButton>
+          <AppButton :tone="tone" @click="confirm">{{ confirmLabel }}</AppButton>
         </div>
       </DialogContent>
     </DialogPortal>

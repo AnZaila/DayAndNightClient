@@ -61,7 +61,7 @@ async function confirmRemoveNote() {
 </script>
 
 <template>
-  <div class="shell stack page">
+  <div class="shell stack wide">
     <section class="card">
       <h1 class="page-title">评论管理</h1>
       <p class="lede">别人留下的。</p>
@@ -120,7 +120,8 @@ async function confirmRemoveNote() {
           <div class="row">
             <AppButton
               v-if="note.status === 'VISIBLE'"
-              variant="quiet"
+              variant="plain"
+              tone="warning"
               type="button"
               @click="setNoteStatus(note.id, 'HIDDEN')"
             >
@@ -128,13 +129,16 @@ async function confirmRemoveNote() {
             </AppButton>
             <AppButton
               v-else
-              variant="quiet"
+              variant="plain"
+              tone="success"
               type="button"
               @click="setNoteStatus(note.id, 'VISIBLE')"
             >
               显示
             </AppButton>
-            <AppButton variant="quiet" type="button" @click="pendingNote = note.id">删除</AppButton>
+            <AppButton variant="plain" tone="danger" type="button" @click="pendingNote = note.id"
+              >删除</AppButton
+            >
           </div>
         </li>
       </ul>
@@ -151,6 +155,7 @@ async function confirmRemoveNote() {
       title="删除这条弹幕？"
       description="删掉之后找不回来。"
       confirm-label="删除"
+      tone="danger"
       @update:open="closeNoteConfirm"
       @confirm="confirmRemoveNote"
     />
@@ -158,10 +163,6 @@ async function confirmRemoveNote() {
 </template>
 
 <style scoped lang="scss">
-.page {
-  width: min(760px, calc(100% - 28px));
-}
-
 h2 {
   margin: 0 0 6px;
   color: var(--heading);

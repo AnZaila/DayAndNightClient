@@ -3,12 +3,13 @@ import Spinner from '@/components/common/Spinner.vue'
 
 withDefaults(
   defineProps<{
-    variant?: 'solid' | 'quiet'
+    variant?: 'solid' | 'plain' | 'quiet'
+    tone?: 'primary' | 'success' | 'warning' | 'danger'
     type?: 'button' | 'submit'
     disabled?: boolean
     loading?: boolean
   }>(),
-  { variant: 'solid', type: 'button', disabled: false, loading: false },
+  { variant: 'solid', tone: 'primary', type: 'button', disabled: false, loading: false },
 )
 </script>
 
@@ -18,7 +19,7 @@ withDefaults(
     :type="type"
     :disabled="disabled || loading"
     :aria-busy="loading || undefined"
-    :class="['btn', variant]"
+    :class="['btn', variant, variant === 'quiet' ? '' : tone]"
   >
     <Spinner v-if="loading" />
     <slot />

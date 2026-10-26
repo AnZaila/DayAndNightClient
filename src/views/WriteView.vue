@@ -5,12 +5,13 @@ import { Globe, Lock, MapPin } from '@lucide/vue'
 import { createPost, deletePostMedia, fetchPost, updatePost, uploadPostCover } from '@/api/post'
 import AppButton from '@/components/common/AppButton.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
-import AppCheckbox from '@/components/common/AppCheckbox.vue'
+import AppSwitch from '@/components/common/AppSwitch.vue'
 import AppDatePicker from '@/components/common/AppDatePicker.vue'
 import AppFilePicker from '@/components/common/AppFilePicker.vue'
 import AppSelect from '@/components/common/AppSelect.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import MapPoint from '@/components/common/MapPoint.vue'
+import ProfileLink from '@/components/common/ProfileLink.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import DiaryIcon from '@/components/post/DiaryIcon.vue'
 import PostBody from '@/components/post/PostBody.vue'
@@ -301,7 +302,7 @@ async function removeMedia(mediaId: number) {
           <span>时间轴</span>
           <AppSelect v-model="status" :options="statusOptions" />
         </div>
-        <AppCheckbox v-model="commentsOpen">允许评论</AppCheckbox>
+        <AppSwitch v-model="commentsOpen">允许评论</AppSwitch>
       </template>
       <div class="field">
         <span>封面</span>
@@ -321,7 +322,7 @@ async function removeMedia(mediaId: number) {
       <div v-else-if="existing.length" class="photos">
         <figure v-for="media in existing" :key="media.id">
           <img :src="media.url" alt="" />
-          <AppButton variant="quiet" type="button" @click="askRemoveMedia(media.id)"
+          <AppButton variant="plain" tone="danger" type="button" @click="askRemoveMedia(media.id)"
             >移除</AppButton
           >
         </figure>
@@ -333,7 +334,9 @@ async function removeMedia(mediaId: number) {
       <p class="kicker">预览</p>
       <time>{{ formatDate(happenedAtValue()) }}</time>
       <div class="author">
-        <UserAvatar :src="session.user?.avatarUrl" :name="session.user?.displayName" :size="36" />
+        <ProfileLink :user-id="session.user?.id">
+          <UserAvatar :src="session.user?.avatarUrl" :name="session.user?.displayName" :size="36" />
+        </ProfileLink>
         <h2>{{ session.user?.displayName || '你' }}写下的这一天</h2>
       </div>
       <div class="chips">
@@ -364,6 +367,7 @@ async function removeMedia(mediaId: number) {
       title="移除这张封面？"
       description="删掉之后找不回来。"
       confirm-label="移除"
+      tone="danger"
       @update:open="closeMediaConfirm"
       @confirm="confirmRemoveMedia"
     />
@@ -373,10 +377,10 @@ async function removeMedia(mediaId: number) {
 <style scoped lang="scss">
 .compose {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
-  width: min(1120px, calc(100% - 28px));
+  width: min(1640px, calc(100% - 28px));
   margin: 0 auto;
 }
 
@@ -386,6 +390,7 @@ async function removeMedia(mediaId: number) {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: var(--surface);
 }
 
 .kicker,
