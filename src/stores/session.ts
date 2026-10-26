@@ -22,9 +22,17 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   async function logout() {
-    await logoutRequest()
+    try {
+      await logoutRequest()
+    } catch {
+      // 服务端会话已经不在时，本地仍然退出。
+    }
     user.value = null
   }
 
-  return { user, ready, refresh, login, logout }
+  function expire() {
+    user.value = null
+  }
+
+  return { user, ready, refresh, login, logout, expire }
 })

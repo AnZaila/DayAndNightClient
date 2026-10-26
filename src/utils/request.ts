@@ -29,12 +29,20 @@ export const request = axios.create({
   xsrfHeaderName: 'X-XSRF-TOKEN',
 })
 
+let onUnauthorized: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: () => void) {
+  onUnauthorized = handler
+}
+
 request.interceptors.response.use(
   (response) => response,
   (error: AxiosError<Problem>) => {
     const status = error.response?.status ?? 0
     const detail = error.response?.data?.detail || error.response?.data?.title || '请求失败'
     const config = error.config as AxiosRequestConfig | undefined
+    const loggingIn = (config?.url ?? '').includes('/auth/login')
+    if (status === 401 && !loggingIn) onUnauthorized?.()
     if (!config?.skipErrorToast) pushToast(detail, 'error')
     return Promise.reject(new ApiError(detail, status))
   },
