@@ -1,8 +1,8 @@
 /* Hallmark · shape: app screen · genre: editorial · theme: brand · redesign: full
  * nav: top bar kept · signature: the timeline of days · states: loading, empty, error
- * axes: cool paper/serif/indigo · posture: restrained · contrast: pass · modes: light+dark · v2.0.0 */
+ * axes: neutral paper/serif/deepseek blue · posture: restrained · contrast: pass · modes: light+dark · v4.0.0 */
 /* Hallmark · pre-emit critique: P4 H4 E3 S4 R4 V4 · weakest: E, routes and fields stay so the diary wiring is untouched */
-/* Hallmark · waive 74 · pre-flight found #6366f1 · the timeline keeps the indigo the owners named as its accent */
+/* 主色沿用 DeepSeek 的 #4D6BFE：纸面回到中性白，强调色只此一处。 */
 :root,
 [data-theme='light'] {
   color-scheme: light;
@@ -37,17 +37,17 @@
   --container: 1120px;
   --measure-write: 1640px;
   --gutter: 14px;
-  --color-paper: oklch(97.2% 0.008 277);
-  --color-paper-2: oklch(99% 0.006 277);
-  --color-paper-3: oklch(95% 0.014 277);
-  --color-ink: oklch(27% 0.04 277);
-  --color-ink-2: oklch(36% 0.035 277);
-  --color-muted: oklch(46% 0.03 277);
-  --color-faint: oklch(58% 0.028 277);
-  --color-rule: oklch(86% 0.016 277);
-  --color-accent: #6366f1;
+  --color-paper: #f7f8fa;
+  --color-paper-2: #ffffff;
+  --color-paper-3: #f0f2f5;
+  --color-ink: #1b1f27;
+  --color-ink-2: #333a45;
+  --color-muted: #5f6773;
+  --color-faint: #858d99;
+  --color-rule: #e5e7eb;
+  --color-accent: #4d6bfe;
   --color-accent-ink: #fffffe;
-  --color-focus: #6366f1;
+  --color-focus: #4d6bfe;
   --color-error: oklch(42% 0.14 10);
   --color-success: oklch(42% 0.1 160);
   --color-warning: oklch(46% 0.11 70);
@@ -80,15 +80,19 @@
   --muted: var(--color-muted);
   --faint: var(--color-faint);
   --primary: var(--color-accent);
-  --primary-fill: #6366f1;
+  --primary-fill: #4d6bfe;
   --on-primary: var(--color-accent-ink);
-  --primary-soft: color-mix(in oklab, var(--color-accent) 12%, transparent);
+  --primary-soft: color-mix(in oklab, #4d6bfe 14%, transparent);
   --ok: var(--color-success);
   --success-fill: oklch(48% 0.12 160);
   --warning: var(--color-warning);
   --warning-fill: oklch(62% 0.14 70);
   --danger: var(--color-error);
   --danger-fill: oklch(55% 0.19 15);
+  /* 图表分类色 */
+  --chart-2: #8ea2ff;
+  --chart-3: #d98a63;
+  --chart-4: #56a397;
   --ring: 0 0 0 3px color-mix(in oklab, var(--color-focus) 32%, transparent);
   --line: var(--color-rule);
   --radius: var(--radius-card);
@@ -101,30 +105,33 @@
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --color-paper: oklch(16% 0.014 277);
-  --color-paper-2: oklch(20.5% 0.016 277);
-  --color-paper-3: oklch(25% 0.02 277);
-  --color-ink: oklch(94% 0.012 277);
-  --color-ink-2: oklch(86% 0.02 277);
-  --color-muted: oklch(76% 0.028 277);
-  --color-faint: oklch(66% 0.03 277);
-  --color-rule: oklch(32% 0.02 277);
-  --color-accent: #6366f1;
+  --color-paper: #16181d;
+  --color-paper-2: #1c1f26;
+  --color-paper-3: #23272f;
+  --color-ink: #ecedf1;
+  --color-ink-2: #d3d7de;
+  --color-muted: #9ea6b2;
+  --color-faint: #7b8391;
+  --color-rule: #2c313a;
+  --color-accent: #8ea2ff;
   --color-accent-ink: #fffffe;
-  --color-focus: oklch(80% 0.09 277);
-  --primary: oklch(80% 0.09 277);
+  --color-focus: #8ea2ff;
+  --primary: #9aabff;
   --color-error: oklch(78% 0.1 10);
   --color-success: oklch(80% 0.1 160);
   --color-warning: oklch(82% 0.11 85);
-  --primary-fill: #6366f1;
-  --primary-soft: color-mix(in oklab, #6366f1 22%, transparent);
+  --primary-fill: #4d6bfe;
+  --primary-soft: color-mix(in oklab, #4d6bfe 24%, transparent);
   --success-fill: oklch(48% 0.12 160);
   --warning-fill: oklch(68% 0.13 75);
   --danger-fill: oklch(62% 0.18 15);
-  --shadow: 0 16px 34px oklch(8% 0.02 277 / 0.55);
-  --shadow-hover: 0 22px 42px oklch(6% 0.02 277 / 0.66);
-  --scrim: color-mix(in oklab, oklch(4% 0.01 277) 68%, transparent);
-  --scrim-strong: color-mix(in oklab, oklch(3% 0.01 277) 86%, transparent);
+  --chart-2: #8ea2ff;
+  --chart-3: #e0a37f;
+  --chart-4: #6fb7ab;
+  --shadow: 0 16px 34px oklch(8% 0.02 265 / 0.55);
+  --shadow-hover: 0 22px 42px oklch(6% 0.02 265 / 0.66);
+  --scrim: color-mix(in oklab, oklch(5% 0.01 265) 68%, transparent);
+  --scrim-strong: color-mix(in oklab, oklch(4% 0.01 265) 86%, transparent);
   --ring: 0 0 0 3px color-mix(in oklab, var(--color-focus) 45%, transparent);
 }
 
