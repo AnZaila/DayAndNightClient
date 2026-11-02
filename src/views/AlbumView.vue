@@ -77,9 +77,9 @@ async function remove() {
 <template>
   <section class="shell wide">
     <header class="mast">
-      <div>
+      <div class="heading">
         <h1 class="page-title">相册</h1>
-        <p class="lede">日子里的封面，和后来补上的照片，都放在这里。</p>
+        <p v-if="album.total.value > 0" class="count">{{ album.total.value }} 张</p>
       </div>
       <AppFilePicker
         v-if="session.user"
@@ -143,10 +143,28 @@ async function remove() {
 .mast {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+}
+
+.heading .page-title {
+  margin: 0;
+}
+
+.count {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .grid {
@@ -226,6 +244,24 @@ time {
 
 .go {
   left: var(--space-xs);
+  opacity: 0;
+  transform: translateY(-2px);
+  transition:
+    opacity var(--dur-short) var(--ease-out),
+    transform var(--dur-short) var(--ease-out);
+}
+
+li:hover .go,
+li:focus-within .go {
+  opacity: 1;
+  transform: none;
+}
+
+@media (hover: none) {
+  .go {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .drop {
