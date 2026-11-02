@@ -243,20 +243,14 @@ onMounted(load)
       </PostArticle>
       <section class="card">
         <h2>弹幕</h2>
-        <p class="lede">短短一句，从画面上飞过去。鼠标停在上面会暂停。</p>
         <DanmakuForm :send="sendDanmaku" />
       </section>
       <section id="comments" class="card">
         <h2>
           评论<span v-if="post.commentCount" class="count">{{ post.commentCount }}</span>
         </h2>
-        <p class="lede">
-          <template v-if="canComment && session.user"
-            >用「{{ session.user.displayName }}」留言。</template
-          >
-          <template v-else-if="canComment">留个昵称就行。</template>
-          <template v-else-if="!post.commentsOpen">评论已关闭。</template>
-          <template v-else>这篇不开放评论。</template>
+        <p v-if="!canComment" class="lede">
+          {{ post.commentsOpen ? '这篇不开放评论。' : '评论已关闭。' }}
         </p>
         <Skeleton
           v-if="thread.loading.value && thread.page.value === 0"
