@@ -76,10 +76,7 @@ function showYear(index: number) {
 <template>
   <section class="shell wide">
     <header class="mast">
-      <div>
-        <h1 class="page-title">时间轴</h1>
-        <p class="lede">{{ ascending ? '从最早往下读。置顶的仍在最上面。' : '从最近往下读。置顶的仍在最上面。' }}</p>
-      </div>
+      <h1 class="page-title">时间轴</h1>
       <p v-if="page > 0" class="count">{{ total }} 篇</p>
     </header>
     <div class="filters">
@@ -88,7 +85,9 @@ function showYear(index: number) {
         <button type="button" :class="{ on: mineOnly }" @click="showMine(true)">只看我的</button>
       </div>
       <div class="group">
-        <button type="button" :class="{ on: !ascending }" @click="showOrder(false)">从近到远</button>
+        <button type="button" :class="{ on: !ascending }" @click="showOrder(false)">
+          从近到远
+        </button>
         <button type="button" :class="{ on: ascending }" @click="showOrder(true)">从远到近</button>
       </div>
     </div>
@@ -129,19 +128,22 @@ function showYear(index: number) {
 <style scoped lang="scss">
 .mast {
   display: flex;
-  align-items: flex-end;
+  align-items: baseline;
   justify-content: space-between;
   gap: var(--space-md);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.mast .page-title {
+  margin: 0;
 }
 
 .count {
   margin: 0;
-  color: var(--heading);
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
+  color: var(--muted);
+  font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
-  line-height: 1;
+  white-space: nowrap;
 }
 
 .filters {

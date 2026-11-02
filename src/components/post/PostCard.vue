@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { EllipsisVertical, Pin } from '@lucide/vue'
-import {
-  PopoverContent,
-  PopoverPortal,
-  PopoverRoot,
-  PopoverTrigger,
-} from 'reka-ui'
+import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import { motion } from 'motion-v'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import ProfileLink from '@/components/common/ProfileLink.vue'
@@ -34,6 +29,10 @@ const session = useSessionStore()
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const excerpt = computed(() => plainText(props.post.excerpt))
 const when = computed(() => formatDate(props.post.happenedAt).replace(/ \d{2}:\d{2}:\d{2}$/, ''))
+const clock = computed(() => {
+  const value = props.post.happenedAt.match(/[T ](\d{2}:\d{2})/)?.[1] ?? ''
+  return value === '00:00' ? '' : value
+})
 const liked = ref(props.post.liked)
 const likeCount = ref(props.post.likeCount)
 const pinned = ref(props.post.pinned)
@@ -88,28 +87,33 @@ async function togglePin() {
         : { type: 'spring', stiffness: 420, damping: 28, delay: Math.min(index, 6) * 0.07 }
     "
   >
-    <article class="card post" :class="{ split: post.coverUrl, pinned }" @click="emit('open', post.id)">
+    <article
+      class="card post"
+      :class="{ split: post.coverUrl, pinned }"
+      @click="emit('open', post.id)"
+    >
       <div v-if="post.coverUrl" class="frame">
         <img :src="post.coverUrl" alt="" />
       </div>
       <div class="copy">
         <time v-if="showWhen" :datetime="post.happenedAt">{{ when }}</time>
-        <p>{{ excerpt || '点进去看这一篇。' }}</p>
+        <p class="head">{{ excerpt || '点进去看这一篇。' }}</p>
         <small class="facts">
           <ProfileLink :user-id="post.authorId">
             <UserAvatar :src="post.authorAvatarUrl" :name="post.displayName" :size="22" />
             <span>{{ post.displayName }}</span>
           </ProfileLink>
-          <span v-if="post.mood" class="mark"
-            ><DiaryIcon kind="mood" :value="post.mood" :size="13" /> {{ post.mood }}</span
-          >
-          <span v-if="post.weather" class="mark"
-            ><DiaryIcon kind="weather" :value="post.weather" :size="13" /> {{ post.weather }}</span
-          >
-          <span v-if="post.visibility === 'PRIVATE'">仅双方</span>
-          <span v-if="pinned" class="mark">
-            <Pin :size="13" fill="currentColor" /> 置顶
+          <span v-if="post.mood" class="tag tag-mood">
+            <DiaryIcon kind="mood" :value="post.mood" :size="13" />{{ post.mood }}
           </span>
+          <span v-if="post.weather" class="tag tag-weather">
+            <DiaryIcon kind="weather" :value="post.weather" :size="13" />{{ post.weather }}
+          </span>
+          <span v-if="post.visibility === 'PRIVATE'" class="tag tag-private">仅双方</span>
+          <span v-if="pinned" class="tag tag-pinned"
+            ><Pin :size="12" fill="currentColor" />置顶</span
+          >
+          <span v-if="clock" class="tag tag-time">{{ clock }}</span>
           <PopoverRoot v-if="session.user" v-model:open="menuOpen">
             <PopoverTrigger as-child>
               <button type="button" class="more" aria-label="更多" @pointerdown.stop @click.stop>
@@ -126,13 +130,15 @@ async function togglePin() {
             </PopoverPortal>
           </PopoverRoot>
         </small>
-        <PostStats
-          :view-count="post.viewCount"
-          :like-count="likeCount"
-          :comment-count="post.commentCount"
-          :liked="liked"
-          @like="toggleLike"
-        />
+        <div class="foot">
+          <PostStats
+            :view-count="post.viewCount"
+            :like-count="likeCount"
+            :comment-count="post.commentCount"
+            :liked="liked"
+            @like="toggleLike"
+          />
+        </div>
       </div>
     </article>
   </motion.div>
@@ -166,8 +172,8 @@ async function togglePin() {
 }
 
 .frame {
-  width: 148px;
-  height: 112px;
+  width: 200px;
+  height: 140px;
   flex: none;
   overflow: hidden;
   border-radius: var(--radius);
@@ -198,13 +204,25 @@ time {
   font-size: 12px;
 }
 
-p {
+.head {
   display: -webkit-box;
   overflow: hidden;
   color: var(--heading);
+  font-size: 15.5px;
+  line-height: 1.65;
+  letter-spacing: 0.01em;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+.facts {
+  gap: var(--space-2xs) var(--space-xs);
+}
+
+.foot {
+  padding-top: var(--space-2xs);
+  border-top: var(--rule-hair) solid var(--line);
 }
 
 small {
@@ -214,12 +232,6 @@ small {
   gap: var(--space-xs);
   color: var(--muted);
   font-size: 13px;
-}
-
-.mark {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2xs);
 }
 
 .more {
@@ -252,5 +264,4 @@ small {
     transform: none;
   }
 }
-
 </style>
