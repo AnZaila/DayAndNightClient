@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { PenLine } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import PostCard from '@/components/post/PostCard.vue'
+import HomeHero from '@/components/home/HomeHero.vue'
 import ScrollSentinel from '@/components/common/ScrollSentinel.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
@@ -82,25 +83,17 @@ function showYear(index: number) {
 
 <template>
   <section class="shell wide">
+    <HomeHero
+      :day="todayLabel"
+      :meta="todayMeta"
+      :posts="total"
+      :days="daysTogether"
+      slogan="今天也值得记下来"
+    />
     <header class="mast">
       <div class="mast-head">
         <h1 class="page-title">时间轴</h1>
         <p v-if="page > 0" class="count">{{ total }} 篇</p>
-      </div>
-      <div class="ledger">
-        <p class="ledger-label">今天</p>
-        <p class="ledger-day">{{ todayLabel }}</p>
-        <p class="ledger-meta">{{ todayMeta }}</p>
-        <dl class="ledger-facts">
-          <div>
-            <dt>记下</dt>
-            <dd>{{ total }} 篇</dd>
-          </div>
-          <div v-if="daysTogether">
-            <dt>在一起</dt>
-            <dd>{{ daysTogether }} 天</dd>
-          </div>
-        </dl>
       </div>
     </header>
     <div class="filters">
@@ -174,96 +167,6 @@ function showYear(index: number) {
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-/* 今天：一条台历横带，撑住首页上半部分的空白 */
-.ledger {
-  position: relative;
-  display: grid;
-  grid-template-columns: auto auto 1fr auto;
-  gap: var(--space-xs) var(--space-md);
-  align-items: baseline;
-  padding: var(--space-sm) var(--space-lg);
-  overflow: hidden;
-  background:
-    radial-gradient(90% 220% at 92% 0%, var(--primary-soft), transparent 60%), var(--surface);
-  border: var(--rule-hair) solid var(--line);
-  border-radius: var(--radius-lg);
-
-  &::after {
-    content: '';
-    position: absolute;
-    right: 10px;
-    bottom: -30px;
-    width: 150px;
-    height: 150px;
-    background: url('/logo/at-mark.png') center / contain no-repeat;
-    opacity: 0.07;
-    rotate: -8deg;
-    pointer-events: none;
-  }
-}
-
-.ledger-label {
-  margin: 0;
-  color: var(--primary);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-}
-
-.ledger-day {
-  margin: 0;
-  color: var(--heading);
-  font-family: var(--font-display);
-  font-size: clamp(26px, 3vw, 34px);
-  letter-spacing: var(--tracking-display);
-  line-height: 1.1;
-}
-
-.ledger-meta {
-  margin: 0;
-  color: var(--faint);
-  font-size: var(--text-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.ledger-facts {
-  display: flex;
-  gap: var(--space-lg);
-  justify-self: end;
-  margin: 0;
-  text-align: right;
-
-  div {
-    display: grid;
-    gap: 2px;
-  }
-
-  dt {
-    color: var(--faint);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-align: left;
-  }
-
-  dd {
-    margin: 0;
-    color: var(--heading);
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-}
-
-.end {
-  margin: var(--space-lg) 0 var(--space-2xs);
-  color: var(--faint);
-  font-family: var(--font-display);
-  font-size: 18px;
-  letter-spacing: 0.4em;
-  text-align: center;
 }
 
 .filters {
@@ -410,32 +313,6 @@ li:hover .node {
   li:hover .node {
     animation: none;
     transform: none;
-  }
-}
-
-@media (max-width: 880px) {
-  .ledger {
-    grid-template-columns: minmax(0, 1fr) auto;
-    padding: var(--space-sm) var(--space-md);
-
-    &::after {
-      width: 104px;
-      height: 104px;
-      bottom: -26px;
-    }
-  }
-
-  .ledger-label,
-  .ledger-day,
-  .ledger-meta {
-    grid-column: 1;
-  }
-
-  .ledger-facts {
-    grid-row: 1 / span 3;
-    grid-column: 2;
-    justify-self: end;
-    gap: var(--space-md);
   }
 }
 
