@@ -18,7 +18,10 @@ onMounted(() => {
   watchTheme = new MutationObserver(() => {
     paint.value += 1
   })
-  watchTheme.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  watchTheme.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  })
 })
 
 onBeforeUnmount(() => {
@@ -39,6 +42,19 @@ function token(name: string, fallback: string) {
   return value || fallback
 }
 
+function accent() {
+  const dark = document.documentElement.dataset.theme === 'dark'
+  return dark ? token('--primary', '#b9b6ff') : token('--primary-fill', '#6366f1')
+}
+
+const range = computed(() => {
+  const months = stats.value?.months ?? []
+  const first = months[0]
+  const last = months[months.length - 1]
+  if (!first || !last || months.length < 2) return ''
+  return `${monthLabel(first.month)} — ${monthLabel(last.month)}`
+})
+
 function monthLabel(value: string) {
   const [year, month] = value.split('-')
   if (!year || !month) return value
@@ -57,22 +73,23 @@ const figures = computed(() => {
 })
 
 const monthsOption = computed((): EChartsCoreOption => {
-  paint.value
+  void paint.value
   const current = stats.value
   const ink = token('--heading', '#2c2438')
   const mute = token('--muted', '#6b6575')
-  const fill = token('--primary-fill', '#6366f1')
+  const fill = accent()
   const line = token('--line', '#ddd')
   const labels = (current?.months ?? []).map((item) => monthLabel(item.month))
   return {
     color: [fill],
     textStyle: { color: ink, fontFamily: token('--font-body', 'sans-serif') },
     tooltip: { trigger: 'axis' },
-    grid: { left: 8, right: 12, top: 24, bottom: 8, containLabel: true },
+    grid: { left: 8, right: 12, top: 32, bottom: 8, containLabel: true },
     xAxis: {
       type: 'category',
       data: labels,
       axisLine: { lineStyle: { color: line } },
+      axisTick: { show: false },
       axisLabel: { color: mute, hideOverlap: true },
     },
     yAxis: {
@@ -86,33 +103,61 @@ const monthsOption = computed((): EChartsCoreOption => {
         type: 'bar',
         name: '篇数',
         data: (current?.months ?? []).map((item) => item.posts),
-        barMaxWidth: 28,
+        barMaxWidth: 26,
         itemStyle: { borderRadius: [6, 6, 0, 0] },
+        label: { show: true, position: 'top', color: mute, fontSize: 11 },
       },
     ],
   }
 })
 
 const moodsOption = computed((): EChartsCoreOption => {
-  paint.value
+  void paint.value
   const current = stats.value
   const ink = token('--heading', '#2c2438')
-  const fill = token('--primary-fill', '#6366f1')
-  const soft = token('--primary-soft', '#c7c9f7')
-  const ok = token('--ok', '#2f6b4f')
-  const warn = token('--warning', '#8a6a24')
-  const danger = token('--danger', '#8a2f32')
+  const mute = token('--muted', '#6b6575')
+  const fill = accent()
+  const soft = token('--primary-soft', '#f0d6c9')
+  const sage = token('--chart-2', '#5f8a72')
+  const wheat = token('--chart-3', '#c49a52')
+  const rose = token('--chart-4', '#b2655f')
   return {
-    color: [fill, ok, warn, danger, soft, ink],
+    color: [fill, sage, wheat, rose, soft, ink],
     textStyle: { color: ink, fontFamily: token('--font-body', 'sans-serif') },
     tooltip: { trigger: 'item' },
-    legend: { bottom: 0, textStyle: { color: ink } },
+    legend: { bottom: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { color: ink } },
+    graphic: [
+      {
+        type: 'text',
+        left: 'center',
+        top: '34%',
+        style: {
+          text: String(current?.posts ?? 0),
+          fill: ink,
+          fontFamily: token('--font-display', 'serif'),
+          fontSize: 30,
+          textAlign: 'center',
+        },
+      },
+      {
+        type: 'text',
+        left: 'center',
+        top: '46%',
+        style: {
+          text: '篇',
+          fill: mute,
+          fontFamily: token('--font-body', 'sans-serif'),
+          fontSize: 12,
+          textAlign: 'center',
+        },
+      },
+    ],
     series: [
       {
         type: 'pie',
         name: '心情',
-        radius: ['42%', '68%'],
-        center: ['50%', '44%'],
+        radius: ['44%', '66%'],
+        center: ['50%', '42%'],
         data: (current?.moods ?? []).map((item) => ({ name: item.name, value: item.count })),
         label: { color: ink },
       },
@@ -124,10 +169,8 @@ const moodsOption = computed((): EChartsCoreOption => {
 <template>
   <section class="shell wide">
     <header class="mast">
-      <div>
-        <h1 class="page-title">这些日子</h1>
-        <p class="lede">从写下的篇数、心情和大家的回应里，看这一段路。</p>
-      </div>
+      <h1 class="page-title">这些日子</h1>
+      <p v-if="range" class="range">{{ range }}</p>
     </header>
     <Skeleton v-if="!stats && !failed" preset="detail" />
     <p v-else-if="failed" class="error">{{ failed }}</p>
@@ -159,12 +202,23 @@ const moodsOption = computed((): EChartsCoreOption => {
 
 <style scoped lang="scss">
 .mast {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-xs) var(--space-sm);
   margin-bottom: var(--space-md);
+
+  .page-title {
+    margin: 0;
+  }
 }
 
-.lede {
-  margin: var(--space-2xs) 0 0;
+.range {
+  margin: 0;
   color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .figures {

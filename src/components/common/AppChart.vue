@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { BarChart, PieChart } from 'echarts/charts'
 import {
+  GraphicComponent,
   GridComponent,
   LegendComponent,
   TooltipComponent,
@@ -10,7 +11,15 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { onBeforeUnmount, onMounted, useTemplateRef, watch } from 'vue'
 import type { EChartsCoreOption } from 'echarts/core'
 
-use([CanvasRenderer, BarChart, PieChart, GridComponent, TooltipComponent, LegendComponent])
+use([
+  CanvasRenderer,
+  BarChart,
+  PieChart,
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  GraphicComponent,
+])
 
 const props = defineProps<{
   option: EChartsCoreOption
