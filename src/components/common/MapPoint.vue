@@ -457,8 +457,12 @@ onBeforeUnmount(() => {
       </button>
     </div>
     <div class="tools">
-      <button type="button" aria-label="放大" :disabled="zoom >= 17" @click="changeZoom(1)">+</button>
-      <button type="button" aria-label="缩小" :disabled="zoom <= 3" @click="changeZoom(-1)">−</button>
+      <button type="button" aria-label="放大" :disabled="zoom >= 17" @click="changeZoom(1)">
+        +
+      </button>
+      <button type="button" aria-label="缩小" :disabled="zoom <= 3" @click="changeZoom(-1)">
+        −
+      </button>
     </div>
   </div>
 </template>
@@ -576,41 +580,64 @@ onBeforeUnmount(() => {
   &.photo {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2xs);
-    width: 148px;
-    max-width: 148px;
-    padding: var(--space-2xs) var(--space-2xs) var(--space-xs);
+    gap: 6px;
+    width: 156px;
+    max-width: 156px;
+    padding: 5px 5px 7px;
     border-radius: 14px;
     white-space: normal;
     transform: translate(-50%, calc(-100% - 8px));
+    transition:
+      transform var(--dur-short) var(--ease-out),
+      box-shadow var(--dur-short) var(--ease-out);
 
     img {
       width: 100%;
-      height: 92px;
+      height: 100px;
       max-width: none;
       object-fit: cover;
       border-radius: 10px;
+    }
+
+    span {
+      padding-inline: 3px;
+      font-size: 11.5px;
+      font-weight: 500;
+    }
+
+    &:hover,
+    &:focus-visible {
+      box-shadow: 0 18px 34px -18px color-mix(in oklab, var(--color-ink) 60%, transparent);
+      transform: translate(-50%, calc(-100% - 10px));
     }
   }
 }
 
 .tools {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 14px;
+  right: 14px;
   z-index: 3;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 6px;
 
   button {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    background: var(--surface);
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    background: color-mix(in oklab, var(--surface) 92%, transparent);
     color: var(--heading);
-    box-shadow: var(--shadow);
+    box-shadow: 0 10px 24px -16px color-mix(in oklab, var(--color-ink) 60%, transparent);
+    backdrop-filter: blur(10px);
     cursor: pointer;
+    transition:
+      background-color var(--dur-short) var(--ease-out),
+      color var(--dur-short) var(--ease-out);
+
+    &:hover:not(:disabled) {
+      color: var(--primary);
+    }
 
     &:disabled {
       cursor: default;

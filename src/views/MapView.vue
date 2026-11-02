@@ -5,7 +5,6 @@ import { Maximize2, Minimize2 } from '@lucide/vue'
 import { createMapDanmaku, fetchMapDanmaku, likeDanmaku } from '@/api/danmaku'
 import { fetchPlaces } from '@/api/post'
 import { usePaged } from '@/composables/usePaged'
-import AppButton from '@/components/common/AppButton.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import MapPoint from '@/components/common/MapPoint.vue'
 import DanmakuForm from '@/components/danmaku/DanmakuForm.vue'
@@ -85,7 +84,6 @@ async function likeNote(id: number) {
   <section class="shell stack page" :class="{ fill: filled }">
     <div v-if="!filled">
       <h1 class="page-title">地图</h1>
-      <p class="lede">标过地点的日子，点一下就能打开。</p>
     </div>
     <p v-if="error" class="error">{{ error }}</p>
     <div v-else class="board card" :class="{ wait: !ready }">
@@ -93,11 +91,16 @@ async function likeNote(id: number) {
       <MapPoint v-else :tall="!filled" :fill="filled" :markers="markers" @open="openPost" />
       <DanmakuStage v-if="ready" :items="flying" @like="likeNote" @need-more="notes.more" />
       <div v-if="ready" class="dock">
-        <AppButton variant="quiet" type="button" @click="toggleFullscreen">
+        <button
+          class="fs"
+          type="button"
+          :aria-label="filled ? '退出铺满' : '铺满地图'"
+          :title="filled ? '退出铺满' : '铺满地图'"
+          @click="toggleFullscreen"
+        >
           <Minimize2 v-if="filled" :size="16" />
           <Maximize2 v-else :size="16" />
-          {{ filled ? '退出全屏' : '全屏' }}
-        </AppButton>
+        </button>
         <DanmakuForm :send="send" />
       </div>
     </div>
@@ -164,22 +167,58 @@ async function likeNote(id: number) {
 }
 
 .dock {
-  width: 50%;
   position: absolute;
-  bottom: 12px;
+  bottom: 16px;
   left: 50%;
-  transform: translateX(-50%);
   z-index: 5;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  align-items: flex-start;
-  padding: var(--space-xs);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  align-items: center;
+  gap: var(--space-2xs);
+  width: min(600px, calc(100% - 32px));
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--surface) 86%, transparent);
+  box-shadow:
+    0 18px 40px -24px color-mix(in oklab, var(--color-ink) 70%, transparent),
+    0 0 0 var(--rule-hair) color-mix(in oklab, var(--line) 70%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  transform: translateX(-50%);
 
   :deep(.bar) {
-    width: 100%;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+}
+
+.fs {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--field);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+}
+
+@media (max-width: 620px) {
+  .dock {
+    border-radius: var(--radius);
+  }
+
+  .dock :deep(.bar) {
+    flex-wrap: wrap;
   }
 }
 </style>
