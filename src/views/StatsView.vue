@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
+import { Eye, Heart, MessageCircle, PenLine } from '@lucide/vue'
 import type { EChartsCoreOption } from 'echarts/core'
 import AppChart from '@/components/common/AppChart.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
@@ -48,10 +49,10 @@ const figures = computed(() => {
   const current = stats.value
   if (!current) return []
   return [
-    { label: '写下', value: current.posts },
-    { label: '看过', value: current.views },
-    { label: '点赞', value: current.likes },
-    { label: '评论', value: current.comments },
+    { label: '写下', value: current.posts, icon: PenLine as Component },
+    { label: '看过', value: current.views, icon: Eye as Component },
+    { label: '点赞', value: current.likes, icon: Heart as Component },
+    { label: '评论', value: current.comments, icon: MessageCircle as Component },
   ]
 })
 
@@ -133,8 +134,13 @@ const moodsOption = computed((): EChartsCoreOption => {
     <template v-else-if="stats">
       <ul class="figures">
         <li v-for="item in figures" :key="item.label" class="card">
-          <p class="num">{{ item.value }}</p>
-          <p>{{ item.label }}</p>
+          <span class="glyph">
+            <component :is="item.icon" :size="22" />
+          </span>
+          <div>
+            <p class="num">{{ item.value }}</p>
+            <p>{{ item.label }}</p>
+          </div>
         </li>
       </ul>
       <section class="card block">
@@ -172,10 +178,22 @@ const moodsOption = computed((): EChartsCoreOption => {
 
 .figures .card {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-sm);
   min-width: 0;
   padding: var(--space-md);
+}
+
+.glyph {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .num {

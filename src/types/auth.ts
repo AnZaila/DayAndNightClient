@@ -12,6 +12,7 @@ export type CurrentUser = {
   showCover: boolean
   showEmail: boolean
   showComments: boolean
+  showLikes: boolean
 }
 
 export type PublicProfile = {
@@ -24,5 +25,6 @@ export type PublicProfile = {
   open: boolean
   self: boolean
   showComments: boolean
+  showLikes: boolean
   profileVisibility: ProfileVisibility | null
 }

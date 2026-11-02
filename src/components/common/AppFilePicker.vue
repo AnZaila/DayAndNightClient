@@ -6,6 +6,7 @@ defineProps<{
   accept?: string
   multiple?: boolean
   label?: string
+  hideNames?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -47,7 +48,7 @@ function onChange(event: Event) {
       <ImagePlus :size="16" />
       {{ label || '选择图片' }}
     </button>
-    <p class="file-names">{{ summary }}</p>
+    <p v-if="!hideNames" class="file-names">{{ summary }}</p>
   </div>
 </template>
 

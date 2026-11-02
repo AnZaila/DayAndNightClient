@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Pin } from '@lucide/vue'
+import { EllipsisVertical, Pin } from '@lucide/vue'
+import {
+  PopoverContent,
+  PopoverPortal,
+  PopoverRoot,
+  PopoverTrigger,
+} from 'reka-ui'
 import { motion } from 'motion-v'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import ProfileLink from '@/components/common/ProfileLink.vue'
@@ -31,6 +37,7 @@ const when = computed(() => formatDate(props.post.happenedAt).replace(/ \d{2}:\d
 const liked = ref(props.post.liked)
 const likeCount = ref(props.post.likeCount)
 const pinned = ref(props.post.pinned)
+const menuOpen = ref(false)
 
 watch(
   () => [props.post.liked, props.post.likeCount, props.post.pinned] as const,
@@ -59,6 +66,7 @@ async function toggleLike() {
 }
 
 async function togglePin() {
+  menuOpen.value = false
   try {
     const updated = await pinPost(props.post.id)
     pinned.value = updated.pinned
@@ -99,16 +107,24 @@ async function togglePin() {
             ><DiaryIcon kind="weather" :value="post.weather" :size="13" /> {{ post.weather }}</span
           >
           <span v-if="post.visibility === 'PRIVATE'">仅双方</span>
-          <span v-if="pinned" class="mark">置顶</span>
-          <button
-            v-if="session.user"
-            type="button"
-            class="pin"
-            :aria-label="pinned ? '取消置顶' : '置顶'"
-            @click.stop="togglePin"
-          >
-            <Pin :size="14" :fill="pinned ? 'currentColor' : 'none'" />
-          </button>
+          <span v-if="pinned" class="mark">
+            <Pin :size="13" fill="currentColor" /> 置顶
+          </span>
+          <PopoverRoot v-if="session.user" v-model:open="menuOpen">
+            <PopoverTrigger as-child>
+              <button type="button" class="more" aria-label="更多" @pointerdown.stop @click.stop>
+                <EllipsisVertical :size="16" />
+              </button>
+            </PopoverTrigger>
+            <PopoverPortal>
+              <PopoverContent class="soft-menu more-menu" align="end" :side-offset="6" @click.stop>
+                <button type="button" class="soft-item" @click="togglePin">
+                  <Pin :size="14" :fill="pinned ? 'currentColor' : 'none'" />
+                  {{ pinned ? '取消置顶' : '置顶' }}
+                </button>
+              </PopoverContent>
+            </PopoverPortal>
+          </PopoverRoot>
         </small>
         <PostStats
           :view-count="post.viewCount"
@@ -206,10 +222,21 @@ small {
   gap: var(--space-2xs);
 }
 
-.pin {
+.more {
   margin-left: auto;
-  color: var(--primary);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+  color: var(--muted);
   cursor: pointer;
+
+  &:hover,
+  &[data-state='open'] {
+    color: var(--heading);
+    background: var(--field);
+  }
 }
 
 @media (max-width: 640px) {

@@ -20,7 +20,7 @@ const visibility = ref<ProfileVisibility>(session.user?.profileVisibility ?? 'PU
 const showSignature = ref(session.user?.showSignature ?? true)
 const showCover = ref(session.user?.showCover ?? true)
 const showEmail = ref(session.user?.showEmail ?? false)
-const showComments = ref(session.user?.showComments ?? false)
+const showLikes = ref(session.user?.showLikes ?? false)
 const saving = ref(false)
 const uploading = ref(false)
 const cropOpen = ref(false)
@@ -50,7 +50,7 @@ watch(
     showSignature.value = user.showSignature
     showCover.value = user.showCover
     showEmail.value = user.showEmail
-    showComments.value = user.showComments
+    showLikes.value = user.showLikes ?? false
   },
 )
 
@@ -69,7 +69,8 @@ async function saveProfile() {
       showSignature.value,
       showCover.value,
       showEmail.value,
-      showComments.value,
+      session.user?.showComments ?? false,
+      showLikes.value,
     )
     pushToast('资料已保存')
   } catch (cause) {
@@ -135,44 +136,45 @@ async function useFile(file: File) {
       </template>
     </ProfileHero>
 
-    <ProfileShelf :user-id="session.user.id" can-moderate />
-
-    <form class="card" novalidate @submit.prevent="saveProfile">
-      <h2>资料</h2>
-      <div class="row">
-        <AppButton type="button" @click="avatarInput?.click()">上传头像</AppButton>
-        <AppButton variant="quiet" type="button" @click="generateOpen = true">生成头像</AppButton>
-        <input
-          ref="avatarInput"
-          class="sr-only"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          @change="chooseFile($event, 'avatar')"
-        />
-      </div>
-      <label class="field">
-        <span>名字</span>
-        <input v-model="name" maxlength="40" />
-      </label>
-      <label class="field">
-        <span>签名</span>
-        <textarea v-model="signature" maxlength="120" placeholder="一句话就好" />
-      </label>
-      <div class="field">
-        <span>谁可以看</span>
-        <AppSelect v-model="visibility" :options="visibilityOptions" />
-      </div>
-      <div class="priv">
-        <AppSwitch v-model="showSignature">签名</AppSwitch>
-        <AppSwitch v-model="showCover">背景</AppSwitch>
-        <AppSwitch v-model="showEmail">邮箱</AppSwitch>
-        <AppSwitch v-model="showComments">留言</AppSwitch>
-      </div>
-      <p class="hint">
-        公开时访客也能看，仅双方要登录，仅自己只有你能看。上面四项可以再单独收起。名字和头像仍会出现在帖子上。
-      </p>
-      <AppButton type="submit" :loading="saving">保存</AppButton>
-    </form>
+    <ProfileShelf :user-id="session.user.id" self can-moderate>
+      <template #profile>
+        <form class="card" novalidate @submit.prevent="saveProfile">
+          <div class="row">
+            <AppButton type="button" @click="avatarInput?.click()">上传头像</AppButton>
+            <AppButton variant="quiet" type="button" @click="generateOpen = true">生成头像</AppButton>
+            <input
+              ref="avatarInput"
+              class="sr-only"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              @change="chooseFile($event, 'avatar')"
+            />
+          </div>
+          <label class="field">
+            <span>名字</span>
+            <input v-model="name" maxlength="40" />
+          </label>
+          <label class="field">
+            <span>签名</span>
+            <textarea v-model="signature" maxlength="120" placeholder="一句话就好" />
+          </label>
+          <div class="field">
+            <span>谁可以看</span>
+            <AppSelect v-model="visibility" :options="visibilityOptions" />
+          </div>
+          <div class="priv">
+            <AppSwitch v-model="showSignature">签名</AppSwitch>
+            <AppSwitch v-model="showCover">背景</AppSwitch>
+            <AppSwitch v-model="showEmail">邮箱</AppSwitch>
+            <AppSwitch v-model="showLikes">赞过的</AppSwitch>
+          </div>
+          <p class="hint">
+            公开时访客也能看，仅双方要登录，仅自己只有你能看。打开赞过的后，别人打开你的主页也能看到你赞过的公开帖子。名字和头像仍会出现在帖子上。
+          </p>
+          <AppButton type="submit" :loading="saving">保存</AppButton>
+        </form>
+      </template>
+    </ProfileShelf>
 
     <AvatarCropDialog
       v-model:open="cropOpen"

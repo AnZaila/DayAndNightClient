@@ -16,6 +16,11 @@ const router = createRouter({
       component: () => import('@/views/MapView.vue'),
     },
     {
+      path: '/album',
+      name: 'album',
+      component: () => import('@/views/AlbumView.vue'),
+    },
+    {
       path: '/posts/:id',
       name: 'post',
       component: () => import('@/views/PostDetailView.vue'),

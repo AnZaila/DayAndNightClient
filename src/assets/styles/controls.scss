@@ -56,6 +56,7 @@
 .soft-item {
   display: flex;
   align-items: center;
+  gap: var(--space-xs);
   min-height: 36px;
   padding: var(--space-xs) var(--space-sm);
   border-radius: 10px;
@@ -329,6 +330,17 @@
 .soft-menu,
 .soft-calendar {
   transform-origin: var(--reka-select-content-transform-origin, var(--reka-popover-content-transform-origin, top));
+}
+
+.more-menu {
+  z-index: calc(var(--z-sticky) + 1);
+  width: max-content;
+  min-width: 148px;
+  overflow: visible;
+}
+
+[data-reka-popper-content-wrapper]:has(.more-menu) {
+  z-index: calc(var(--z-sticky) + 1);
 }
 
 .soft-menu[data-state='open'],

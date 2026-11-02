@@ -23,6 +23,7 @@ export async function updateProfile(
   showCover: boolean,
   showEmail: boolean,
   showComments: boolean,
+  showLikes: boolean,
 ) {
   const { data } = await request.patch<CurrentUser>('/auth/me', {
     displayName,
@@ -32,6 +33,7 @@ export async function updateProfile(
     showCover,
     showEmail,
     showComments,
+    showLikes,
   })
   return data
 }

@@ -29,6 +29,7 @@ export async function fetchUserPosts(id: number, page = 1, size = 10) {
 export async function fetchLikedPosts(id: number, page = 1, size = 10) {
   const { data } = await request.get<Page<PostSummary>>(`/users/${id}/liked-posts`, {
     params: { page, size },
+    skipErrorToast: true,
   })
   return data
 }

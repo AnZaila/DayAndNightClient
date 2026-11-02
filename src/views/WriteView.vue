@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Globe, Lock, MapPin } from '@lucide/vue'
 import { createPost, deletePostMedia, fetchPost, updatePost, uploadPostCover } from '@/api/post'
 import AppButton from '@/components/common/AppButton.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
@@ -10,16 +9,12 @@ import AppDatePicker from '@/components/common/AppDatePicker.vue'
 import AppFilePicker from '@/components/common/AppFilePicker.vue'
 import AppSelect from '@/components/common/AppSelect.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import MapPoint from '@/components/common/MapPoint.vue'
-import ProfileLink from '@/components/common/ProfileLink.vue'
-import UserAvatar from '@/components/common/UserAvatar.vue'
-import DiaryIcon from '@/components/post/DiaryIcon.vue'
-import PostBody from '@/components/post/PostBody.vue'
+import PostArticle from '@/components/post/PostArticle.vue'
 import RichEditor from '@/components/post/RichEditor.vue'
 import { pushToast } from '@/composables/useToast'
 import type { Media, PostStatus, Visibility } from '@/types/post'
 import { ApiError } from '@/utils/request'
-import { formatDate, isBlankHtml, toEditorHtml } from '@/utils/text'
+import { isBlankHtml, toEditorHtml } from '@/utils/text'
 import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
@@ -101,6 +96,11 @@ function happenedAtValue() {
   const time = happenedTime.value.length === 5 ? `${happenedTime.value}:00` : happenedTime.value
   return happenedDate.value && time ? `${happenedDate.value}T${time}` : ''
 }
+
+const previewMedia = computed(() => {
+  if (draft.value) return [{ url: draft.value }]
+  return existing.value
+})
 
 function reset() {
   content.value = ''
@@ -330,37 +330,23 @@ async function removeMedia(mediaId: number) {
       <p v-if="error" class="error">{{ error }}</p>
       <AppButton type="submit" :loading="saving">放进时间轴</AppButton>
     </form>
-    <aside class="card preview">
+    <aside class="preview">
       <p class="preview-label">预览</p>
-      <time>{{ formatDate(happenedAtValue()) }}</time>
-      <div class="author">
-        <ProfileLink :user-id="session.user?.id">
-          <UserAvatar :src="session.user?.avatarUrl" :name="session.user?.displayName" :size="36" />
-        </ProfileLink>
-        <h2>{{ session.user?.displayName || '你' }}写下的这一天</h2>
-      </div>
-      <div class="chips">
-        <span v-if="mood !== 'none'"><DiaryIcon kind="mood" :value="mood" /> {{ mood }}</span>
-        <span v-if="weather !== 'none'"
-          ><DiaryIcon kind="weather" :value="weather" /> {{ weather }}</span
-        >
-        <span v-if="location"><MapPin :size="14" /> {{ location }}</span>
-        <span v-if="visibility === 'PRIVATE'"><Lock :size="14" /> 仅双方</span>
-        <span v-else><Globe :size="14" /> 公开</span>
-      </div>
-      <MapPoint
-        v-if="latitude != null && longitude != null"
+      <PostArticle
+        :display-name="session.user?.displayName || '你'"
+        :avatar-url="session.user?.avatarUrl"
+        :author-id="session.user?.id"
+        :happened-at="happenedAtValue()"
+        :mood="chosen(mood)"
+        :weather="chosen(weather)"
+        :location="location"
+        :visibility="visibility"
+        :content="content"
+        :media="previewMedia"
         :latitude="latitude"
         :longitude="longitude"
+        empty="正文会显示在这里。"
       />
-      <div v-if="draft || existing.length" class="gallery">
-        <img v-if="draft" :src="draft" alt="" />
-        <template v-else>
-          <img v-for="media in existing" :key="media.id" :src="media.url" alt="" />
-        </template>
-      </div>
-      <PostBody v-if="!isBlankHtml(content)" :content="content" />
-      <p v-else class="muted">正文会显示在这里。</p>
     </aside>
     <ConfirmDialog
       :open="pendingMedia !== null"
@@ -390,29 +376,11 @@ async function removeMedia(mediaId: number) {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  background: var(--surface);
 }
 
-.preview-label,
-time {
+.preview-label {
   color: var(--muted);
   font-size: 13px;
-}
-
-.author {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-
-  h2 {
-    overflow-wrap: break-word;
-    min-width: 0;
-  }
-}
-
-h2 {
-  color: var(--heading);
-  font-size: 20px;
 }
 
 .point {
@@ -438,36 +406,6 @@ h2 {
   input.clock {
     width: 9.5rem;
     flex: none;
-  }
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-
-  span {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2xs);
-    min-height: 28px;
-    padding: 0 var(--space-xs);
-    border-radius: 999px;
-    background: var(--field);
-    color: var(--heading);
-    font-size: 13px;
-  }
-}
-
-.gallery {
-  display: grid;
-  gap: var(--space-xs);
-
-  img {
-    width: 100%;
-    max-height: 280px;
-    object-fit: cover;
-    border-radius: var(--radius);
   }
 }
 

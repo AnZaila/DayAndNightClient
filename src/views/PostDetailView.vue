@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Globe, Lock, MapPin, Maximize2 } from '@lucide/vue'
+import { Maximize2, Pin } from '@lucide/vue'
 import { motion } from 'motion-v'
 import {
   createComment,
@@ -21,20 +21,16 @@ import DanmakuStage from '@/components/danmaku/DanmakuStage.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import ScrollSentinel from '@/components/common/ScrollSentinel.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
-import MapPoint from '@/components/common/MapPoint.vue'
-import UserAvatar from '@/components/common/UserAvatar.vue'
-import ProfileLink from '@/components/common/ProfileLink.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import ImageLightbox from '@/components/common/ImageLightbox.vue'
-import DiaryIcon from '@/components/post/DiaryIcon.vue'
-import PostBody from '@/components/post/PostBody.vue'
+import PostArticle from '@/components/post/PostArticle.vue'
 import PostStats from '@/components/post/PostStats.vue'
 import type { Comment } from '@/types/comment'
 import type { Danmaku } from '@/types/danmaku'
 import type { Media, PostDetail } from '@/types/post'
 import { ApiError } from '@/utils/request'
-import { formatDate, plainText } from '@/utils/text'
+import { plainText } from '@/utils/text'
 import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
@@ -181,65 +177,59 @@ onMounted(load)
 <template>
   <div>
     <div v-if="post" class="shell stack wide">
-      <article class="card detail">
-        <div v-if="post.media.length" class="gallery">
-          <button
-            v-for="media in post.media"
-            :key="media.id"
-            type="button"
-            class="shot"
-            @click="active = media"
-          >
-            <motion.img
-              :src="media.url"
-              :alt="alt"
-              :layout-id="media.id === post.media[0]?.id ? `cover-${post.id}` : undefined"
-            />
-            <span class="zoom"><Maximize2 :size="16" /> 放大</span>
-          </button>
-        </div>
-        <div class="author">
-          <ProfileLink :user-id="post.authorId">
-            <UserAvatar :src="post.authorAvatarUrl" :name="post.displayName" :size="42" />
-          </ProfileLink>
-          <div>
-            <h1>
-              <ProfileLink :user-id="post.authorId">{{ post.displayName }}</ProfileLink
-              >写下的这一天
-            </h1>
-            <time :datetime="post.happenedAt">{{ formatDate(post.happenedAt) }}</time>
+      <PostArticle
+        :display-name="post.displayName"
+        :avatar-url="post.authorAvatarUrl"
+        :author-id="post.authorId"
+        :happened-at="post.happenedAt"
+        :mood="post.mood"
+        :weather="post.weather"
+        :location="post.location"
+        :visibility="post.visibility"
+        :pinned="post.pinned"
+        :content="post.content"
+        :media="post.media"
+        :latitude="post.latitude"
+        :longitude="post.longitude"
+        zoom
+        @open="active = $event as Media"
+      >
+        <template #gallery>
+          <div v-if="post.media.length" class="gallery">
+            <button
+              v-for="media in post.media"
+              :key="media.id"
+              type="button"
+              class="shot"
+              @click="active = media"
+            >
+              <motion.img
+                :src="media.url"
+                :alt="alt"
+                :layout-id="media.id === post.media[0]?.id ? `cover-${post.id}` : undefined"
+              />
+              <span class="zoom"><Maximize2 :size="16" /> 放大</span>
+            </button>
           </div>
-        </div>
-        <div class="chips">
-          <span v-if="post.mood"><DiaryIcon kind="mood" :value="post.mood" /> {{ post.mood }}</span>
-          <span v-if="post.weather"
-            ><DiaryIcon kind="weather" :value="post.weather" /> {{ post.weather }}</span
-          >
-          <span v-if="post.location"><MapPin :size="14" /> {{ post.location }}</span>
-          <span v-if="post.visibility === 'PRIVATE'"><Lock :size="14" /> 仅双方</span>
-          <span v-else><Globe :size="14" /> 公开</span>
+        </template>
+        <template #chips>
           <span v-if="post.status === 'HIDDEN'">时间轴上已隐藏</span>
-          <span v-if="post.pinned">置顶</span>
-        </div>
-        <PostStats
-          :view-count="post.viewCount"
-          :like-count="post.likeCount"
-          :comment-count="post.commentCount"
-          :liked="post.liked"
-          comment-href="#comments"
-          @like="likeThis"
-        />
-        <MapPoint
-          v-if="post.latitude != null && post.longitude != null"
-          :key="`${post.id}-${post.latitude}-${post.longitude}`"
-          :latitude="post.latitude"
-          :longitude="post.longitude"
-        />
-        <PostBody class="body" :content="post.content" />
+        </template>
+        <template #stats>
+          <PostStats
+            :view-count="post.viewCount"
+            :like-count="post.likeCount"
+            :comment-count="post.commentCount"
+            :liked="post.liked"
+            comment-href="#comments"
+            @like="likeThis"
+          />
+        </template>
         <div v-if="session.user" class="row">
-          <AppButton variant="plain" type="button" @click="pinThis">{{
-            post.pinned ? '取消置顶' : '置顶'
-          }}</AppButton>
+          <AppButton variant="plain" type="button" @click="pinThis">
+            <Pin :size="16" :fill="post.pinned ? 'currentColor' : 'none'" />
+            {{ post.pinned ? '取消置顶' : '置顶' }}
+          </AppButton>
           <template v-if="mine">
             <WaveLink class="btn quiet" :to="{ name: 'write', params: { id: post.id } }"
               >修改这篇</WaveLink
@@ -250,7 +240,7 @@ onMounted(load)
           </template>
         </div>
         <DanmakuStage :items="flying" @like="likeNote" @need-more="notes.more" />
-      </article>
+      </PostArticle>
       <section class="card">
         <h2>弹幕</h2>
         <p class="lede">短短一句，从画面上飞过去。鼠标停在上面会暂停。</p>
@@ -325,45 +315,14 @@ onMounted(load)
 </template>
 
 <style scoped lang="scss">
-.detail {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-}
-
-.author {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-
-  > div {
-    min-width: 0;
-  }
-}
-
-time {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-h1,
 h2 {
+  margin-bottom: var(--space-xs);
   color: var(--heading);
+  font-size: 18px;
   font-weight: 600;
   line-height: 1.3;
   overflow-wrap: break-word;
   min-width: 0;
-}
-
-h1 {
-  font-size: var(--text-xl);
-  overflow-wrap: anywhere;
-}
-
-h2 {
-  margin-bottom: var(--space-xs);
-  font-size: 18px;
 }
 
 .count {

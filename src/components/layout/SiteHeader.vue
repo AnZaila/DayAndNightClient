@@ -3,6 +3,7 @@ import {
   CalendarDays,
   ChartColumn,
   Heart,
+  Images,
   Info,
   LogIn,
   LogOut,
@@ -95,6 +96,10 @@ async function logout() {
           <WaveLink :to="{ name: 'map' }">
             <Map :size="16" />
             地图
+          </WaveLink>
+          <WaveLink :to="{ name: 'album' }">
+            <Images :size="16" />
+            相册
           </WaveLink>
           <WaveLink :to="{ name: 'anniversaries' }">
             <CalendarDays :size="16" />
