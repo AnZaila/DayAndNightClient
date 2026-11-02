@@ -35,7 +35,7 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
 </script>
 
 <template>
-  <section class="hero" :style="canvas">
+  <section class="hero" :class="{ 'has-image': image }" :style="canvas">
     <div class="art" />
     <div class="grain" />
     <span
@@ -94,10 +94,10 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
   display: grid;
   align-items: center;
   width: 100vw;
-  min-height: clamp(320px, 46vh, 440px);
-  margin: calc(-1 * var(--space-lg)) calc(50% - 50vw) var(--space-lg);
-  padding: var(--space-lg) max(var(--space-lg), calc(50vw - var(--container) / 2))
-    clamp(56px, 6vw, 78px);
+  min-height: clamp(360px, 52vh, 520px);
+  margin: calc(-1 * var(--space-lg) - var(--header-height, 64px)) calc(50% - 50vw) var(--space-lg);
+  padding: calc(var(--header-height, 64px) + var(--space-md))
+    max(var(--space-lg), calc(50vw - var(--container) / 2)) clamp(56px, 6vw, 78px);
   overflow: hidden;
   color: #fff;
   isolation: isolate;
@@ -119,6 +119,19 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
   background-size: cover;
   transform: translate3d(0, var(--shift, 0), 0);
   will-change: transform;
+}
+
+.hero.has-image .art {
+  background-color: #16233f;
+  background-image:
+    linear-gradient(180deg, rgb(6 14 48 / 42%) 0, rgb(6 14 48 / 0%) 120px),
+    linear-gradient(180deg, rgb(6 14 48 / 30%), rgb(6 14 48 / 66%)), var(--hero-image, none);
+}
+
+[data-theme='dark'] .hero.has-image .art {
+  background-image:
+    linear-gradient(180deg, rgb(4 8 20 / 52%) 0, rgb(4 8 20 / 12%) 120px),
+    linear-gradient(180deg, rgb(4 8 20 / 26%), rgb(4 8 20 / 72%)), var(--hero-image, none);
 }
 
 .grain {

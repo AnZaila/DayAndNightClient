@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Heart, Menu, X } from '@lucide/vue'
+import { useWindowScroll } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import HeaderActions from '@/components/layout/HeaderActions.vue'
 import HeaderBrand from '@/components/layout/HeaderBrand.vue'
@@ -11,9 +12,13 @@ import { useSiteStore } from '@/stores/site'
 const route = useRoute()
 const site = useSiteStore()
 const { site: setting } = storeToRefs(site)
+const { y } = useWindowScroll()
 const menuOpen = ref(false)
 const headerEl = useTemplateRef('headerEl')
 let headerSize: ResizeObserver | null = null
+
+/* 首页顶部是整幅插画，滚动不到 88px 时页头浮在画面上 */
+const overHero = computed(() => route.name === 'timeline' && y.value < 88 && !menuOpen.value)
 
 onMounted(() => {
   const el = headerEl.value
@@ -40,7 +45,7 @@ watch(
 </script>
 
 <template>
-  <header ref="headerEl" class="header" :class="{ open: menuOpen }">
+  <header ref="headerEl" class="header" :class="{ open: menuOpen, 'over-hero': overHero }">
     <button
       class="backdrop"
       type="button"
@@ -127,6 +132,43 @@ watch(
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+/* 浮在首页插画上时，页头透明、文字转白 */
+.header.over-hero {
+  background: transparent;
+  border-bottom-color: transparent;
+
+  :deep(.brand-name),
+  :deep(nav a),
+  :deep(.actions a),
+  :deep(.actions button),
+  :deep(.menu) {
+    color: rgb(255 255 255 / 84%);
+  }
+
+  :deep(.brand-mark) {
+    filter: invert(1);
+  }
+
+  :deep(nav a:hover),
+  :deep(.actions a:hover),
+  :deep(.actions button:hover),
+  :deep(nav a.router-link-active),
+  :deep(.actions a.router-link-active),
+  :deep(.menu:hover) {
+    color: #fff;
+  }
+
+  :deep(nav a::after),
+  :deep(.actions a::after) {
+    background: #fff;
+  }
+
+  :deep(.days) {
+    background: rgb(255 255 255 / 18%);
+    color: #fff;
+  }
 }
 
 @media (max-width: 980px) {

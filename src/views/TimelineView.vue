@@ -88,6 +88,7 @@ function showYear(index: number) {
       :meta="todayMeta"
       :posts="total"
       :days="daysTogether"
+      image="/hero/home.jpg"
       slogan="今天也值得记下来"
     />
     <header class="mast">
