@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import SiteHeader from '@/components/layout/SiteHeader.vue'
-import SiteWave from '@/components/layout/SiteWave.vue'
 import AppToast from '@/components/common/AppToast.vue'
 </script>
 
@@ -14,7 +13,6 @@ import AppToast from '@/components/common/AppToast.vue'
         </Transition>
       </router-view>
     </main>
-    <SiteWave />
     <AppToast />
   </div>
 </template>

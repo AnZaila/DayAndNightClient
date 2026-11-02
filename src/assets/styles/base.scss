@@ -4,6 +4,13 @@
   box-sizing: border-box;
 }
 
+/* 头图波浪的 viewBox 很扁；样式没到之前先锁高度，避免白边铺满。 */
+svg.waves {
+  display: block;
+  max-height: 62px;
+  aspect-ratio: auto;
+}
+
 html,
 body {
   overflow-x: clip;

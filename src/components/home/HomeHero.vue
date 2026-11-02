@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { usePreferredReducedMotion, useWindowScroll } from '@vueuse/core'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -12,15 +11,8 @@ const props = defineProps<{
   image?: string
 }>()
 
-const { y } = useWindowScroll()
-const motion = usePreferredReducedMotion()
-
-/* 视差：画布比容器高 40%，滚动时只挪 1/3，看上去像画廊里的背景。 */
-const shift = computed(() => (motion.value === 'reduce' ? 0 : Math.min(y.value * 0.34, 170)))
-
 const canvas = computed(() => ({
   '--hero-image': props.image ? `url(${props.image})` : 'none',
-  '--shift': `${shift.value}px`,
 }))
 
 const petals = Array.from({ length: 14 }, (_, index) => ({
@@ -72,7 +64,14 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
       </dl>
     </div>
 
-    <svg class="waves" viewBox="0 24 150 28" preserveAspectRatio="none" aria-hidden="true">
+    <svg
+      class="waves"
+      viewBox="0 24 150 28"
+      width="150"
+      height="28"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
       <defs>
         <path
           id="heroWave"
@@ -90,11 +89,12 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
 
 <style scoped lang="scss">
 .hero {
+  --hero-h: clamp(360px, 52vh, 520px);
   position: relative;
   display: grid;
   align-items: center;
   width: 100vw;
-  min-height: clamp(360px, 52vh, 520px);
+  min-height: var(--hero-h);
   margin: calc(-1 * var(--space-lg) - var(--header-height, 64px)) calc(50% - 50vw) var(--space-lg);
   padding: calc(var(--header-height, 64px) + var(--space-md))
     max(var(--space-lg), calc(50vw - var(--container) / 2)) clamp(56px, 6vw, 78px);
@@ -106,7 +106,7 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
 /* 画布：先用渐变和光斑撑出「海面 + 天光」，换成插画时只改 --hero-image。 */
 .art {
   position: absolute;
-  inset: -26% 0;
+  inset: 0;
   z-index: -2;
   background-color: #4d6bfe;
   background-image:
@@ -114,18 +114,20 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
     radial-gradient(58% 80% at 82% 12%, rgb(255 255 255 / 34%), transparent 62%),
     radial-gradient(46% 60% at 12% 84%, rgb(16 48 170 / 45%), transparent 60%),
     linear-gradient(140deg, #4d6bfe 6%, #6f8bff 38%, #9db4ff 68%, #cfd8ff 100%);
+  background-attachment: fixed;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  transform: translate3d(0, var(--shift, 0), 0);
-  will-change: transform;
 }
 
 .hero.has-image .art {
+  /* 头图 2400×1039：按视口宽度铺满，再垂直居中到头图高度里，湖面还在窗口中。 */
   background-color: #16233f;
   background-image:
     linear-gradient(180deg, rgb(6 14 48 / 42%) 0, rgb(6 14 48 / 0%) 120px),
     linear-gradient(180deg, rgb(6 14 48 / 30%), rgb(6 14 48 / 66%)), var(--hero-image, none);
+  background-size: 100% auto;
+  background-position: center calc((var(--hero-h) - 43.29vw) / 2);
 }
 
 [data-theme='dark'] .hero.has-image .art {
@@ -136,13 +138,11 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
 
 .grain {
   position: absolute;
-  inset: -26% 0;
+  inset: 0;
   z-index: -1;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
   mix-blend-mode: soft-light;
   opacity: 0.5;
-  transform: translate3d(0, var(--shift, 0), 0);
-  will-change: transform;
 }
 
 .copy {
@@ -223,8 +223,13 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
   bottom: -1px;
   left: -120px;
   z-index: 3;
+  display: block;
   width: calc(100% + 240px);
   height: clamp(40px, 5vw, 62px);
+  max-height: 62px;
+  overflow: hidden;
+  aspect-ratio: auto;
+  pointer-events: none;
 }
 
 .parallax use {
@@ -291,6 +296,10 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .art {
+    background-attachment: scroll;
+  }
+
   .parallax use,
   .petal {
     animation: none;
@@ -303,7 +312,7 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
 
 @media (max-width: 720px) {
   .hero {
-    min-height: 180px;
+    --hero-h: 180px;
     padding: var(--space-md) var(--space-md) 52px;
   }
 
