@@ -29,13 +29,14 @@ const items = useToasts()
 .toast {
   --toast: var(--color-success);
   margin: 0;
-  padding: var(--space-xs) var(--space-sm);
-  border: var(--rule-hair) solid var(--toast);
-  border-radius: var(--radius);
-  background: color-mix(in oklab, var(--toast) 22%, var(--surface));
-  color: var(--toast);
+  padding: 10px var(--space-sm);
+  border: 0;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--toast) 14%, var(--surface));
+  box-shadow: var(--shadow);
+  color: color-mix(in oklab, var(--toast) 68%, var(--heading));
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.5;
   text-align: center;
 

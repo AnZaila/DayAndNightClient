@@ -178,8 +178,12 @@ function finish(id: number) {
   max-width: 70%;
   padding: var(--space-2xs) var(--space-sm);
   border-radius: 999px;
-  background: var(--scrim-strong);
-  color: var(--color-accent-ink);
+  background: color-mix(in oklab, var(--surface) 82%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  box-shadow:
+    0 6px 18px oklch(24% 0.02 265 / 0.12),
+    inset 0 0 0 1px color-mix(in oklab, var(--line) 70%, transparent);
+  color: var(--text);
   font-size: 14px;
   line-height: 1.4;
   white-space: nowrap;
@@ -203,10 +207,14 @@ function finish(id: number) {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2xs);
-    color: var(--color-accent-ink);
+    color: var(--muted);
     font-size: 12px;
     white-space: nowrap;
     cursor: pointer;
+
+    &:hover {
+      color: var(--primary);
+    }
 
     &.on {
       color: var(--danger);
