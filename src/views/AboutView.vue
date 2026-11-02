@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { CalendarDays, Heart } from '@lucide/vue'
 import { storeToRefs } from 'pinia'
 import Skeleton from '@/components/common/Skeleton.vue'
@@ -6,22 +7,37 @@ import WaveLink from '@/components/common/WaveLink.vue'
 import { useSiteStore } from '@/stores/site'
 
 const { site } = storeToRefs(useSiteStore())
+
+const since = computed(() => {
+  const value = site.value?.togetherSince
+  if (!value) return ''
+  const parts = value.slice(0, 10).split('-').map(Number)
+  const [year, month, day] = parts
+  if (!year || !month || !day) return ''
+  return `${year} 年 ${month} 月 ${day} 日`
+})
 </script>
 
 <template>
   <div>
     <section v-if="site" class="shell wide about">
-      <div class="days">
-        <p class="count">第 {{ site.daysTogether }} 天</p>
+      <div class="ledger">
+        <p class="since">{{ since }} 起</p>
+        <p class="count">
+          <span class="num">{{ site.daysTogether }}</span
+          ><span class="unit">天</span>
+        </p>
         <p class="together">
-          <Heart :size="16" />
+          <Heart :size="15" />
           在一起
         </p>
       </div>
-      <div class="copy card">
+      <div class="letter">
         <h1>{{ site.title }}</h1>
-        <p class="lead">{{ site.subtitle }}</p>
-        <p class="body">{{ site.about || '这里还没有写介绍。' }}</p>
+        <p class="subtitle">{{ site.subtitle }}</p>
+        <p class="body" :class="{ quiet: !site.about }">
+          {{ site.about || '还没有写介绍。' }}
+        </p>
         <div class="row">
           <WaveLink class="btn solid" :to="{ name: 'timeline' }">去看时间轴</WaveLink>
           <WaveLink class="btn quiet" :to="{ name: 'anniversaries' }">
@@ -38,72 +54,105 @@ const { site } = storeToRefs(useSiteStore())
 <style scoped lang="scss">
 .about {
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  gap: var(--space-xl);
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(var(--space-lg), 6vw, 88px);
   align-items: center;
+  min-height: calc(100dvh - var(--header-height, 64px) - 220px);
+  padding-block: clamp(48px, 10vh, 104px);
 }
 
-.days {
+.ledger {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  padding-right: clamp(var(--space-md), 4vw, 56px);
+  border-right: var(--rule-hair) solid var(--line);
 }
 
-.together,
-.lead {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2xs);
+.since {
+  margin: 0;
   color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 .count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
   margin: 0;
   color: var(--heading);
   font-family: var(--font-display);
-  font-size: var(--text-3xl);
   font-variant-numeric: tabular-nums;
-  line-height: 1;
-  animation: rise var(--dur-long) var(--ease-out) both;
+  line-height: 0.95;
 }
 
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(var(--space-sm));
-  }
+.num {
+  font-size: clamp(64px, 9vw, 108px);
+  letter-spacing: -0.02em;
 }
 
-.copy {
+.unit {
+  color: var(--muted);
+  font-size: var(--text-xl);
+}
+
+.together {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin: 0;
+  color: var(--primary);
+  font-size: var(--text-sm);
+}
+
+.letter {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
+  max-width: 34em;
 }
 
 h1 {
+  margin: 0;
   color: var(--heading);
-  font-size: var(--text-2xl);
+  font-size: clamp(28px, 3.4vw, 40px);
   line-height: 1.15;
-  overflow-wrap: break-word;
-  min-width: 0;
   text-wrap: balance;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .count {
-    animation: none;
-  }
-}
-
-@media (max-width: 720px) {
-  .about {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-md);
-  }
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
 }
 
 .body {
+  margin: var(--space-sm) 0 var(--space-xs);
+  color: var(--text);
+  font-size: var(--text-md);
+  line-height: 1.85;
   white-space: pre-wrap;
+
+  &.quiet {
+    color: var(--faint);
+  }
+}
+
+@media (max-width: 860px) {
+  .about {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-lg);
+    min-height: 0;
+    padding-block: var(--space-lg);
+  }
+
+  .ledger {
+    padding-right: 0;
+    border-right: 0;
+  }
 }
 </style>
