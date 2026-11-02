@@ -1,0 +1,49 @@
+// 头部里所有可点项（导航链接、动作按钮）共用的底座。
+// 只被 layout/ 下的组件 @use，不进全局样式表。
+@mixin control {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 36px;
+  padding: 0 var(--space-xs);
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+
+  &:hover {
+    color: var(--heading);
+  }
+}
+
+// 链接底部那条「从左边划出来」的短线。
+@mixin underline {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: var(--space-xs);
+    bottom: 0;
+    left: var(--space-xs);
+    height: 2px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transform-origin: left center;
+    pointer-events: none;
+    transition: transform var(--dur-short) var(--ease-out);
+  }
+}
+
+// 当前路由命中时：变色 + 把短线划满。
+@mixin active {
+  color: var(--primary);
+  font-weight: 600;
+
+  &::after {
+    transform: scaleX(1);
+  }
+}
