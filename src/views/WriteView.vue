@@ -312,7 +312,6 @@ async function removeMedia(mediaId: number) {
           accept="image/jpeg,image/png,image/webp"
           @select="chooseCover"
         />
-        <p class="hint">只放一张，显示在时间轴上。</p>
         <p v-if="file && existing.length" class="hint">保存后会换成这一张。</p>
       </div>
       <figure v-if="draft" class="pending">

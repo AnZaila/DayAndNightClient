@@ -48,7 +48,6 @@ async function saveSite() {
   <div>
     <section v-if="form" class="shell card wide">
       <h1 class="page-title">设置</h1>
-      <p class="lede">整站的名字、日期，以及评论和弹幕怎么放出。</p>
       <form novalidate @submit.prevent="saveSite">
         <label class="field">
           <span>网站名称</span>

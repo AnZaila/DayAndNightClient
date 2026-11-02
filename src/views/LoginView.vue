@@ -41,7 +41,7 @@ async function submit() {
   <div class="shell wide gate">
     <div class="intro">
       <h1 class="page-title">登录</h1>
-      <p class="lede">朝暮只给两个人登录。看的人不用账号。</p>
+      <p class="lede">只给两个人登录，看的人不用账号。</p>
     </div>
     <form class="card narrow" novalidate @submit.prevent="submit">
     <label class="field">

@@ -64,7 +64,6 @@ async function confirmRemoveNote() {
   <div class="shell stack wide">
     <section class="card">
       <h1 class="page-title">评论管理</h1>
-      <p class="lede">别人留下的。</p>
       <Skeleton
         v-if="thread.loading.value && thread.items.value.length === 0"
         preset="comment"
@@ -93,7 +92,6 @@ async function confirmRemoveNote() {
     </section>
     <section class="card">
       <h2>弹幕</h2>
-      <p class="lede">包括自己发的。先审后发时，从这里放出来。</p>
       <Skeleton
         v-if="notes.loading.value && notes.items.value.length === 0"
         preset="note"
