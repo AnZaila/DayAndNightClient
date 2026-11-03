@@ -5,6 +5,7 @@ export type PostSummary = {
   id: number
   authorId: number
   happenedAt: string
+  title: string
   excerpt: string
   mood: string | null
   weather: string | null
@@ -30,6 +31,7 @@ export type PostDetail = {
   id: number
   authorId: number
   displayName: string
+  title: string
   content: string
   happenedAt: string
   mood: string | null
@@ -50,6 +52,7 @@ export type PostDetail = {
 }
 
 export type PostInput = {
+  title: string
   content: string
   happenedAt: string
   mood: string

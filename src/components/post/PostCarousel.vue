@@ -8,6 +8,7 @@ import { A11y, Keyboard } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import type { Swiper as SwiperInstance } from 'swiper'
 import 'swiper/css'
+import ImageLightbox from '@/components/common/ImageLightbox.vue'
 import type { Media } from '@/types/post'
 
 const props = defineProps<{
@@ -19,18 +20,27 @@ const props = defineProps<{
 const { t } = useI18n()
 const index = defineModel<number>({ default: 0 })
 const deck = ref<SwiperInstance | null>(null)
+const viewOpen = ref(false)
 const many = computed(() => props.items.length > 1)
+const current = computed(() => props.items[index.value] ?? props.items[0])
 const reduce = usePreferredReducedMotion()
 const speed = computed(() => (reduce.value === 'reduce' ? 0 : 480))
 const modules = [A11y, Keyboard]
 
 function bind(swiper: SwiperInstance) {
   deck.value = swiper
-  if (swiper.activeIndex !== index.value) swiper.slideTo(index.value, 0)
+  sync(index.value, 0)
 }
 
 function onSlide(swiper: SwiperInstance) {
-  index.value = swiper.activeIndex
+  index.value = swiper.realIndex
+}
+
+function sync(n: number, duration?: number) {
+  const swiper = deck.value
+  if (!swiper || swiper.realIndex === n) return
+  if (many.value) swiper.slideToLoop(n, duration)
+  else swiper.slideTo(n, duration)
 }
 
 function go(step: number) {
@@ -38,9 +48,7 @@ function go(step: number) {
   else deck.value?.slideNext()
 }
 
-watch(index, (n) => {
-  if (deck.value && deck.value.activeIndex !== n) deck.value.slideTo(n)
-})
+watch(index, (n) => sync(n))
 </script>
 
 <template>
@@ -50,6 +58,7 @@ watch(index, (n) => {
       :modules="modules"
       :initial-slide="index"
       :speed="speed"
+      :loop="many"
       :allow-touch-move="many"
       :grab-cursor="many"
       :keyboard="{ enabled: true, onlyInViewport: true }"
@@ -69,6 +78,7 @@ watch(index, (n) => {
           :alt="alt"
           draggable="false"
           :layout-id="i === 0 ? layoutId : undefined"
+          @click="viewOpen = true"
         />
       </SwiperSlide>
     </Swiper>
@@ -102,6 +112,11 @@ watch(index, (n) => {
         @click="index = i"
       />
     </div>
+    <ImageLightbox
+      v-model:open="viewOpen"
+      :src="current?.url || ''"
+      :alt="alt"
+    />
   </div>
 </template>
 
@@ -119,16 +134,24 @@ watch(index, (n) => {
   height: 100%;
 }
 
+.gallery :deep(.swiper-wrapper),
 .gallery :deep(.swiper-slide) {
-  display: grid;
-  place-items: center;
   height: 100%;
 }
 
+.gallery :deep(.swiper-slide) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .gallery :deep(img) {
-  width: 100%;
+  flex: none;
+  width: auto;
+  max-width: none;
   height: 100%;
-  object-fit: contain;
+  max-height: 100%;
+  cursor: zoom-in;
   user-select: none;
 }
 

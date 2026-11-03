@@ -27,6 +27,7 @@ const session = useSessionStore()
 const editing = computed(() => route.params.id !== undefined)
 const postId = computed(() => Number(route.params.id))
 
+const title = ref('')
 const content = ref('')
 const happenedDate = ref('')
 const happenedTime = ref('00:00:00')
@@ -110,6 +111,7 @@ const previewMedia = computed(() => [
 ])
 
 function reset() {
+  title.value = ''
   content.value = ''
   applyNow()
   mood.value = 'none'
@@ -138,6 +140,7 @@ async function load() {
     await router.replace({ name: 'post', params: { id: post.id } })
     return
   }
+  title.value = post.title
   content.value = toEditorHtml(post.content)
   applyWhen(post.happenedAt)
   mood.value = post.mood || 'none'
@@ -179,6 +182,10 @@ watch(
 )
 
 async function save() {
+  if (!title.value.trim()) {
+    pushToast(t('write.needTitle'), 'error')
+    return
+  }
   if (!happenedDate.value || !happenedTime.value) {
     pushToast(t('write.needWhen'), 'error')
     return
@@ -190,6 +197,7 @@ async function save() {
   saving.value = true
   error.value = null
   const input = {
+    title: title.value.trim(),
     content: content.value,
     happenedAt: happenedAtValue(),
     mood: chosen(mood.value),
@@ -280,6 +288,15 @@ async function removeMedia(mediaId: number) {
           />
         </div>
       </div>
+      <label class="field">
+        <span>{{ t('write.title') }}</span>
+        <input
+          v-model="title"
+          maxlength="80"
+          :placeholder="t('write.titlePlaceholder')"
+          :aria-label="t('write.title')"
+        />
+      </label>
       <div class="field">
         <span>{{ t('write.body') }}</span>
         <RichEditor v-if="ready" v-model="content" />
@@ -363,6 +380,7 @@ async function removeMedia(mediaId: number) {
         :weather="chosen(weather)"
         :location="location"
         :visibility="visibility"
+        :title="title"
         :content="content"
         :media="previewMedia"
         :latitude="latitude"

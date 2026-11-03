@@ -30,7 +30,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const session = useSessionStore()
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-const excerpt = computed(() => plainText(props.post.excerpt))
+const head = computed(() => props.post.title.trim() || plainText(props.post.excerpt))
 const when = computed(() => formatDate(props.post.happenedAt).replace(/ \d{2}:\d{2}:\d{2}$/, ''))
 const clock = computed(() => {
   const value = props.post.happenedAt.match(/[T ](\d{2}:\d{2})/)?.[1] ?? ''
@@ -100,7 +100,7 @@ async function togglePin() {
       </div>
       <div class="copy">
         <time v-if="showWhen" :datetime="post.happenedAt">{{ when }}</time>
-        <p class="head">{{ excerpt || t('timeline.excerptFallback') }}</p>
+        <p class="head">{{ head || t('timeline.excerptFallback') }}</p>
         <small class="facts">
           <ProfileLink :user-id="post.authorId">
             <UserAvatar :src="post.authorAvatarUrl" :name="post.displayName" :size="22" />

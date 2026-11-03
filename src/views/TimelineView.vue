@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { PenLine } from '@lucide/vue'
 import { useRouter } from 'vue-router'
+import { PenLine } from '@lucide/vue'
 import PostCard from '@/components/post/PostCard.vue'
 import HomeHero from '@/components/home/HomeHero.vue'
 import ScrollSentinel from '@/components/common/ScrollSentinel.vue'
@@ -62,7 +62,7 @@ function onPin() {
 }
 
 function openPost(id: number) {
-  router.push({ name: 'post', params: { id } })
+  void router.push({ name: 'post', params: { id } })
 }
 
 watch(

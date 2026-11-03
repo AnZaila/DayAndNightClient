@@ -55,7 +55,8 @@ function insertEmoji(emoji: string) {
   content.value = next
   emojiOpen.value = false
   const caret = start + emoji.length
-  requestAnimationFrame(() => {
+  void nextTick(() => {
+    onBox()
     el?.focus()
     el?.setSelectionRange(caret, caret)
   })
@@ -63,15 +64,10 @@ function insertEmoji(emoji: string) {
 
 function onBox() {
   const el = box.value
-  if (!el || props.bar) return
+  if (!el) return
+  const cap = props.bar ? 160 : 96
   el.style.height = 'auto'
-  el.style.height = `${Math.min(el.scrollHeight, 96)}px`
-}
-
-function onKey(event: KeyboardEvent) {
-  if (!props.bar || event.key !== 'Enter' || event.shiftKey) return
-  event.preventDefault()
-  void submit()
+  el.style.height = `${Math.min(el.scrollHeight, cap)}px`
 }
 
 async function submit() {
@@ -119,42 +115,39 @@ async function submit() {
       <ProfileLink v-if="session.user && !bar" :user-id="session.user.id">
         <UserAvatar :src="session.user.avatarUrl" :name="session.user.displayName" :size="32" />
       </ProfileLink>
-      <div class="box">
-        <textarea
-          ref="box"
-          v-model="content"
-          maxlength="500"
-          rows="1"
-          :placeholder="
-            replyTo
-              ? t('comment.placeholderReply', { name: replyTo.nickname })
-              : t('comment.placeholder')
-          "
-          :aria-label="t('comment.body')"
-          @input="onBox"
-          @keydown="onKey"
-        />
-        <div class="tools">
-          <button
-            ref="emojiButton"
-            v-wave
-            type="button"
-            class="icon"
-            :aria-label="t('comment.emoji')"
-            @click="emojiOpen = !emojiOpen"
-          >
-            <Smile :size="20" />
-          </button>
-          <button
-            v-wave
-            type="submit"
-            class="send"
-            :disabled="sending || !canSend"
-            :aria-busy="sending || undefined"
-          >
-            {{ replyTo ? t('action.reply') : t('comment.submit') }}
-          </button>
-        </div>
+      <textarea
+        ref="box"
+        v-model="content"
+        maxlength="500"
+        rows="3"
+        :placeholder="
+          replyTo
+            ? t('comment.placeholderReply', { name: replyTo.nickname })
+            : t('comment.placeholder')
+        "
+        :aria-label="t('comment.body')"
+        @input="onBox"
+      />
+      <div class="tools">
+        <button
+          ref="emojiButton"
+          v-wave
+          type="button"
+          class="icon"
+          :aria-label="t('comment.emoji')"
+          @click="emojiOpen = !emojiOpen"
+        >
+          <Smile :size="20" />
+        </button>
+        <button
+          v-wave
+          type="submit"
+          class="send"
+          :disabled="sending || !canSend"
+          :aria-busy="sending || undefined"
+        >
+          {{ replyTo ? t('action.reply') : t('comment.submit') }}
+        </button>
         <Transition :name="reduced ? undefined : 'pop'">
           <EmojiPicker
             v-if="emojiOpen"
@@ -211,15 +204,6 @@ async function submit() {
   gap: var(--space-sm);
 }
 
-.box {
-  position: relative;
-  display: flex;
-  flex: 1;
-  align-items: flex-end;
-  gap: var(--space-xs);
-  min-width: 0;
-}
-
 textarea {
   flex: 1;
   min-width: 0;
@@ -233,6 +217,7 @@ textarea {
 }
 
 .tools {
+  position: relative;
   display: flex;
   flex-shrink: 0;
   align-items: center;
@@ -285,33 +270,19 @@ textarea {
   flex: 1;
   min-width: 0;
   align-items: center;
-}
-
-.composer.bar .box {
-  align-items: center;
-  height: 40px;
-  min-height: 40px;
-  padding: 0 8px 0 16px;
-  overflow: hidden;
-  background: color-mix(in oklab, var(--heading) 4%, var(--surface));
-  border-radius: 20px;
+  gap: 12px;
 }
 
 .composer.bar textarea {
-  height: 22px;
-  min-height: 22px;
-  max-height: 22px;
-  padding: 0;
+  min-height: 88px;
+  max-height: 160px;
+  padding: 12px 16px;
   overflow-x: hidden;
   overflow-y: auto;
+  background: color-mix(in oklab, var(--heading) 4%, var(--surface));
+  border-radius: 16px;
   font-size: 14px;
   line-height: 22px;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-  }
 }
 
 .composer.bar .tools {

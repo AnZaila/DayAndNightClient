@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Maximize2, Minimize2 } from '@lucide/vue'
@@ -44,18 +44,20 @@ function syncFill(on: boolean) {
 
 watch(filled, (value) => syncFill(value), { immediate: true })
 
-onActivated(() => syncFill(filled.value))
-onDeactivated(() => document.documentElement.classList.remove('map-fill'))
-
-onMounted(async () => {
+async function load() {
   try {
     places.value = await fetchPlaces()
-    await notes.more()
+    if (notes.page.value === 0) await notes.more()
+    else await notes.open(1)
   } catch (cause) {
     error.value = cause instanceof ApiError ? cause.message : t('map.loadFailed')
   } finally {
     ready.value = true
   }
+}
+
+onMounted(() => {
+  void load()
 })
 
 onBeforeUnmount(() => {

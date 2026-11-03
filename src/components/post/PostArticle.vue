@@ -23,6 +23,7 @@ const props = withDefaults(
     location?: string | null
     visibility?: string | null
     pinned?: boolean
+    title?: string | null
     content?: string | null
     media?: ArticleMedia[]
     latitude?: number | null
@@ -38,6 +39,7 @@ const props = withDefaults(
     location: null,
     visibility: 'PUBLIC',
     pinned: false,
+    title: '',
     content: '',
     media: () => [],
     latitude: null,
@@ -52,7 +54,9 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const alt = computed(() => plainText(props.content || '').slice(0, 40) || t('post.imageAlt'))
+const alt = computed(
+  () => props.title?.trim() || plainText(props.content || '').slice(0, 40) || t('post.imageAlt'),
+)
 const hasMood = computed(() => Boolean(props.mood) && props.mood !== 'none')
 const hasWeather = computed(() => Boolean(props.weather) && props.weather !== 'none')
 const when = computed(() => formatDate(props.happenedAt).replace(/(\s00:00(:00)?)$/, ''))
@@ -113,6 +117,7 @@ const when = computed(() => formatDate(props.happenedAt).replace(/(\s00:00(:00)?
       :latitude="latitude"
       :longitude="longitude"
     />
+    <h2 v-if="title?.trim()" class="post-title">{{ title }}</h2>
     <PostBody v-if="content && !isBlankHtml(content)" class="body" :content="content" />
     <p v-else-if="empty" class="muted">{{ empty }}</p>
     <slot />
@@ -149,6 +154,15 @@ h1 {
   line-height: 1.3;
   overflow-wrap: anywhere;
   min-width: 0;
+}
+
+.post-title {
+  margin: 0;
+  color: var(--heading);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: break-word;
 }
 
 .chips {
