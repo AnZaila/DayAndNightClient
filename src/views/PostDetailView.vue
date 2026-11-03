@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { Maximize2, Pin } from '@lucide/vue'
-import { motion } from 'motion-v'
+import { Ellipsis, Lock, Pin, X } from '@lucide/vue'
+import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import {
   createComment,
   deleteComment,
@@ -13,25 +13,29 @@ import {
 } from '@/api/comment'
 import { createPostDanmaku, fetchPostDanmaku, likeDanmaku } from '@/api/danmaku'
 import { usePaged } from '@/composables/usePaged'
+import { overlayBehind } from '@/composables/usePostOverlay'
 import { deletePost, fetchPost, likePost, pinPost } from '@/api/post'
 import { pushToast } from '@/composables/useToast'
 import CommentForm from '@/components/comment/CommentForm.vue'
 import CommentList from '@/components/comment/CommentList.vue'
 import DanmakuForm from '@/components/danmaku/DanmakuForm.vue'
 import DanmakuStage from '@/components/danmaku/DanmakuStage.vue'
-import AppButton from '@/components/common/AppButton.vue'
 import ScrollSentinel from '@/components/common/ScrollSentinel.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
-import ImageLightbox from '@/components/common/ImageLightbox.vue'
-import PostArticle from '@/components/post/PostArticle.vue'
+import ProfileLink from '@/components/common/ProfileLink.vue'
+import UserAvatar from '@/components/common/UserAvatar.vue'
+import DiaryIcon from '@/components/post/DiaryIcon.vue'
+import PostBody from '@/components/post/PostBody.vue'
+import PostCarousel from '@/components/post/PostCarousel.vue'
 import PostStats from '@/components/post/PostStats.vue'
 import type { Comment } from '@/types/comment'
 import type { Danmaku } from '@/types/danmaku'
-import type { Media, PostDetail } from '@/types/post'
+import type { PostDetail } from '@/types/post'
+import { namedLabel } from '@/i18n'
 import { ApiError } from '@/utils/request'
-import { plainText } from '@/utils/text'
+import { formatDate, isBlankHtml, plainText } from '@/utils/text'
 import { useSessionStore } from '@/stores/session'
 
 const { t } = useI18n()
@@ -45,13 +49,8 @@ const thread = usePaged<Comment>((page) => fetchComments(postId.value, page, 10)
 const notes = usePaged<Danmaku>((page) => fetchPostDanmaku(postId.value, page, 20))
 const replyTarget = ref<Comment | null>(null)
 const confirmOpen = ref(false)
-const active = ref<Media | null>(null)
-const lightboxOpen = computed({
-  get: () => active.value !== null,
-  set(value: boolean) {
-    if (!value) active.value = null
-  },
-})
+const menuOpen = ref(false)
+const shot = ref(0)
 
 const postId = computed(() => Number(route.params.id))
 const mine = computed(() => session.user?.id === post.value?.authorId)
@@ -65,9 +64,51 @@ const alt = computed(() =>
   post.value ? plainText(post.value.content).slice(0, 40) : t('post.imageAlt'),
 )
 const flying = computed(() => notes.items.value.filter((item) => item.status === 'VISIBLE'))
+const hasMood = computed(() => Boolean(post.value?.mood) && post.value?.mood !== 'none')
+const hasWeather = computed(() => Boolean(post.value?.weather) && post.value?.weather !== 'none')
+const when = computed(() =>
+  post.value ? formatDate(post.value.happenedAt).replace(/(\s00:00(:00)?)$/, '') : '',
+)
+const mediaRatio = ref(3 / 4)
+const natural = ref<Record<number, { w: number; h: number }>>({})
+
+const currentMedia = computed(() => post.value?.media[shot.value] ?? post.value?.media[0] ?? null)
+
+const noteStyle = computed(() => ({
+  '--media-ratio': String(mediaRatio.value > 0 ? mediaRatio.value : 0.75),
+}))
+
+function readRatio() {
+  const item = currentMedia.value
+  if (!item) return
+  if (item.width && item.height) {
+    mediaRatio.value = item.width / item.height
+    return
+  }
+  const cached = natural.value[item.id]
+  if (cached) {
+    mediaRatio.value = cached.w / cached.h
+    return
+  }
+  const img = new Image()
+  img.onload = () => {
+    natural.value = {
+      ...natural.value,
+      [item.id]: { w: img.naturalWidth, h: img.naturalHeight },
+    }
+    if (currentMedia.value?.id === item.id && img.naturalHeight) {
+      mediaRatio.value = img.naturalWidth / img.naturalHeight
+    }
+  }
+  img.src = item.url
+}
+
+watch(currentMedia, readRatio, { immediate: true })
 
 async function load() {
   error.value = null
+  shot.value = 0
+  post.value = null
   try {
     post.value = await fetchPost(postId.value)
     thread.reset()
@@ -156,6 +197,7 @@ async function likeThis() {
 
 async function pinThis() {
   if (!post.value) return
+  menuOpen.value = false
   try {
     post.value = await pinPost(post.value.id)
     pushToast(post.value.pinned ? t('action.pinned') : t('action.unpinned'))
@@ -172,130 +214,194 @@ async function likeNote(id: number) {
 async function removePost() {
   await deletePost(postId.value)
   pushToast(t('action.deleted'))
-  await router.push({ name: 'timeline' })
+  close()
 }
 
-onMounted(load)
+function askDelete() {
+  menuOpen.value = false
+  confirmOpen.value = true
+}
+
+function close() {
+  if (overlayBehind.value && window.history.length > 1) {
+    router.back()
+    return
+  }
+  void router.push({ name: 'timeline' })
+}
+
+function onKey(event: KeyboardEvent) {
+  if (event.key !== 'Escape' || confirmOpen.value || menuOpen.value) return
+  close()
+}
+
+watch(postId, load, { immediate: true })
+onMounted(() => window.addEventListener('keydown', onKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <div>
-    <div v-if="post" class="shell stack wide">
-      <PostArticle
-        :display-name="post.displayName"
-        :avatar-url="post.authorAvatarUrl"
-        :author-id="post.authorId"
-        :happened-at="post.happenedAt"
-        :mood="post.mood"
-        :weather="post.weather"
-        :location="post.location"
-        :visibility="post.visibility"
-        :pinned="post.pinned"
-        :content="post.content"
-        :media="post.media"
-        :latitude="post.latitude"
-        :longitude="post.longitude"
-        zoom
-        @open="active = $event as Media"
+  <Teleport to="body">
+    <div class="mask" @click.self="close">
+      <button type="button" class="shut" :aria-label="t('action.close')" @click="close">
+        <X :size="20" />
+      </button>
+      <article
+        v-if="post"
+        class="note"
+        :class="{ 'has-media': post.media.length }"
+        :style="noteStyle"
+        @click.stop
       >
-        <template #gallery>
-          <div v-if="post.media.length" class="gallery">
-            <button
-              v-for="media in post.media"
-              :key="media.id"
-              type="button"
-              class="shot"
-              @click="active = media"
-            >
-              <motion.img
-                :src="media.url"
-                :alt="alt"
-                :layout-id="media.id === post.media[0]?.id ? `cover-${post.id}` : undefined"
-              />
-              <span class="zoom"><Maximize2 :size="16" /> {{ t('action.zoomIn') }}</span>
-            </button>
-          </div>
-        </template>
-        <template #chips>
-          <span v-if="post.status === 'HIDDEN'">{{ t('post.hiddenOnTimeline') }}</span>
-        </template>
-        <template #stats>
-          <PostStats
-            :view-count="post.viewCount"
-            :like-count="post.likeCount"
-            :comment-count="post.commentCount"
-            :liked="post.liked"
-            comment-href="#comments"
-            @like="likeThis"
-          />
-        </template>
-        <div v-if="session.user" class="row">
-          <AppButton variant="plain" type="button" @click="pinThis">
-            <Pin :size="16" :fill="post.pinned ? 'currentColor' : 'none'" />
-            {{ post.pinned ? t('action.unpin') : t('action.pin') }}
-          </AppButton>
-          <template v-if="mine">
-            <WaveLink class="btn quiet" :to="{ name: 'write', params: { id: post.id } }">{{
-              t('post.edit')
-            }}</WaveLink>
-            <AppButton variant="plain" tone="danger" type="button" @click="confirmOpen = true">{{
-              t('post.delete')
-            }}</AppButton>
-          </template>
+        <div v-if="post.media.length" class="media">
+          <PostCarousel v-model="shot" :items="post.media" :alt="alt" :layout-id="`cover-${post.id}`" />
+          <DanmakuStage contained :items="flying" @like="likeNote" @need-more="notes.more" />
         </div>
-        <DanmakuStage :items="flying" @like="likeNote" @need-more="notes.more" />
-      </PostArticle>
-      <section class="card">
-        <h2>{{ t('post.danmaku') }}</h2>
-        <DanmakuForm :send="sendDanmaku" />
-      </section>
-      <section id="comments" class="card">
-        <h2>
-          {{ t('post.comments')
-          }}<span v-if="post.commentCount" class="count">{{ post.commentCount }}</span>
-        </h2>
-        <p v-if="!canComment" class="lede">
-          {{ post.commentsOpen ? t('post.commentsClosedOff') : t('post.commentsClosed') }}
-        </p>
-        <Skeleton
-          v-if="thread.loading.value && thread.page.value === 0"
-          preset="comment"
-          :count="3"
-        />
-        <CommentList
-          v-else
-          threaded
-          :comments="thread.items.value"
-          :can-moderate="Boolean(session.user)"
-          @hide="setStatus($event, 'HIDDEN')"
-          @show="setStatus($event, 'VISIBLE')"
-          @remove="removeComment"
-          @like="likeOne"
-          @reply="replyTarget = $event"
-        />
-        <p v-if="thread.error.value && thread.items.value.length === 0" class="error">
-          {{ thread.error.value }}
-        </p>
-        <p
-          v-else-if="thread.page.value > 0 && thread.items.value.length === 0"
-          class="muted empty-note"
-        >
-          {{ t('post.noComments') }}
-        </p>
-        <Skeleton v-if="thread.loading.value && thread.items.value.length" preset="comment" />
-        <ScrollSentinel
-          v-if="thread.hasMore.value && thread.page.value > 0"
-          :key="thread.page.value"
-          @visible="thread.more"
-        />
-        <p v-if="commentError" class="error">{{ commentError }}</p>
-        <CommentForm
-          v-if="canComment"
-          :submit-comment="submitComment"
-          :reply-to="replyTarget"
-          @cancel-reply="replyTarget = null"
-        />
-      </section>
+        <div class="side">
+          <header class="who">
+            <ProfileLink :user-id="post.authorId">
+              <UserAvatar :src="post.authorAvatarUrl" :name="post.displayName" :size="40" />
+            </ProfileLink>
+            <div class="by">
+              <p class="name">
+                <ProfileLink :user-id="post.authorId">{{ post.displayName }}</ProfileLink>
+              </p>
+            </div>
+            <PopoverRoot v-if="session.user" v-model:open="menuOpen">
+              <PopoverTrigger as-child>
+                <button type="button" class="more" :aria-label="t('action.more')">
+                  <Ellipsis :size="20" />
+                </button>
+              </PopoverTrigger>
+              <PopoverPortal>
+                <PopoverContent class="soft-menu more-menu" align="end" :side-offset="6">
+                  <button type="button" class="soft-item" @click="pinThis">
+                    <Pin :size="14" :fill="post.pinned ? 'currentColor' : 'none'" />
+                    {{ post.pinned ? t('action.unpin') : t('action.pin') }}
+                  </button>
+                  <WaveLink
+                    v-if="mine"
+                    class="soft-item"
+                    :to="{ name: 'write', params: { id: post.id } }"
+                    @click="menuOpen = false"
+                  >
+                    {{ t('post.edit') }}
+                  </WaveLink>
+                  <button v-if="mine" type="button" class="soft-item danger" @click="askDelete">
+                    {{ t('post.delete') }}
+                  </button>
+                </PopoverContent>
+              </PopoverPortal>
+            </PopoverRoot>
+          </header>
+          <div class="caption">
+            <div
+              v-if="
+                hasMood ||
+                hasWeather ||
+                post.visibility === 'PRIVATE' ||
+                post.pinned ||
+                post.status === 'HIDDEN'
+              "
+              class="chips"
+            >
+              <span v-if="hasMood" class="tag tag-mood"
+                ><DiaryIcon kind="mood" :value="post.mood!" />{{
+                  namedLabel('mood', post.mood)
+                }}</span
+              >
+              <span v-if="hasWeather" class="tag tag-weather"
+                ><DiaryIcon kind="weather" :value="post.weather!" />{{
+                  namedLabel('weather', post.weather)
+                }}</span
+              >
+              <span v-if="post.visibility === 'PRIVATE'" class="tag tag-private"
+                ><Lock :size="12" />{{ t('visibility.PRIVATE') }}</span
+              >
+              <span v-if="post.pinned" class="tag tag-pinned"
+                ><Pin :size="12" fill="currentColor" />{{ t('action.pin') }}</span
+              >
+              <span v-if="post.status === 'HIDDEN'" class="muted">{{
+                t('post.hiddenOnTimeline')
+              }}</span>
+            </div>
+            <PostBody v-if="post.content && !isBlankHtml(post.content)" :content="post.content" />
+            <p class="when">
+              <time :datetime="post.happenedAt">{{ when }}</time>
+              <span v-if="post.location"> · {{ post.location }}</span>
+            </p>
+          </div>
+          <footer class="dock">
+            <p v-if="!canComment" class="lede">
+              {{ post.commentsOpen ? t('post.commentsClosedOff') : t('post.commentsClosed') }}
+            </p>
+            <p v-if="commentError" class="error">{{ commentError }}</p>
+            <div class="engage">
+              <CommentForm
+                v-if="canComment"
+                bar
+                :submit-comment="submitComment"
+                :reply-to="replyTarget"
+                @cancel-reply="replyTarget = null"
+              />
+              <PostStats
+                size="bar"
+                :view-count="post.viewCount"
+                :like-count="post.likeCount"
+                :comment-count="post.commentCount"
+                :liked="post.liked"
+                comment-href="#comments"
+                @like="likeThis"
+              />
+            </div>
+          </footer>
+          <div class="scroll">
+            <h2 id="comments" class="section">
+              {{ t('post.commentsCount', { n: post.commentCount }) }}
+            </h2>
+            <Skeleton
+              v-if="thread.loading.value && thread.page.value === 0"
+              preset="comment"
+              :count="3"
+            />
+            <CommentList
+              v-else
+              threaded
+              dense
+              :comments="thread.items.value"
+              :can-moderate="Boolean(session.user)"
+              @hide="setStatus($event, 'HIDDEN')"
+              @show="setStatus($event, 'VISIBLE')"
+              @remove="removeComment"
+              @like="likeOne"
+              @reply="replyTarget = $event"
+            />
+            <p v-if="thread.error.value && thread.items.value.length === 0" class="error">
+              {{ thread.error.value }}
+            </p>
+            <p
+              v-else-if="thread.page.value > 0 && thread.items.value.length === 0"
+              class="muted empty-note"
+            >
+              {{ t('post.noComments') }}
+            </p>
+            <Skeleton v-if="thread.loading.value && thread.items.value.length" preset="comment" />
+            <ScrollSentinel
+              v-if="thread.hasMore.value && thread.page.value > 0"
+              :key="thread.page.value"
+              @visible="thread.more"
+            />
+          </div>
+          <div class="notes">
+            <p class="notes-label">{{ t('post.danmaku') }}</p>
+            <DanmakuForm :send="sendDanmaku" />
+          </div>
+        </div>
+      </article>
+      <p v-else-if="error" class="fail" @click.stop>
+        {{ t('post.privateHint', { error }) }}
+      </p>
+      <Skeleton v-else class="note loading" preset="detail" />
       <ConfirmDialog
         v-model:open="confirmOpen"
         :title="t('post.deleteTitle')"
@@ -304,31 +410,169 @@ onMounted(load)
         tone="danger"
         @confirm="removePost"
       />
-      <ImageLightbox v-model:open="lightboxOpen" :src="active?.url || ''" :alt="alt" />
     </div>
-    <p v-else-if="error" class="shell wide error">
-      {{ t('post.privateHint', { error }) }}
-    </p>
-    <Skeleton v-else class="shell wide" preset="detail" />
-  </div>
+  </Teleport>
 </template>
 
 <style scoped lang="scss">
-h2 {
-  margin-bottom: var(--space-xs);
-  color: var(--heading);
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.3;
-  overflow-wrap: break-word;
+.mask {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  scrollbar-width: none;
+  background: rgb(0 0 0 / 25%);
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+}
+
+.shut {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 40px;
+  background: rgb(64 64 64 / 25%);
+  color: #fff;
+  cursor: pointer;
+
+  &:hover {
+    background: rgb(64 64 64 / 40%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+}
+
+.note {
+  display: flex;
+  overflow: hidden;
+  width: 480px;
+  height: calc(100dvh - 48px);
+  max-height: calc(100dvh - 48px);
+  background: var(--surface);
+  border-radius: 20px;
+}
+
+.note.has-media {
+  width: min(1040px, calc(100vw - 80px));
+}
+
+.media {
+  position: relative;
+  flex: 1 0 auto;
+  min-width: 280px;
+  max-width: 640px;
+  height: 100%;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--heading) 4%, var(--surface));
+  border-radius: 20px 0 0 20px;
+}
+
+.side {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  width: 400px;
+  max-width: 400px;
+  min-width: 0;
+  height: 100%;
+  border-radius: 0 20px 20px 0;
+}
+
+.note:not(.has-media) .side {
+  width: 100%;
+  max-width: none;
+  border-radius: 20px;
+}
+
+.who {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+  height: 81px;
+  padding: 20px;
+  border-bottom: 1px solid color-mix(in oklab, var(--heading) 6%, transparent);
+}
+
+.by {
+  flex: 1;
   min-width: 0;
 }
 
-.count {
-  margin-left: var(--space-xs);
-  color: var(--muted);
-  font-size: 14px;
+.name {
+  color: var(--heading);
+  font-size: 16px;
   font-weight: 500;
+  line-height: 1.3;
+}
+
+.more {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--heading);
+  cursor: pointer;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: scroll;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+}
+
+.caption {
+  display: grid;
+  flex-shrink: 0;
+  gap: 8px;
+  max-height: 42%;
+  padding: 0 20px 16px;
+  overflow-y: auto;
+  font-size: 16px;
+  line-height: 1.5;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+}
+
+.caption :deep(.rich > *:first-child) {
+  margin: 0 0 8px;
+  color: var(--heading);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.when {
+  margin: 8px 0 0;
+  color: color-mix(in oklab, var(--heading) 30%, transparent);
+  font-size: 14px;
 }
 
 .chips {
@@ -337,62 +581,109 @@ h2 {
   gap: var(--space-xs);
 }
 
-.chips span {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2xs);
-  min-height: 32px;
-  color: var(--heading);
-  font-size: var(--text-sm);
+.section {
+  margin: 0 8px 12px 20px;
+  color: color-mix(in oklab, var(--heading) 60%, transparent);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
 }
 
-.gallery {
-  display: grid;
-  gap: var(--space-sm);
+.scroll :deep(.list) {
+  padding: 0 12px 16px 20px;
 }
 
-.shot {
-  position: relative;
-  width: 100%;
-  padding: 0;
-  overflow: hidden;
-  border-radius: var(--radius-lg);
-  cursor: zoom-in;
-}
-
-img {
-  width: 100%;
-  max-height: 420px;
-  object-fit: cover;
-  transition: transform var(--dur-long) var(--ease-out);
-}
-
-.shot:hover img {
-  transform: scale(1.03);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .shot:hover img {
-    transform: none;
-  }
-}
-
-.zoom {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2xs);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius);
+.dock {
+  z-index: 1;
+  flex-shrink: 0;
+  padding: 16px 16px 16px;
   background: var(--surface);
-  color: var(--heading);
-  font-size: var(--text-sm);
-  border: var(--rule-hair) solid var(--line);
+}
+
+.engage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.engage :deep(.row) {
+  min-width: 0;
+}
+
+.notes {
+  z-index: 1;
+  flex-shrink: 0;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-top: var(--rule-hair) solid var(--line);
+  border-bottom: var(--rule-hair) solid var(--line);
+}
+
+.notes-label {
+  margin: 0 0 var(--space-xs);
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .empty-note {
-  margin-bottom: var(--space-md);
+  margin: 0 20px 16px;
+}
+
+.lede,
+.error {
+  margin: 0 0 8px;
+}
+
+.fail {
+  max-width: 28em;
+  padding: var(--space-lg);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--danger);
+}
+
+.note.loading {
+  width: min(720px, calc(100vw - 80px));
+  padding: var(--space-md);
+}
+
+:deep(.soft-item.danger) {
+  color: var(--danger);
+}
+
+@media (max-width: 840px) {
+  .shut {
+    top: 12px;
+    left: 12px;
+  }
+
+  .note,
+  .note.has-media {
+    flex-direction: column;
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .media {
+    flex: none;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    max-height: min(52dvh, 480px);
+    aspect-ratio: var(--media-ratio, 3 / 4);
+    border-radius: 0;
+  }
+
+  .side {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    flex: 1;
+    border-radius: 0;
+  }
 }
 </style>

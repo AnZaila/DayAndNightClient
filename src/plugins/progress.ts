@@ -11,6 +11,7 @@ NProgress.configure({
 
 export function setupProgress(router: Router) {
   router.beforeEach((to, from) => {
+    if (to.name === 'post' || from.name === 'post') return
     if (from.matched.length && to.fullPath !== from.fullPath) {
       NProgress.start()
     }

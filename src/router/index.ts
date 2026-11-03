@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { rememberPostBackground } from '@/composables/usePostOverlay'
 import { setupProgress } from '@/plugins/progress'
 import { useSessionStore } from '@/stores/session'
 
@@ -75,12 +76,15 @@ const router = createRouter({
       component: () => import('@/views/UserHomeView.vue'),
     },
   ],
-  scrollBehavior() {
+  scrollBehavior(to, from, saved) {
+    if (to.name === 'post' || from.name === 'post') return false
+    if (saved) return saved
     return { top: 0 }
   },
 })
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, from) => {
+  rememberPostBackground(to, from)
   const session = useSessionStore()
   if (!session.ready) {
     await session.refresh()

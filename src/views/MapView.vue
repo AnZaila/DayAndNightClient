@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Maximize2, Minimize2 } from '@lucide/vue'
@@ -38,13 +38,14 @@ function toggleFullscreen() {
   filled.value = !filled.value
 }
 
-watch(
-  filled,
-  (value) => {
-    document.documentElement.classList.toggle('map-fill', value)
-  },
-  { immediate: true },
-)
+function syncFill(on: boolean) {
+  document.documentElement.classList.toggle('map-fill', on)
+}
+
+watch(filled, (value) => syncFill(value), { immediate: true })
+
+onActivated(() => syncFill(filled.value))
+onDeactivated(() => document.documentElement.classList.remove('map-fill'))
 
 onMounted(async () => {
   try {

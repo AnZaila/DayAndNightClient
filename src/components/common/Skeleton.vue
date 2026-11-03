@@ -59,36 +59,35 @@ const rows = computed(() => Array.from({ length: Math.max(props.count, 1) }, (_,
       </div>
     </template>
     <template v-else-if="preset === 'detail'">
-      <article class="card piece">
-        <div class="person">
-          <SkeletonBone width="42px" height="42px" circle />
-          <div class="lines">
-            <SkeletonBone width="168px" height="18px" />
-            <SkeletonBone width="148px" height="12px" />
+      <div class="stage">
+        <SkeletonBone class="photo" height="520px" radius="0" />
+        <article class="piece side-panel">
+          <div class="person">
+            <SkeletonBone width="36px" height="36px" circle />
+            <div class="lines">
+              <SkeletonBone width="88px" height="14px" />
+              <SkeletonBone width="120px" height="12px" />
+            </div>
           </div>
-        </div>
-        <SkeletonBone height="220px" radius="12px" />
-        <SkeletonBone height="14px" />
-        <SkeletonBone width="90%" height="14px" />
-        <SkeletonBone width="64%" height="14px" />
-      </article>
-      <article class="card piece">
-        <SkeletonBone width="56px" height="18px" />
-        <div class="person">
-          <SkeletonBone width="36px" height="36px" circle />
-          <div class="lines">
-            <SkeletonBone width="72px" height="12px" />
-            <SkeletonBone height="14px" />
+          <SkeletonBone height="14px" />
+          <SkeletonBone width="92%" height="14px" />
+          <SkeletonBone width="64%" height="14px" />
+          <div class="person">
+            <SkeletonBone width="32px" height="32px" circle />
+            <div class="lines">
+              <SkeletonBone width="72px" height="12px" />
+              <SkeletonBone height="14px" />
+            </div>
           </div>
-        </div>
-        <div class="person">
-          <SkeletonBone width="36px" height="36px" circle />
-          <div class="lines">
-            <SkeletonBone width="64px" height="12px" />
-            <SkeletonBone width="80%" height="14px" />
+          <div class="person">
+            <SkeletonBone width="32px" height="32px" circle />
+            <div class="lines">
+              <SkeletonBone width="64px" height="12px" />
+              <SkeletonBone width="80%" height="14px" />
+            </div>
           </div>
-        </div>
-      </article>
+        </article>
+      </div>
     </template>
     <template v-else-if="preset === 'note' || preset === 'anniversary'">
       <div v-for="row in rows" :key="row" class="note">
@@ -144,6 +143,24 @@ const rows = computed(() => Array.from({ length: Math.max(props.count, 1) }, (_,
     flex-direction: row;
     align-items: center;
   }
+}
+
+.stage {
+  display: grid;
+  overflow: hidden;
+  background: var(--surface);
+  border: var(--rule-hair) solid var(--line);
+  border-radius: 12px;
+}
+
+@media (min-width: 841px) {
+  .stage {
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 360px);
+  }
+}
+
+.side-panel {
+  padding: var(--space-md);
 }
 
 .shot {

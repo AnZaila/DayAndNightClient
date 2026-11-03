@@ -8,6 +8,7 @@ import type { Danmaku } from '@/types/danmaku'
 
 const props = defineProps<{
   items: Danmaku[]
+  contained?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -120,8 +121,8 @@ function finish(id: number) {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="shown" class="stage">
+  <Teleport to="body" :disabled="contained">
+    <div v-if="shown" class="stage" :class="{ contained }">
       <span
         v-for="item in flying"
         :key="item.id"
@@ -167,6 +168,17 @@ function finish(id: number) {
   z-index: 35;
   overflow: hidden;
   pointer-events: none;
+
+  &.contained {
+    position: absolute;
+    top: 0;
+    z-index: 4;
+    container-type: inline-size;
+
+    .bullet {
+      animation-name: fly-box;
+    }
+  }
 }
 
 .bullet {
@@ -233,6 +245,16 @@ function finish(id: number) {
 
   to {
     transform: translateX(calc(-100vw - 100%));
+  }
+}
+
+@keyframes fly-box {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-100cqw - 100%));
   }
 }
 

@@ -10,13 +10,19 @@ const motion = usePreferredReducedMotion()
 const reduced = computed(() => motion.value === 'reduce')
 const likeBtn = useTemplateRef('likeBtn')
 
-const props = defineProps<{
-  viewCount: number
-  likeCount: number
-  commentCount: number
-  liked: boolean
-  commentHref?: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    viewCount: number
+    likeCount: number
+    commentCount: number
+    liked: boolean
+    commentHref?: string
+    size?: 'md' | 'lg' | 'bar'
+  }>(),
+  { size: 'md' },
+)
+
+const icon = computed(() => (props.size === 'lg' ? 24 : props.size === 'bar' ? 20 : 14))
 
 const emit = defineEmits<{
   like: []
@@ -54,9 +60,9 @@ function onLike() {
 </script>
 
 <template>
-  <div class="stats" @click.stop>
-    <span class="stat">
-      <Eye :size="14" />
+  <div class="stats" :class="size" @click.stop>
+    <span v-if="size === 'md'" class="stat">
+      <Eye :size="icon" />
       {{ viewCount }}
     </span>
     <button
@@ -68,16 +74,20 @@ function onLike() {
       :aria-label="liked ? t('action.unlike') : t('action.like')"
       @click="onLike"
     >
-      <Heart :size="14" :fill="liked ? 'currentColor' : 'none'" />
-      {{ likeCount }}
+      <Heart :size="icon" :fill="liked ? 'currentColor' : 'none'" />
+      <span>{{ likeCount }}</span>
     </button>
     <a v-if="commentHref" class="stat" :href="commentHref">
-      <MessageCircle :size="14" />
-      {{ commentCount }}
+      <MessageCircle :size="icon" />
+      <span>{{ commentCount }}</span>
     </a>
     <span v-else class="stat">
-      <MessageCircle :size="14" />
-      {{ commentCount }}
+      <MessageCircle :size="icon" />
+      <span>{{ commentCount }}</span>
+    </span>
+    <span v-if="size === 'lg' || size === 'bar'" class="stat views">
+      <Eye :size="18" />
+      {{ viewCount }}
     </span>
   </div>
 </template>
@@ -118,5 +128,36 @@ a.stat {
 
 .like.on {
   color: var(--danger);
+}
+
+.stats.lg {
+  gap: var(--space-md);
+
+  .stat {
+    min-height: 40px;
+    color: var(--heading);
+  }
+
+  .views {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 13px;
+  }
+}
+
+.stats.bar {
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  gap: 12px;
+
+  .stat {
+    min-height: 40px;
+    color: var(--heading);
+    font-size: 12px;
+  }
+
+  .views {
+    color: var(--muted);
+  }
 }
 </style>

@@ -15,6 +15,7 @@ const props = defineProps<{
   canModerate: boolean
   showPost?: boolean
   threaded?: boolean
+  dense?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -65,17 +66,19 @@ function confirmRemove() {
 </script>
 
 <template>
-  <ul v-if="comments.length && threaded" class="list">
+  <ul v-if="comments.length && threaded" class="list" :class="{ dense }">
     <li v-for="thread in threads" :key="thread.root.id" class="thread">
       <article class="comment">
         <ProfileLink :user-id="thread.root.userId">
           <UserAvatar :src="thread.root.avatarUrl" :name="thread.root.nickname" :size="36" />
         </ProfileLink>
         <div class="body">
-          <ProfileLink :user-id="thread.root.userId">
-            <strong>{{ thread.root.nickname }}</strong>
-          </ProfileLink>
-          <p class="text">{{ thread.root.content }}</p>
+          <p class="text" :class="{ stack: dense }">
+            <ProfileLink :user-id="thread.root.userId">
+              <strong>{{ thread.root.nickname }}</strong>
+            </ProfileLink>
+            {{ thread.root.content }}
+          </p>
           <div class="meta">
             <span class="muted">{{ formatDateTime(thread.root.createdAt) }}</span>
             <span v-if="thread.root.status === 'HIDDEN'" class="muted">{{
@@ -130,10 +133,10 @@ function confirmRemove() {
                 <UserAvatar :src="reply.avatarUrl" :name="reply.nickname" :size="24" />
               </ProfileLink>
               <div class="body">
-                <ProfileLink :user-id="reply.userId">
-                  <strong>{{ reply.nickname }}</strong>
-                </ProfileLink>
-                <p class="text">
+                <p class="text" :class="{ stack: dense }">
+                  <ProfileLink :user-id="reply.userId">
+                    <strong>{{ reply.nickname }}</strong>
+                  </ProfileLink>
                   <template v-if="reply.replyToNickname">
                     {{ t('comment.reply') }} <span class="at">{{ reply.replyToNickname }}</span>
                   </template>
@@ -314,6 +317,41 @@ function confirmRemove() {
   margin: var(--space-3xs) 0 0;
   white-space: pre-wrap;
   word-break: break-word;
+
+  &.inline {
+    margin: 0;
+  }
+
+  &.inline :deep(.profile-link) {
+    display: inline;
+    vertical-align: baseline;
+  }
+
+  &.inline strong {
+    margin-right: 6px;
+  }
+
+  &.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+  }
+
+  &.stack :deep(.profile-link) {
+    display: inline;
+  }
+
+  &.stack strong {
+    color: color-mix(in oklab, var(--heading) 80%, transparent);
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.list.dense {
+  gap: var(--space-sm);
+  margin-bottom: 0;
 }
 
 .meta {
@@ -331,9 +369,6 @@ function confirmRemove() {
   flex-direction: column;
   gap: var(--space-sm);
   margin-top: var(--space-sm);
-  padding: var(--space-sm) var(--space-sm) var(--space-xs);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--field) 70%, transparent);
 
   .text {
     font-size: 14px;
