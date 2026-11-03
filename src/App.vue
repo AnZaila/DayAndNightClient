@@ -8,7 +8,7 @@ import AppToast from '@/components/common/AppToast.vue'
     <SiteHeader />
     <main>
       <router-view v-slot="{ Component, route }">
-        <Transition name="page" mode="out-in">
+        <Transition name="page" mode="out-in" type="transition">
           <component :is="Component" :key="route.fullPath" />
         </Transition>
       </router-view>

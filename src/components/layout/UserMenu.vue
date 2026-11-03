@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from 'reka-ui'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { pushToast } from '@/composables/useToast'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
@@ -20,6 +21,7 @@ type MenuRoute = 'profile' | 'comments' | 'settings'
 
 const emit = defineEmits<{ navigate: [] }>()
 
+const { t } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
 const { user } = storeToRefs(session)
@@ -37,7 +39,7 @@ function askLogout() {
 
 async function logout() {
   await session.logout()
-  pushToast('已退出')
+  pushToast(t('menu.loggedOut'))
   await router.push({ name: 'timeline' })
 }
 </script>
@@ -46,7 +48,7 @@ async function logout() {
   <template v-if="user">
     <DropdownMenuRoot>
       <DropdownMenuTrigger as-child>
-        <button v-wave type="button" class="me" :aria-label="`${user.displayName} 的账户菜单`">
+        <button v-wave type="button" class="me" :aria-label="t('header.accountMenu', { name: user.displayName })">
           <UserAvatar :src="user.avatarUrl" :name="user.displayName" :size="26" />
           <span class="me-name">{{ user.displayName }}</span>
           <ChevronDown class="caret" :size="14" />
@@ -56,30 +58,30 @@ async function logout() {
         <DropdownMenuContent class="soft-menu more-menu" align="end" :side-offset="8">
           <DropdownMenuItem class="soft-item" @select="go('profile')">
             <User :size="16" />
-            个人主页
+            {{ t('menu.profile') }}
           </DropdownMenuItem>
           <DropdownMenuItem class="soft-item" @select="go('comments')">
             <MessageCircle :size="16" />
-            评论管理
+            {{ t('menu.comments') }}
           </DropdownMenuItem>
           <DropdownMenuItem class="soft-item" @select="go('settings')">
             <Settings :size="16" />
-            设置
+            {{ t('menu.settings') }}
           </DropdownMenuItem>
           <DropdownMenuSeparator class="menu-rule" />
           <DropdownMenuItem class="soft-item" @select="askLogout">
             <LogOut :size="16" />
-            退出
+            {{ t('menu.logout') }}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenuPortal>
     </DropdownMenuRoot>
     <ConfirmDialog
       v-model:open="logoutOpen"
-      title="退出登录？"
-      description="退出之后，写和改都要重新登录。"
-      confirm-label="退出"
-      cancel-label="取消"
+      :title="t('menu.logoutTitle')"
+      :description="t('menu.logoutBody')"
+      :confirm-label="t('menu.logout')"
+      :cancel-label="t('action.cancel')"
       @confirm="logout"
     />
   </template>

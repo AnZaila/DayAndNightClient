@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { VueCropper } from 'vue-cropper'
 import {
   DialogContent,
@@ -30,8 +31,11 @@ const props = withDefaults(
     outputName?: string
     aspect?: [number, number]
   }>(),
-  { loading: false, title: '裁剪头像', outputName: 'avatar.jpg', aspect: () => [1, 1] },
+  { loading: false, outputName: 'avatar.jpg', aspect: () => [1, 1] },
 )
+
+const { t } = useI18n()
+const dialogTitle = computed(() => props.title || t('avatar.crop'))
 
 const cropWidth = computed(() => (props.aspect[0] >= props.aspect[1] ? 320 : 220))
 const cropHeight = computed(() => Math.round((cropWidth.value * props.aspect[1]) / props.aspect[0]))
@@ -52,7 +56,7 @@ function readAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(String(reader.result || ''))
-    reader.onerror = () => reject(new Error('图片读取失败'))
+    reader.onerror = () => reject(new Error(t('avatar.readFailed')))
     reader.readAsDataURL(file)
   })
 }
@@ -67,11 +71,13 @@ function onPreview(data: { url: string; w: number; h: number; img?: Record<strin
 async function confirm() {
   const cropper = cropperRef.value
   if (!cropper) {
-    pushToast('裁剪还没准备好', 'error')
+    pushToast(t('avatar.cropNotReady'), 'error')
     return
   }
   const blob = await new Promise<Blob>((resolve, reject) => {
-    cropper.getCropBlob((data) => (data ? resolve(data) : reject(new Error('裁剪失败'))))
+    cropper.getCropBlob((data) =>
+      data ? resolve(data) : reject(new Error(t('avatar.cropFailed'))),
+    )
   })
   emit('confirm', new File([blob], props.outputName, { type: blob.type || 'image/jpeg' }))
 }
@@ -86,7 +92,7 @@ watch(
     try {
       img.value = await readAsDataUrl(file)
     } catch {
-      pushToast('图片读取失败', 'error')
+      pushToast(t('avatar.readFailed'), 'error')
       emit('update:open', false)
     }
   },
@@ -98,8 +104,8 @@ watch(
     <DialogPortal>
       <DialogOverlay class="overlay" />
       <DialogContent class="content">
-        <DialogTitle class="title">{{ title }}</DialogTitle>
-        <DialogDescription class="sr-only">拖动或缩放后确认。</DialogDescription>
+        <DialogTitle class="title">{{ dialogTitle }}</DialogTitle>
+        <DialogDescription class="sr-only">{{ t('avatar.cropHint') }}</DialogDescription>
         <div class="layout">
           <div class="stage">
             <VueCropper
@@ -141,23 +147,25 @@ watch(
                 <img :src="preview.url" :style="preview.img" alt="" />
               </div>
             </div>
-            <p>拖动图片，滚轮缩放。</p>
+            <p>{{ t('avatar.cropHintBody') }}</p>
           </div>
         </div>
         <div class="actions">
-          <AppButton variant="quiet" type="button" @click="cropperRef?.changeScale(-1)"
-            >缩小</AppButton
-          >
-          <AppButton variant="quiet" type="button" @click="cropperRef?.changeScale(1)"
-            >放大</AppButton
-          >
-          <AppButton variant="quiet" type="button" @click="cropperRef?.rotateLeft()"
-            >左转</AppButton
-          >
-          <AppButton variant="quiet" type="button" @click="emit('update:open', false)"
-            >取消</AppButton
-          >
-          <AppButton type="button" :loading="loading" @click="confirm">用这张</AppButton>
+          <AppButton variant="quiet" type="button" @click="cropperRef?.changeScale(-1)">{{
+            t('action.zoomOut')
+          }}</AppButton>
+          <AppButton variant="quiet" type="button" @click="cropperRef?.changeScale(1)">{{
+            t('action.zoomIn')
+          }}</AppButton>
+          <AppButton variant="quiet" type="button" @click="cropperRef?.rotateLeft()">{{
+            t('avatar.rotate')
+          }}</AppButton>
+          <AppButton variant="quiet" type="button" @click="emit('update:open', false)">{{
+            t('action.cancel')
+          }}</AppButton>
+          <AppButton type="button" :loading="loading" @click="confirm">{{
+            t('avatar.useThis')
+          }}</AppButton>
         </div>
       </DialogContent>
     </DialogPortal>

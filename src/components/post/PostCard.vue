@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { EllipsisVertical, Pin } from '@lucide/vue'
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import { motion } from 'motion-v'
@@ -12,6 +13,7 @@ import { pushToast } from '@/composables/useToast'
 import { useSessionStore } from '@/stores/session'
 import type { PostSummary } from '@/types/post'
 import { ApiError } from '@/utils/request'
+import { namedLabel } from '@/i18n'
 import { formatDate, plainText } from '@/utils/text'
 
 const props = defineProps<{
@@ -25,6 +27,7 @@ const emit = defineEmits<{
   pin: []
 }>()
 
+const { t } = useI18n()
 const session = useSessionStore()
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 const excerpt = computed(() => plainText(props.post.excerpt))
@@ -60,7 +63,7 @@ async function toggleLike() {
     liked.value = updated.liked
     likeCount.value = updated.likeCount
   } catch (cause) {
-    pushToast(cause instanceof ApiError ? cause.message : '没有点上', 'error')
+    pushToast(cause instanceof ApiError ? cause.message : t('post.likeFailed'), 'error')
   }
 }
 
@@ -69,10 +72,10 @@ async function togglePin() {
   try {
     const updated = await pinPost(props.post.id)
     pinned.value = updated.pinned
-    pushToast(updated.pinned ? '已置顶' : '已放下')
+    pushToast(updated.pinned ? t('action.pinned') : t('action.unpinned'))
     emit('pin')
   } catch (cause) {
-    pushToast(cause instanceof ApiError ? cause.message : '没有置上', 'error')
+    pushToast(cause instanceof ApiError ? cause.message : t('post.pinFailed'), 'error')
   }
 }
 </script>
@@ -97,26 +100,30 @@ async function togglePin() {
       </div>
       <div class="copy">
         <time v-if="showWhen" :datetime="post.happenedAt">{{ when }}</time>
-        <p class="head">{{ excerpt || '点进去看这一篇。' }}</p>
+        <p class="head">{{ excerpt || t('timeline.excerptFallback') }}</p>
         <small class="facts">
           <ProfileLink :user-id="post.authorId">
             <UserAvatar :src="post.authorAvatarUrl" :name="post.displayName" :size="22" />
             <span>{{ post.displayName }}</span>
           </ProfileLink>
           <span v-if="post.mood" class="tag tag-mood">
-            <DiaryIcon kind="mood" :value="post.mood" :size="13" />{{ post.mood }}
+            <DiaryIcon kind="mood" :value="post.mood" :size="13" />{{ namedLabel('mood', post.mood) }}
           </span>
           <span v-if="post.weather" class="tag tag-weather">
-            <DiaryIcon kind="weather" :value="post.weather" :size="13" />{{ post.weather }}
+            <DiaryIcon kind="weather" :value="post.weather" :size="13" />{{
+              namedLabel('weather', post.weather)
+            }}
           </span>
-          <span v-if="post.visibility === 'PRIVATE'" class="tag tag-private">仅双方</span>
+          <span v-if="post.visibility === 'PRIVATE'" class="tag tag-private">{{
+            t('visibility.PRIVATE')
+          }}</span>
           <span v-if="pinned" class="tag tag-pinned"
-            ><Pin :size="12" fill="currentColor" />置顶</span
+            ><Pin :size="12" fill="currentColor" />{{ t('action.pin') }}</span
           >
           <span v-if="clock" class="tag tag-time">{{ clock }}</span>
           <PopoverRoot v-if="session.user" v-model:open="menuOpen">
             <PopoverTrigger as-child>
-              <button type="button" class="more" aria-label="更多" @pointerdown.stop @click.stop>
+              <button type="button" class="more" :aria-label="t('action.more')" @pointerdown.stop @click.stop>
                 <EllipsisVertical :size="16" />
               </button>
             </PopoverTrigger>
@@ -124,7 +131,7 @@ async function togglePin() {
               <PopoverContent class="soft-menu more-menu" align="end" :side-offset="6" @click.stop>
                 <button type="button" class="soft-item" @click="togglePin">
                   <Pin :size="14" :fill="pinned ? 'currentColor' : 'none'" />
-                  {{ pinned ? '取消置顶' : '置顶' }}
+                  {{ pinned ? t('action.unpin') : t('action.pin') }}
                 </button>
               </PopoverContent>
             </PopoverPortal>

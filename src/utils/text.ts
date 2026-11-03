@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify'
+import { i18n } from '@/i18n'
 
 const allowed = {
   ALLOWED_TAGS: [
@@ -75,10 +76,21 @@ function dateParts(value: string) {
   }
 }
 
+function locale() {
+  return String(i18n.global.locale.value)
+}
+
+function formatYmd(part: { year: string; month: number; day: number }) {
+  if (locale().startsWith('en')) {
+    return `${part.month}/${part.day}/${part.year}`
+  }
+  return `${part.year}年${part.month}月${part.day}日`
+}
+
 export function formatDate(value: string) {
   const part = dateParts(value)
   if (!part) return value
-  const day = `${part.year}年${part.month}月${part.day}日`
+  const day = formatYmd(part)
   if (!part.hour || !part.minute || part.second == null) return day
   return `${day} ${part.hour}:${part.minute}:${part.second}`
 }
@@ -86,6 +98,7 @@ export function formatDate(value: string) {
 export function formatMonthDay(value: string) {
   const part = dateParts(value)
   if (!part) return value
+  if (locale().startsWith('en')) return `${part.month}/${part.day}`
   return `${part.month}月${part.day}日`
 }
 

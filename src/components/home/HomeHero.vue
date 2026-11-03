@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   day: string
@@ -11,6 +12,7 @@ const props = defineProps<{
   image?: string
 }>()
 
+const { t } = useI18n()
 const canvas = computed(() => ({
   '--hero-image': props.image ? `url(${props.image})` : 'none',
 }))
@@ -47,19 +49,19 @@ const petals = Array.from({ length: 14 }, (_, index) => ({
 
     <div class="copy">
       <div class="stamp">
-        <p class="label">今天</p>
+        <p class="label">{{ t('hero.today') }}</p>
         <p class="day">{{ day }}</p>
         <p class="meta">{{ meta }}</p>
         <p v-if="slogan" class="slogan">{{ slogan }}</p>
       </div>
       <dl class="facts">
         <div>
-          <dt>记下</dt>
-          <dd>{{ posts }} 篇</dd>
+          <dt>{{ t('hero.logged') }}</dt>
+          <dd>{{ t('hero.posts', { n: posts }) }}</dd>
         </div>
         <div v-if="days">
-          <dt>在一起</dt>
-          <dd>{{ days }} 天</dd>
+          <dt>{{ t('hero.together') }}</dt>
+          <dd>{{ t('hero.days', { n: days }) }}</dd>
         </div>
       </dl>
     </div>

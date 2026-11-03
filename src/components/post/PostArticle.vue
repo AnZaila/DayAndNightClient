@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Lock, MapPin, Maximize2, Pin } from '@lucide/vue'
 import MapPoint from '@/components/common/MapPoint.vue'
 import ProfileLink from '@/components/common/ProfileLink.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import DiaryIcon from '@/components/post/DiaryIcon.vue'
 import PostBody from '@/components/post/PostBody.vue'
+import { namedLabel } from '@/i18n'
 import { formatDate, isBlankHtml, plainText } from '@/utils/text'
 
 export type ArticleMedia = { id?: number; url: string }
@@ -49,7 +51,8 @@ const emit = defineEmits<{
   open: [media: ArticleMedia]
 }>()
 
-const alt = computed(() => plainText(props.content || '').slice(0, 40) || '帖子图片')
+const { t } = useI18n()
+const alt = computed(() => plainText(props.content || '').slice(0, 40) || t('post.imageAlt'))
 const hasMood = computed(() => Boolean(props.mood) && props.mood !== 'none')
 const hasWeather = computed(() => Boolean(props.weather) && props.weather !== 'none')
 const when = computed(() => formatDate(props.happenedAt).replace(/(\s00:00(:00)?)$/, ''))
@@ -69,7 +72,9 @@ const when = computed(() => formatDate(props.happenedAt).replace(/(\s00:00(:00)?
           @click="zoom && emit('open', item)"
         >
           <img :src="item.url" :alt="alt" />
-          <span v-if="zoom && index === 0" class="zoom"><Maximize2 :size="16" /> 放大</span>
+          <span v-if="zoom && index === 0" class="zoom"
+            ><Maximize2 :size="16" /> {{ t('action.zoomIn') }}</span
+          >
         </component>
       </div>
     </slot>
@@ -80,22 +85,24 @@ const when = computed(() => formatDate(props.happenedAt).replace(/(\s00:00(:00)?
       <div>
         <h1>
           <ProfileLink :user-id="authorId">{{ displayName }}</ProfileLink
-          >写下的这一天
+          >{{ t('post.wroteThisDay') }}
         </h1>
         <time :datetime="happenedAt">{{ when }}</time>
       </div>
     </div>
     <div class="chips">
       <span v-if="hasMood" class="tag tag-mood"
-        ><DiaryIcon kind="mood" :value="mood!" />{{ mood }}</span
+        ><DiaryIcon kind="mood" :value="mood!" />{{ namedLabel('mood', mood) }}</span
       >
       <span v-if="hasWeather" class="tag tag-weather"
-        ><DiaryIcon kind="weather" :value="weather!" />{{ weather }}</span
+        ><DiaryIcon kind="weather" :value="weather!" />{{ namedLabel('weather', weather) }}</span
       >
       <span v-if="location" class="tag tag-place"><MapPin :size="14" />{{ location }}</span>
-      <span v-if="visibility === 'PRIVATE'" class="tag tag-private"><Lock :size="14" />仅双方</span>
+      <span v-if="visibility === 'PRIVATE'" class="tag tag-private"
+        ><Lock :size="14" />{{ t('visibility.PRIVATE') }}</span
+      >
       <span v-if="pinned" class="tag tag-pinned"
-        ><Pin :size="12" :fill="'currentColor'" />置顶</span
+        ><Pin :size="12" :fill="'currentColor'" />{{ t('action.pin') }}</span
       >
       <slot name="chips" />
     </div>

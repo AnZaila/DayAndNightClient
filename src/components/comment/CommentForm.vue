@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSessionStore } from '@/stores/session'
 import AppButton from '@/components/common/AppButton.vue'
 import GuestAvatar from '@/components/common/GuestAvatar.vue'
@@ -21,6 +22,7 @@ const emit = defineEmits<{
   cancelReply: []
 }>()
 
+const { t } = useI18n()
 const session = useSessionStore()
 const nickname = ref('')
 const avatarUrl = ref<string | null>(null)
@@ -38,7 +40,7 @@ function insertEmoji(emoji: string) {
   const end = el?.selectionEnd ?? start
   const next = content.value.slice(0, start) + emoji + content.value.slice(end)
   if (next.length > 500) {
-    pushToast('评论最多 500 字', 'error')
+    pushToast(t('comment.tooLong'), 'error')
     return
   }
   content.value = next
@@ -52,11 +54,11 @@ function insertEmoji(emoji: string) {
 
 async function submit() {
   if (!signedIn.value && !nickname.value.trim()) {
-    pushToast('留一个昵称', 'error')
+    pushToast(t('comment.needNickname'), 'error')
     return
   }
   if (!content.value.trim()) {
-    pushToast('写一条评论', 'error')
+    pushToast(t('comment.needBody'), 'error')
     return
   }
   sending.value = true
@@ -77,29 +79,29 @@ async function submit() {
 <template>
   <form class="form" novalidate @submit.prevent="submit">
     <p v-if="replyTo" class="hint reply">
-      回复 {{ replyTo.nickname }}
-      <button v-wave type="button" @click="emit('cancelReply')">取消</button>
+      {{ t('comment.replyTo', { name: replyTo.nickname }) }}
+      <button v-wave type="button" @click="emit('cancelReply')">{{ t('comment.cancel') }}</button>
     </p>
     <p v-if="session.user" class="hint identity">
       <ProfileLink :user-id="session.user.id">
         <UserAvatar :src="session.user.avatarUrl" :name="session.user.displayName" :size="22" />
       </ProfileLink>
-      以 {{ session.user.displayName }} 留言。
+      {{ t('comment.asUser', { name: session.user.displayName }) }}
     </p>
     <template v-else>
       <label class="field">
-        <span>昵称</span>
-        <input v-model="nickname" maxlength="20" placeholder="怎么称呼你" />
+        <span>{{ t('comment.nickname') }}</span>
+        <input v-model="nickname" maxlength="20" :placeholder="t('comment.nicknamePlaceholder')" />
       </label>
       <div class="field">
-        <span>头像</span>
+        <span>{{ t('comment.avatar') }}</span>
         <GuestAvatar v-model="avatarUrl" />
-        <p class="optional">可以生成一张，也可以不选。</p>
+        <p class="optional">{{ t('comment.avatarOptional') }}</p>
       </div>
     </template>
     <div class="field anchor">
       <span class="label-line">
-        <span>评论</span>
+        <span>{{ t('comment.body') }}</span>
         <button
           ref="emojiButton"
           v-wave
@@ -107,7 +109,7 @@ async function submit() {
           class="emoji"
           @click="emojiOpen = !emojiOpen"
         >
-          表情
+          {{ t('comment.emoji') }}
         </button>
       </span>
       <Transition :name="reduced ? undefined : 'pop'">
@@ -122,10 +124,16 @@ async function submit() {
         ref="box"
         v-model="content"
         maxlength="500"
-        :placeholder="replyTo ? `回复 ${replyTo.nickname}` : '留下一句就好'"
+        :placeholder="
+          replyTo
+            ? t('comment.placeholderReply', { name: replyTo.nickname })
+            : t('comment.placeholder')
+        "
       />
     </div>
-    <AppButton type="submit" :loading="sending">{{ replyTo ? '回复' : '留下' }}</AppButton>
+    <AppButton type="submit" :loading="sending">{{
+      replyTo ? t('action.reply') : t('comment.submit')
+    }}</AppButton>
   </form>
 </template>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
   page: number
@@ -12,13 +13,14 @@ const emit = defineEmits<{
   page: [page: number]
 }>()
 
+const { t } = useI18n()
 const pages = computed(() => Math.max(1, Math.ceil(props.total / Math.max(props.size, 1))))
 </script>
 
 <template>
-  <nav v-if="total > size" class="pager" aria-label="分页">
+  <nav v-if="total > size" class="pager" :aria-label="t('pager.label')">
     <button v-wave type="button" :disabled="disabled || page <= 1" @click="emit('page', page - 1)">
-      上一页
+      {{ t('pager.prev') }}
     </button>
     <span>{{ page }} / {{ pages }}</span>
     <button
@@ -27,7 +29,7 @@ const pages = computed(() => Math.max(1, Math.ceil(props.total / Math.max(props.
       :disabled="disabled || page >= pages"
       @click="emit('page', page + 1)"
     >
-      下一页
+      {{ t('pager.next') }}
     </button>
   </nav>
 </template>

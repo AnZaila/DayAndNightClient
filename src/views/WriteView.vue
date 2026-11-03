@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { createPost, deletePostMedia, fetchPost, updatePost, uploadPostCover } from '@/api/post'
 import AppButton from '@/components/common/AppButton.vue'
@@ -9,14 +10,17 @@ import AppDatePicker from '@/components/common/AppDatePicker.vue'
 import AppFilePicker from '@/components/common/AppFilePicker.vue'
 import AppSelect from '@/components/common/AppSelect.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import MapPoint from '@/components/common/MapPoint.vue'
 import PostArticle from '@/components/post/PostArticle.vue'
 import RichEditor from '@/components/post/RichEditor.vue'
 import { pushToast } from '@/composables/useToast'
 import type { Media, PostStatus, Visibility } from '@/types/post'
 import { ApiError } from '@/utils/request'
+import { namedLabel } from '@/i18n'
 import { isBlankHtml, toEditorHtml } from '@/utils/text'
 import { useSessionStore } from '@/stores/session'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
@@ -43,21 +47,24 @@ const error = ref<string | null>(null)
 const saving = ref(false)
 const ready = ref(false)
 
-const visibilityOptions = [
-  { value: 'PUBLIC' as const, label: '公开' },
-  { value: 'PRIVATE' as const, label: '仅双方' },
-]
-const statusOptions = [
-  { value: 'PUBLISHED' as const, label: '显示在时间轴' },
-  { value: 'HIDDEN' as const, label: '先从时间轴藏起来' },
-]
+const visibilityOptions = computed(() => [
+  { value: 'PUBLIC' as const, label: t('visibility.PUBLIC') },
+  { value: 'PRIVATE' as const, label: t('visibility.PRIVATE') },
+])
+const statusOptions = computed(() => [
+  { value: 'PUBLISHED' as const, label: t('write.published') },
+  { value: 'HIDDEN' as const, label: t('write.hidden') },
+])
 const moodPresets = ['开心', '平静', '想你', '甜蜜', '想家', '难过', '烦躁', '累了', '期待']
 const weatherPresets = ['晴', '多云', '阴', '小雨', '大雨', '雷雨', '雪', '大风', '雾']
 
 function choiceOptions(presets: string[], current: string) {
   const options = [
-    { value: 'none', label: '不选' },
-    ...presets.map((item) => ({ value: item, label: item })),
+    { value: 'none', label: t('write.none') },
+    ...presets.map((item) => ({
+      value: item,
+      label: namedLabel(presets === moodPresets ? 'mood' : 'weather', item) || item,
+    })),
   ]
   if (current !== 'none' && current && !presets.includes(current)) {
     options.push({ value: current, label: current })
@@ -173,11 +180,11 @@ watch(
 
 async function save() {
   if (!happenedDate.value || !happenedTime.value) {
-    pushToast('选一个日期和时间', 'error')
+    pushToast(t('write.needWhen'), 'error')
     return
   }
   if (isBlankHtml(content.value)) {
-    pushToast('正文还是空的', 'error')
+    pushToast(t('write.needBody'), 'error')
     return
   }
   saving.value = true
@@ -204,7 +211,7 @@ async function save() {
       try {
         await uploadPostCover(saved.id, file.value)
       } catch (cause) {
-        const message = cause instanceof ApiError ? cause.message : '封面没有传上去'
+        const message = cause instanceof ApiError ? cause.message : t('write.coverFailed')
         error.value = message
         if (!(cause instanceof ApiError)) pushToast(message, 'error')
         if (!editing.value) {
@@ -213,10 +220,10 @@ async function save() {
         return
       }
     }
-    pushToast(editing.value ? '已保存' : '已放进时间轴')
+    pushToast(editing.value ? t('write.savedEdit') : t('write.savedNew'))
     await router.push({ name: 'post', params: { id: saved.id } })
   } catch (cause) {
-    error.value = cause instanceof ApiError ? cause.message : '保存失败'
+    error.value = cause instanceof ApiError ? cause.message : t('write.saveFailed')
     if (!(cause instanceof ApiError)) pushToast(error.value, 'error')
   } finally {
     saving.value = false
@@ -247,9 +254,9 @@ async function removeMedia(mediaId: number) {
   try {
     await deletePostMedia(postId.value, mediaId)
     existing.value = existing.value.filter((item) => item.id !== mediaId)
-    pushToast('已移除')
+    pushToast(t('write.removed'))
   } catch (cause) {
-    if (!(cause instanceof ApiError)) pushToast('移除失败', 'error')
+    if (!(cause instanceof ApiError)) pushToast(t('write.removeFailed'), 'error')
   }
 }
 </script>
@@ -257,82 +264,92 @@ async function removeMedia(mediaId: number) {
 <template>
   <div class="compose">
     <form class="card form" novalidate @submit.prevent="save">
-      <h1 class="page-title">{{ editing ? '改一笔' : '写一笔' }}</h1>
+      <h1 class="page-title">{{ editing ? t('write.edit') : t('write.create') }}</h1>
       <div class="field">
-        <span>发生在</span>
+        <span>{{ t('write.happened') }}</span>
         <div class="when">
           <AppDatePicker v-model="happenedDate" />
-          <input v-model="happenedTime" class="clock" type="time" step="1" aria-label="时间" />
+          <input
+            v-model="happenedTime"
+            class="clock"
+            type="time"
+            step="1"
+            :aria-label="t('write.time')"
+          />
         </div>
       </div>
       <div class="field">
-        <span>正文</span>
+        <span>{{ t('write.body') }}</span>
         <RichEditor v-if="ready" v-model="content" />
         <Skeleton v-else preset="editor" />
       </div>
       <div class="split">
         <div class="field">
-          <span>心情</span>
+          <span>{{ t('write.mood') }}</span>
           <AppSelect v-model="mood" :options="moodOptions" />
         </div>
         <div class="field">
-          <span>天气</span>
+          <span>{{ t('write.weather') }}</span>
           <AppSelect v-model="weather" :options="weatherOptions" />
         </div>
       </div>
       <label class="field">
-        <span>地点</span>
-        <input v-model="location" maxlength="80" placeholder="家里、火车上" />
+        <span>{{ t('write.location') }}</span>
+        <input v-model="location" maxlength="80" :placeholder="t('write.locationPlaceholder')" />
       </label>
       <div class="field">
-        <span>地图</span>
+        <span>{{ t('write.map') }}</span>
         <MapPoint v-model:latitude="latitude" v-model:longitude="longitude" pick />
-        <p class="hint">点一下标记，拖动可以移动地图。</p>
+        <p class="hint">{{ t('write.mapHint') }}</p>
         <div v-if="latitude != null && longitude != null" class="point">
           <span>{{ latitude.toFixed(6) }}, {{ longitude.toFixed(6) }}</span>
-          <AppButton variant="quiet" type="button" @click="clearPoint">清除标记</AppButton>
+          <AppButton variant="quiet" type="button" @click="clearPoint">{{
+            t('write.clearPin')
+          }}</AppButton>
         </div>
       </div>
       <div class="field">
-        <span>谁可以看</span>
+        <span>{{ t('write.who') }}</span>
         <AppSelect v-model="visibility" :options="visibilityOptions" />
       </div>
       <template v-if="editing">
         <div class="field">
-          <span>时间轴</span>
+          <span>{{ t('write.timeline') }}</span>
           <AppSelect v-model="status" :options="statusOptions" />
         </div>
-        <AppSwitch v-model="commentsOpen">允许评论</AppSwitch>
+        <AppSwitch v-model="commentsOpen">{{ t('write.comments') }}</AppSwitch>
       </template>
       <div class="field">
-        <span>封面</span>
+        <span>{{ t('write.cover') }}</span>
         <AppFilePicker
           :key="pickerKey"
-          label="选择封面"
+          :label="t('write.pickCover')"
           accept="image/jpeg,image/png,image/webp"
           @select="chooseCover"
         />
-        <p v-if="file && existing.length" class="hint">保存后会换成这一张。</p>
+        <p v-if="file && existing.length" class="hint">{{ t('write.coverReplace') }}</p>
       </div>
       <figure v-if="draft" class="pending">
         <img :src="draft" alt="" />
-        <AppButton variant="quiet" type="button" @click="clearCover">取消这张</AppButton>
+        <AppButton variant="quiet" type="button" @click="clearCover">{{
+          t('write.cancelCover')
+        }}</AppButton>
       </figure>
       <div v-else-if="existing.length" class="photos">
         <figure v-for="media in existing" :key="media.id">
           <img :src="media.url" alt="" />
-          <AppButton variant="plain" tone="danger" type="button" @click="askRemoveMedia(media.id)"
-            >移除</AppButton
-          >
+          <AppButton variant="plain" tone="danger" type="button" @click="askRemoveMedia(media.id)">{{
+            t('write.remove')
+          }}</AppButton>
         </figure>
       </div>
       <p v-if="error" class="error">{{ error }}</p>
-      <AppButton type="submit" :loading="saving">放进时间轴</AppButton>
+      <AppButton type="submit" :loading="saving">{{ t('write.submit') }}</AppButton>
     </form>
     <aside class="preview">
-      <p class="preview-label">预览</p>
+      <p class="preview-label">{{ t('write.preview') }}</p>
       <PostArticle
-        :display-name="session.user?.displayName || '你'"
+        :display-name="session.user?.displayName || t('write.you')"
         :avatar-url="session.user?.avatarUrl"
         :author-id="session.user?.id"
         :happened-at="happenedAtValue()"
@@ -344,14 +361,14 @@ async function removeMedia(mediaId: number) {
         :media="previewMedia"
         :latitude="latitude"
         :longitude="longitude"
-        empty="正文会显示在这里。"
+        :empty="t('write.emptyPreview')"
       />
     </aside>
     <ConfirmDialog
       :open="pendingMedia !== null"
-      title="移除这张封面？"
-      description="删掉之后找不回来。"
-      confirm-label="移除"
+      :title="t('write.removeCoverTitle')"
+      :description="t('write.removeCoverBody')"
+      :confirm-label="t('write.remove')"
       tone="danger"
       @update:open="closeMediaConfirm"
       @confirm="confirmRemoveMedia"

@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ImagePlus } from '@lucide/vue'
 
-defineProps<{
+const props = defineProps<{
   accept?: string
   multiple?: boolean
   label?: string
   hideNames?: boolean
 }>()
+const { t } = useI18n()
 
 const emit = defineEmits<{
   select: [files: File[]]
@@ -16,9 +18,9 @@ const emit = defineEmits<{
 const input = ref<HTMLInputElement | null>(null)
 const names = ref<string[]>([])
 const summary = computed(() => {
-  if (names.value.length === 0) return '还没有选择图片'
+  if (names.value.length === 0) return t('file.none')
   if (names.value.length === 1) return names.value[0]
-  return `已选 ${names.value.length} 张`
+  return t('file.picked', { n: names.value.length })
 })
 
 function open() {
@@ -46,7 +48,7 @@ function onChange(event: Event) {
     />
     <button v-wave type="button" class="btn quiet" @click="open">
       <ImagePlus :size="16" />
-      {{ label || '选择图片' }}
+      {{ props.label || t('file.pick') }}
     </button>
     <p v-if="!hideNames" class="file-names">{{ summary }}</p>
   </div>

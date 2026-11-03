@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Eye, Heart, MessageCircle, PenLine } from '@lucide/vue'
 import type { EChartsCoreOption } from 'echarts/core'
 import AppChart from '@/components/common/AppChart.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import { fetchStats } from '@/api/stats'
 import type { SiteStats } from '@/types/stats'
+import { namedLabel } from '@/i18n'
 import { ApiError } from '@/utils/request'
 
+const { t } = useI18n()
 const stats = ref<SiteStats | null>(null)
 const failed = ref<string | null>(null)
 const paint = ref(0)
@@ -33,7 +36,7 @@ async function load() {
   try {
     stats.value = await fetchStats()
   } catch (cause) {
-    failed.value = cause instanceof ApiError ? cause.message : '统计没有读出来'
+    failed.value = cause instanceof ApiError ? cause.message : t('stats.loadFailed')
   }
 }
 
@@ -58,17 +61,17 @@ const range = computed(() => {
 function monthLabel(value: string) {
   const [year, month] = value.split('-')
   if (!year || !month) return value
-  return `${year}年${Number(month)}月`
+  return t('date.ym', { y: year, m: Number(month) })
 }
 
 const figures = computed(() => {
   const current = stats.value
   if (!current) return []
   return [
-    { label: '写下', value: current.posts, icon: PenLine as Component },
-    { label: '看过', value: current.views, icon: Eye as Component },
-    { label: '点赞', value: current.likes, icon: Heart as Component },
-    { label: '评论', value: current.comments, icon: MessageCircle as Component },
+    { label: t('stats.posts'), value: current.posts, icon: PenLine as Component },
+    { label: t('stats.views'), value: current.views, icon: Eye as Component },
+    { label: t('stats.likes'), value: current.likes, icon: Heart as Component },
+    { label: t('stats.comments'), value: current.comments, icon: MessageCircle as Component },
   ]
 })
 
@@ -101,7 +104,7 @@ const monthsOption = computed((): EChartsCoreOption => {
     series: [
       {
         type: 'bar',
-        name: '篇数',
+        name: t('stats.seriesPosts'),
         data: (current?.months ?? []).map((item) => item.posts),
         barMaxWidth: 26,
         itemStyle: { borderRadius: [6, 6, 0, 0] },
@@ -144,7 +147,7 @@ const moodsOption = computed((): EChartsCoreOption => {
         left: 'center',
         top: '46%',
         style: {
-          text: '篇',
+          text: t('stats.unit'),
           fill: mute,
           fontFamily: token('--font-body', 'sans-serif'),
           fontSize: 12,
@@ -155,10 +158,13 @@ const moodsOption = computed((): EChartsCoreOption => {
     series: [
       {
         type: 'pie',
-        name: '心情',
+        name: t('stats.moods'),
         radius: ['44%', '66%'],
         center: ['50%', '42%'],
-        data: (current?.moods ?? []).map((item) => ({ name: item.name, value: item.count })),
+        data: (current?.moods ?? []).map((item) => ({
+          name: namedLabel('mood', item.name) || item.name,
+          value: item.count,
+        })),
         label: { color: ink },
       },
     ],
@@ -169,7 +175,7 @@ const moodsOption = computed((): EChartsCoreOption => {
 <template>
   <section class="shell wide">
     <header class="mast">
-      <h1 class="page-title">这些日子</h1>
+      <h1 class="page-title">{{ t('stats.title') }}</h1>
       <p v-if="range" class="range">{{ range }}</p>
     </header>
     <Skeleton v-if="!stats && !failed" preset="detail" />
@@ -187,13 +193,13 @@ const moodsOption = computed((): EChartsCoreOption => {
         </li>
       </ul>
       <section class="card block">
-        <h2>每月写下</h2>
-        <p v-if="stats.months.length === 0" class="muted">还没有可以画的月份。</p>
+        <h2>{{ t('stats.monthly') }}</h2>
+        <p v-if="stats.months.length === 0" class="muted">{{ t('stats.emptyMonths') }}</p>
         <AppChart v-else :option="monthsOption" />
       </section>
       <section class="card block">
-        <h2>心情</h2>
-        <p v-if="stats.moods.length === 0" class="muted">还没有记下心情。</p>
+        <h2>{{ t('stats.moods') }}</h2>
+        <p v-if="stats.moods.length === 0" class="muted">{{ t('stats.emptyMoods') }}</p>
         <AppChart v-else :option="moodsOption" />
       </section>
     </template>

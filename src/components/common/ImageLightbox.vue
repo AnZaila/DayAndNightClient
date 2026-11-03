@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from 'reka-ui'
 import { X } from '@lucide/vue'
+import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
@@ -19,6 +20,7 @@ const props = withDefaults(
   { closeOnOutside: true },
 )
 
+const { t } = useI18n()
 const open = defineModel<boolean>('open', { required: true })
 
 function onOutside(event: Event) {
@@ -31,13 +33,13 @@ function onOutside(event: Event) {
     <DialogPortal>
       <DialogOverlay class="overlay" :class="{ away: closeOnOutside }" />
       <DialogContent class="frame" @pointer-down-outside="onOutside">
-        <DialogTitle class="sr-only">查看图片</DialogTitle>
-        <DialogDescription class="sr-only">{{ alt || '帖子里的图片' }}</DialogDescription>
+        <DialogTitle class="sr-only">{{ t('dialog.viewImage') }}</DialogTitle>
+        <DialogDescription class="sr-only">{{ alt || t('dialog.imageFallback') }}</DialogDescription>
         <img v-if="src" :src="src" :alt="alt" />
         <DialogClose as-child>
           <button v-wave type="button" class="close">
             <X :size="18" />
-            关闭
+            {{ t('action.close') }}
           </button>
         </DialogClose>
       </DialogContent>

@@ -3,12 +3,14 @@ import { Heart, Menu, X } from '@lucide/vue'
 import { useWindowScroll } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import HeaderActions from '@/components/layout/HeaderActions.vue'
 import HeaderBrand from '@/components/layout/HeaderBrand.vue'
 import HeaderNav from '@/components/layout/HeaderNav.vue'
 import { useSiteStore } from '@/stores/site'
 
+const { t } = useI18n()
 const route = useRoute()
 const site = useSiteStore()
 const { site: setting } = storeToRefs(site)
@@ -49,7 +51,7 @@ watch(
     <button
       class="backdrop"
       type="button"
-      aria-label="关闭菜单"
+      :aria-label="t('header.closeMenu')"
       :tabindex="menuOpen ? 0 : -1"
       :aria-hidden="!menuOpen"
       @click="menuOpen = false"
@@ -62,14 +64,14 @@ watch(
       </div>
       <p v-if="setting" class="days">
         <Heart :size="14" />
-        第 {{ setting.daysTogether }} 天
+        {{ t('header.dayCount', { n: setting.daysTogether }) }}
       </p>
       <button
         v-wave
         class="menu"
         type="button"
         :aria-expanded="menuOpen"
-        :aria-label="menuOpen ? '关闭菜单' : '打开菜单'"
+        :aria-label="menuOpen ? t('header.closeMenu') : t('header.openMenu')"
         @click="menuOpen = !menuOpen"
       >
         <X v-if="menuOpen" :size="18" />

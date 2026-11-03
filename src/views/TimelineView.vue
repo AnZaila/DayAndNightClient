@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { PenLine } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import PostCard from '@/components/post/PostCard.vue'
@@ -13,15 +14,22 @@ import { useSessionStore } from '@/stores/session'
 import { useSiteStore } from '@/stores/site'
 import { formatMonthDay } from '@/utils/text'
 
+const { t, locale } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
 const site = useSiteStore()
 const mineOnly = ref(false)
 const ascending = ref(false)
-const now = new Date()
-const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-const todayLabel = `${now.getMonth() + 1} 月 ${now.getDate()} 日`
-const todayMeta = `${now.getFullYear()} · ${weekdays[now.getDay()]}`
+const todayLabel = computed(() => {
+  void locale.value
+  const now = new Date()
+  return t('date.todayLabel', { m: now.getMonth() + 1, d: now.getDate() })
+})
+const todayMeta = computed(() => {
+  void locale.value
+  const now = new Date()
+  return t('date.todayMeta', { y: now.getFullYear(), w: t(`weekday.${now.getDay()}`) })
+})
 const daysTogether = computed(() => site.site?.daysTogether ?? 0)
 const {
   items: posts,
@@ -89,24 +97,30 @@ function showYear(index: number) {
       :posts="total"
       :days="daysTogether"
       image="/hero/home.jpg"
-      slogan="今天也值得记下来"
+      :slogan="t('hero.slogan')"
     />
     <header class="mast">
       <div class="mast-head">
-        <h1 class="page-title">时间轴</h1>
-        <p v-if="page > 0" class="count">{{ total }} 篇</p>
+        <h1 class="page-title">{{ t('timeline.title') }}</h1>
+        <p v-if="page > 0" class="count">{{ t('timeline.count', { n: total }) }}</p>
       </div>
     </header>
     <div class="filters">
       <div v-if="session.user" class="group">
-        <button type="button" :class="{ on: !mineOnly }" @click="showMine(false)">全部</button>
-        <button type="button" :class="{ on: mineOnly }" @click="showMine(true)">只看我的</button>
+        <button type="button" :class="{ on: !mineOnly }" @click="showMine(false)">
+          {{ t('timeline.all') }}
+        </button>
+        <button type="button" :class="{ on: mineOnly }" @click="showMine(true)">
+          {{ t('timeline.mine') }}
+        </button>
       </div>
       <div class="group">
         <button type="button" :class="{ on: !ascending }" @click="showOrder(false)">
-          从近到远
+          {{ t('timeline.newest') }}
         </button>
-        <button type="button" :class="{ on: ascending }" @click="showOrder(true)">从远到近</button>
+        <button type="button" :class="{ on: ascending }" @click="showOrder(true)">
+          {{ t('timeline.oldest') }}
+        </button>
       </div>
     </div>
     <Skeleton
@@ -116,20 +130,20 @@ function showYear(index: number) {
     />
     <p v-else-if="error && posts.length === 0" class="error">{{ error }}</p>
     <div v-else-if="posts.length === 0" class="card empty">
-      <h2>{{ mineOnly ? '你还没有写过' : '还没有记下的日子' }}</h2>
+      <h2>{{ mineOnly ? t('timeline.emptyMineTitle') : t('timeline.emptyTitle') }}</h2>
       <p>
-        {{ mineOnly ? '对方写的在「全部」里。' : '从今天写起，也可以补以前的日子。' }}
+        {{ mineOnly ? t('timeline.emptyMineBody') : t('timeline.emptyBody') }}
       </p>
       <WaveLink v-if="session.user" class="btn solid" :to="{ name: 'write' }">
         <PenLine :size="16" />
-        写第一笔
+        {{ t('timeline.writeFirst') }}
       </WaveLink>
     </div>
     <ol v-if="posts.length" class="timeline">
       <li v-for="(post, index) in posts" :key="post.id" :class="{ lead: index === 0 }">
         <div class="rail">
           <time :datetime="post.happenedAt">
-            <span v-if="post.pinned" class="year">置顶</span>
+            <span v-if="post.pinned" class="year">{{ t('timeline.pinned') }}</span>
             <span v-else-if="showYear(index)" class="year">{{ yearOf(post.happenedAt) }}</span>
             <span>{{ formatMonthDay(post.happenedAt) }}</span>
           </time>

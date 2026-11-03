@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchUser } from '@/api/user'
 import Skeleton from '@/components/common/Skeleton.vue'
@@ -9,6 +10,7 @@ import { useSessionStore } from '@/stores/session'
 import type { PublicProfile } from '@/types/auth'
 import { ApiError } from '@/utils/request'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
@@ -22,7 +24,7 @@ async function load() {
   failed.value = null
   profile.value = null
   if (!Number.isInteger(userId.value) || userId.value < 1) {
-    failed.value = '这份主页不存在'
+    failed.value = t('profile.missing')
     loading.value = false
     return
   }
@@ -34,7 +36,7 @@ async function load() {
     }
     profile.value = next
   } catch (cause) {
-    failed.value = cause instanceof ApiError ? cause.message : '这份主页不存在'
+    failed.value = cause instanceof ApiError ? cause.message : t('profile.missing')
   } finally {
     loading.value = false
   }
@@ -71,15 +73,11 @@ watch(
       :email="profile.email"
     >
       <template #meta>
-        <p v-if="!profile.open" class="closed">这份主页收起来了。</p>
+        <p v-if="!profile.open" class="closed">{{ t('profile.closed') }}</p>
       </template>
     </ProfileHero>
 
-    <ProfileShelf
-      v-if="profile.open"
-      :user-id="profile.id"
-      :show-likes="profile.showLikes"
-    />
+    <ProfileShelf v-if="profile.open" :user-id="profile.id" :show-likes="profile.showLikes" />
   </div>
 </template>
 

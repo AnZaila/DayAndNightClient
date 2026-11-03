@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { Eye, Heart, MessageCircle } from '@lucide/vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 defineProps<{
   viewCount: number
@@ -25,7 +28,7 @@ const emit = defineEmits<{
       type="button"
       class="stat like"
       :class="{ on: liked }"
-      :aria-label="liked ? '取消赞' : '赞'"
+      :aria-label="liked ? t('action.unlike') : t('action.like')"
       @click="emit('like')"
     >
       <Heart :size="14" :fill="liked ? 'currentColor' : 'none'" />

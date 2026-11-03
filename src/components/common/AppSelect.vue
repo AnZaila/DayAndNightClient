@@ -9,7 +9,9 @@ import {
   SelectValue,
   SelectViewport,
 } from 'reka-ui'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 defineProps<{
   options: { value: T; label: string }[]
   placeholder?: string
@@ -22,7 +24,7 @@ const model = defineModel<T>({ required: true })
   <SelectRoot v-model="model">
     <SelectTrigger as-child>
       <button type="button" class="soft-trigger">
-        <SelectValue :placeholder="placeholder ?? '请选择'" />
+        <SelectValue :placeholder="placeholder ?? t('select.placeholder')" />
         <svg class="soft-chevron caret" viewBox="0 0 16 16" aria-hidden="true">
           <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         </svg>

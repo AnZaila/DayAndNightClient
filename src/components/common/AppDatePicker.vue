@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '@lucide/vue'
 import { getLocalTimeZone, parseDate, today, type DateValue } from '@internationalized/date'
 import {
@@ -20,7 +21,10 @@ import {
   DatePickerTrigger,
 } from 'reka-ui'
 
-const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+const { t, locale } = useI18n()
+const months = computed(() =>
+  Array.from({ length: 12 }, (_, index) => t(`date.month.${index + 1}`)),
+)
 
 const model = defineModel<string>({ required: true })
 const open = ref(false)
@@ -44,8 +48,8 @@ const placeholder = ref<DateValue>(date.value ?? today(getLocalTimeZone()))
 
 const label = computed(() => {
   const value = date.value
-  if (!value) return '选择日期'
-  return `${value.year}年${value.month}月${value.day}日`
+  if (!value) return t('date.pick')
+  return t('date.ymd', { y: value.year, m: value.month, d: value.day })
 })
 
 const decadeStart = computed(() => Math.floor(placeholder.value.year / 10) * 10)
@@ -55,8 +59,8 @@ const years = computed(() => Array.from({ length: 12 }, (_, index) => decadeStar
 const headingText = computed(() => {
   const value = placeholder.value
   if (view.value === 'year') return `${decadeStart.value}–${decadeStart.value + 9}`
-  if (view.value === 'month') return `${value.year}年`
-  return `${value.year}年${value.month}月`
+  if (view.value === 'month') return t('date.yearOnly', { y: value.year })
+  return t('date.ym', { y: value.year, m: value.month })
 })
 
 watch(open, (value) => {
@@ -93,7 +97,7 @@ function pickYear(year: number) {
       v-model="date"
       v-model:placeholder="placeholder"
       v-model:open="open"
-      locale="zh-CN"
+      :locale="locale"
       :week-starts-on="1"
       prevent-deselect
       close-on-select
@@ -117,12 +121,12 @@ function pickYear(year: number) {
         <DatePickerCalendar v-slot="{ weekDays, grid }">
           <DatePickerHeader class="soft-cal-header">
             <DatePickerPrev as-child :prev-page="stepYear">
-              <button type="button" class="soft-cal-nav" aria-label="上一年">
+              <button type="button" class="soft-cal-nav" :aria-label="t('date.prevYear')">
                 <ChevronsLeft :size="16" />
               </button>
             </DatePickerPrev>
             <DatePickerPrev v-if="view === 'day'" as-child>
-              <button type="button" class="soft-cal-nav" aria-label="上个月">
+              <button type="button" class="soft-cal-nav" :aria-label="t('date.prevMonth')">
                 <ChevronLeft :size="16" />
               </button>
             </DatePickerPrev>
@@ -131,18 +135,18 @@ function pickYear(year: number) {
               type="button"
               class="soft-cal-heading"
               :disabled="view === 'year'"
-              :aria-label="view === 'day' ? '选择月份' : '选择年份'"
+              :aria-label="view === 'day' ? t('date.pickMonth') : t('date.pickYear')"
               @click="liftView"
             >
               {{ headingText }}
             </button>
             <DatePickerNext v-if="view === 'day'" as-child>
-              <button type="button" class="soft-cal-nav" aria-label="下个月">
+              <button type="button" class="soft-cal-nav" :aria-label="t('date.nextMonth')">
                 <ChevronRight :size="16" />
               </button>
             </DatePickerNext>
             <DatePickerNext as-child :next-page="stepYearForward">
-              <button type="button" class="soft-cal-nav" aria-label="下一年">
+              <button type="button" class="soft-cal-nav" :aria-label="t('date.nextYear')">
                 <ChevronsRight :size="16" />
               </button>
             </DatePickerNext>

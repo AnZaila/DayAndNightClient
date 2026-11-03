@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppButton from '@/components/common/AppButton.vue'
 import AppSwitch from '@/components/common/AppSwitch.vue'
 import GuestAvatar from '@/components/common/GuestAvatar.vue'
@@ -11,6 +12,7 @@ const props = defineProps<{
   send: (nickname: string | null, content: string, avatarUrl: string | null) => Promise<void>
 }>()
 
+const { t } = useI18n()
 const { shown } = useDanmakuVisible()
 
 const session = useSessionStore()
@@ -22,11 +24,11 @@ const signedIn = computed(() => Boolean(session.user))
 
 async function submit() {
   if (!signedIn.value && !nickname.value.trim()) {
-    pushToast('留一个昵称', 'error')
+    pushToast(t('danmaku.needNickname'), 'error')
     return
   }
   if (!content.value.trim()) {
-    pushToast('写一条弹幕', 'error')
+    pushToast(t('danmaku.needBody'), 'error')
     return
   }
   sending.value = true
@@ -47,11 +49,22 @@ async function submit() {
   <form class="bar" novalidate @submit.prevent="submit">
     <template v-if="!signedIn">
       <GuestAvatar v-model="avatarUrl" />
-      <input v-model="nickname" maxlength="20" placeholder="昵称" aria-label="昵称" />
+      <input
+        v-model="nickname"
+        class="nick"
+        maxlength="20"
+        :placeholder="t('danmaku.nickname')"
+        :aria-label="t('danmaku.nickname')"
+      />
     </template>
-    <input v-model="content" maxlength="40" placeholder="飞一句过去" aria-label="弹幕内容" />
-    <AppSwitch v-model="shown">弹幕</AppSwitch>
-    <AppButton type="submit" :loading="sending">发送</AppButton>
+    <input
+      v-model="content"
+      maxlength="40"
+      :placeholder="t('danmaku.fly')"
+      :aria-label="t('danmaku.content')"
+    />
+    <AppSwitch v-model="shown">{{ t('danmaku.toggle') }}</AppSwitch>
+    <AppButton type="submit" :loading="sending">{{ t('action.send') }}</AppButton>
   </form>
 </template>
 
@@ -75,7 +88,7 @@ async function submit() {
       outline-color var(--dur-short) var(--ease-out);
   }
 
-  input[aria-label='昵称'] {
+  .nick {
     width: 108px;
     flex: none;
   }

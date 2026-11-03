@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useSlots } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { deleteComment, updateCommentStatus } from '@/api/comment'
 import { fetchLikedPosts, fetchReceived, fetchUserComments, fetchUserPosts } from '@/api/user'
@@ -29,6 +30,7 @@ const props = withDefaults(
   },
 )
 
+const { t } = useI18n()
 const slots = useSlots()
 const router = useRouter()
 const pageSize = 10
@@ -55,15 +57,15 @@ function showShelf(next: Shelf) {
 }
 
 function lineFor(item: Activity) {
-  if (item.kind === 'POST_LIKE') return `${item.actorName} 赞了这篇`
-  if (item.kind === 'COMMENT_LIKE') return `${item.actorName} 赞了你的评论`
-  return `${item.actorName} 评了这篇`
+  if (item.kind === 'POST_LIKE') return t('shelf.likedPost', { name: item.actorName })
+  if (item.kind === 'COMMENT_LIKE') return t('shelf.likedComment', { name: item.actorName })
+  return t('shelf.commented', { name: item.actorName })
 }
 
 async function setStatus(id: number, status: CommentStatus) {
   const updated = await updateCommentStatus(id, status)
   thread.items.value = thread.items.value.map((item) => (item.id === id ? updated : item))
-  pushToast(status === 'HIDDEN' ? '已隐藏' : '已显示')
+  pushToast(status === 'HIDDEN' ? t('action.hidden') : t('action.shown'))
 }
 
 async function removeComment(id: number) {
@@ -73,17 +75,17 @@ async function removeComment(id: number) {
       ? thread.page.value - 1
       : thread.page.value
   await thread.open(next || 1)
-  pushToast('已删除')
+  pushToast(t('action.deleted'))
 }
 </script>
 
 <template>
   <div class="filters">
     <button type="button" :class="{ on: shelf === 'posts' }" @click="showShelf('posts')">
-      写下的
+      {{ t('shelf.posts') }}
     </button>
     <button type="button" :class="{ on: shelf === 'comments' }" @click="showShelf('comments')">
-      {{ self ? '我评过' : '评过的' }}
+      {{ self ? t('shelf.commentsSelf') : t('shelf.comments') }}
     </button>
     <button
       v-if="canLikes"
@@ -91,7 +93,7 @@ async function removeComment(id: number) {
       :class="{ on: shelf === 'likes' }"
       @click="showShelf('likes')"
     >
-      {{ self ? '我赞过' : '赞过的' }}
+      {{ self ? t('shelf.likesSelf') : t('shelf.likes') }}
     </button>
     <button
       v-if="self"
@@ -99,7 +101,7 @@ async function removeComment(id: number) {
       :class="{ on: shelf === 'inbox' }"
       @click="showShelf('inbox')"
     >
-      收到的
+      {{ t('shelf.inbox') }}
     </button>
     <button
       v-if="hasProfile"
@@ -107,7 +109,7 @@ async function removeComment(id: number) {
       :class="{ on: shelf === 'profile' }"
       @click="showShelf('profile')"
     >
-      资料
+      {{ t('shelf.profile') }}
     </button>
   </div>
 
@@ -119,7 +121,7 @@ async function removeComment(id: number) {
     />
     <p v-else-if="writings.error.value" class="error">{{ writings.error.value }}</p>
     <p v-else-if="writings.items.value.length === 0" class="muted">
-      {{ self ? '还没有写下的日子。' : '还没有公开的文字。' }}
+      {{ self ? t('shelf.emptyPostsSelf') : t('shelf.emptyPosts') }}
     </p>
     <div v-if="writings.items.value.length" class="posts">
       <PostCard
@@ -145,7 +147,7 @@ async function removeComment(id: number) {
     <Skeleton v-if="liked.loading.value && liked.page.value === 0" preset="timeline" :count="2" />
     <p v-else-if="liked.error.value" class="error">{{ liked.error.value }}</p>
     <p v-else-if="liked.items.value.length === 0" class="muted">
-      {{ self ? '还没有点过赞。' : '还没有公开的点赞。' }}
+      {{ self ? t('shelf.emptyLikesSelf') : t('shelf.emptyLikes') }}
     </p>
     <div v-if="liked.items.value.length" class="posts">
       <PostCard
@@ -170,7 +172,7 @@ async function removeComment(id: number) {
     <Skeleton v-if="thread.loading.value && thread.page.value === 0" preset="comment" :count="2" />
     <p v-else-if="thread.error.value" class="error">{{ thread.error.value }}</p>
     <p v-else-if="thread.items.value.length === 0" class="muted">
-      {{ self ? '你还没有留言。' : '还没有公开的留言。' }}
+      {{ self ? t('shelf.emptyCommentsSelf') : t('shelf.emptyComments') }}
     </p>
     <CommentList
       v-if="thread.items.value.length"
@@ -193,7 +195,7 @@ async function removeComment(id: number) {
   <section v-else-if="shelf === 'inbox' && self">
     <Skeleton v-if="inbox.loading.value && inbox.page.value === 0" preset="comment" :count="2" />
     <p v-else-if="inbox.error.value" class="error">{{ inbox.error.value }}</p>
-    <p v-else-if="inbox.items.value.length === 0" class="muted">还没有收到赞或评论。</p>
+    <p v-else-if="inbox.items.value.length === 0" class="muted">{{ t('shelf.emptyInbox') }}</p>
     <ul v-if="inbox.items.value.length" class="inbox">
       <li v-for="item in inbox.items.value" :key="`${item.kind}-${item.createdAt}-${item.postId}`">
         <div class="note" @click="openPost(item.postId)">

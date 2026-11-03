@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef, toRaw, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ChevronLeft, ChevronRight, RefreshCw } from '@lucide/vue'
 import {
   DialogContent,
@@ -20,58 +21,17 @@ import { SETTINGS } from '@/vendor/vue-color-avatar/utils/constant'
 const EXPORT_SIZE = 512
 const SQUIRCLE_RADIUS = 0.2
 
-const SHAPE_LABELS: Record<string, string> = {
-  none: '无',
-  base: '默认',
-  fonze: '短发',
-  funny: '卷毛',
-  clean: '光头',
-  punk: '朋克',
-  danny: '中分',
-  wave: '波浪',
-  turban: '头巾',
-  pixie: '精灵短发',
-  beanie: '毛线帽',
-  attached: '贴耳',
-  detached: '招风耳',
-  hoop: '圆环',
-  stud: '耳钉',
-  up: '上挑',
-  down: '下垂',
-  eyelashesup: '上睫毛',
-  eyelashesdown: '下睫毛',
-  ellipse: '椭圆',
-  smiling: '笑眼',
-  eyeshadow: '眼影',
-  round: '圆形',
-  curve: '曲线',
-  pointed: '尖鼻',
-  frown: '皱眉',
-  laughing: '大笑',
-  nervous: '紧张',
-  pucker: '嘟嘴',
-  sad: '难过',
-  smile: '微笑',
-  smirk: '坏笑',
-  surprised: '惊讶',
-  scruff: '胡茬',
-  crew: '圆领',
-  collared: '衬衫',
-  open: '开领',
-  square: '方框',
-}
-
-const widgetControls: { type: WidgetType; label: string }[] = [
-  { type: WidgetType.Tops, label: '发型' },
-  { type: WidgetType.Eyes, label: '眼睛' },
-  { type: WidgetType.Eyebrows, label: '眉毛' },
-  { type: WidgetType.Nose, label: '鼻子' },
-  { type: WidgetType.Mouth, label: '嘴巴' },
-  { type: WidgetType.Clothes, label: '衣服' },
-  { type: WidgetType.Glasses, label: '眼镜' },
-  { type: WidgetType.Earrings, label: '耳饰' },
-  { type: WidgetType.Beard, label: '胡须' },
-  { type: WidgetType.Ear, label: '耳朵' },
+const widgetControls = [
+  WidgetType.Tops,
+  WidgetType.Eyes,
+  WidgetType.Eyebrows,
+  WidgetType.Nose,
+  WidgetType.Mouth,
+  WidgetType.Clothes,
+  WidgetType.Glasses,
+  WidgetType.Earrings,
+  WidgetType.Beard,
+  WidgetType.Ear,
 ]
 
 const props = withDefaults(
@@ -87,6 +47,7 @@ const emit = defineEmits<{
   confirm: [file: File]
 }>()
 
+const { t } = useI18n()
 const genderPref = ref<'any' | 'male' | 'female'>('any')
 const option = shallowRef<AvatarOption>(createOption())
 const avatarRef = ref<{ avatarRef?: HTMLDivElement }>()
@@ -130,7 +91,7 @@ function patch(mutator: (draft: AvatarOption) => void) {
 
 function shapeLabel(type: WidgetType) {
   const shape = option.value.widgets[type]?.shape ?? 'none'
-  return SHAPE_LABELS[shape] ?? shape
+  return t(`avatar.part.${shape}`)
 }
 
 function cycleWidget(type: WidgetType, delta: number) {
@@ -185,7 +146,7 @@ function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image()
     image.onload = () => resolve(image)
-    image.onerror = () => reject(new Error('头像导出失败'))
+    image.onerror = () => reject(new Error(t('avatar.exportFailed')))
     image.src = src
   })
 }
@@ -195,13 +156,13 @@ async function waitForSvg(root: HTMLElement) {
     if (root.querySelector('.avatar-payload svg g')) return
     await new Promise((resolve) => setTimeout(resolve, 50))
   }
-  throw new Error('头像尚未生成')
+  throw new Error(t('avatar.notGenerated'))
 }
 
 async function exportAvatar(root: HTMLElement, current: AvatarOption) {
   await waitForSvg(root)
   const svg = root.querySelector('.avatar-payload svg')
-  if (!svg) throw new Error('头像尚未生成')
+  if (!svg) throw new Error(t('avatar.notGenerated'))
   const cloned = svg.cloneNode(true) as SVGSVGElement
   cloned.setAttribute('width', String(EXPORT_SIZE))
   cloned.setAttribute('height', String(EXPORT_SIZE))
@@ -214,7 +175,7 @@ async function exportAvatar(root: HTMLElement, current: AvatarOption) {
     canvas.width = EXPORT_SIZE
     canvas.height = EXPORT_SIZE
     const ctx = canvas.getContext('2d')
-    if (!ctx) throw new Error('头像导出失败')
+    if (!ctx) throw new Error(t('avatar.exportFailed'))
     const radius = EXPORT_SIZE * SQUIRCLE_RADIUS
     ctx.beginPath()
     ctx.moveTo(radius, 0)
@@ -228,7 +189,7 @@ async function exportAvatar(root: HTMLElement, current: AvatarOption) {
     ctx.drawImage(image, 0, 0, EXPORT_SIZE, EXPORT_SIZE)
     const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
-        (data) => (data ? resolve(data) : reject(new Error('头像导出失败'))),
+        (data) => (data ? resolve(data) : reject(new Error(t('avatar.exportFailed')))),
         'image/png',
       )
     })
@@ -241,7 +202,7 @@ async function exportAvatar(root: HTMLElement, current: AvatarOption) {
 async function confirm() {
   const root = avatarRef.value?.avatarRef
   if (!root) {
-    pushToast('头像还没准备好', 'error')
+    pushToast(t('avatar.notReady'), 'error')
     return
   }
   exporting.value = true
@@ -251,7 +212,7 @@ async function confirm() {
     emit('confirm', file)
   } catch (error) {
     exporting.value = false
-    pushToast(error instanceof Error ? error.message : '头像导出失败', 'error')
+    pushToast(error instanceof Error ? error.message : t('avatar.exportFailed'), 'error')
   }
 }
 
@@ -271,57 +232,57 @@ watch(
     <DialogPortal>
       <DialogOverlay class="overlay" />
       <DialogContent class="content">
-        <DialogTitle class="title">生成头像</DialogTitle>
-        <DialogDescription class="sr-only">调整五官和颜色，确认后作为头像。</DialogDescription>
+        <DialogTitle class="title">{{ t('avatar.generate') }}</DialogTitle>
+        <DialogDescription class="sr-only">{{ t('avatar.generateHint') }}</DialogDescription>
         <div class="layout">
           <div class="preview">
             <VueColorAvatar ref="avatarRef" :option="option" :size="220" />
             <AppButton variant="quiet" type="button" :disabled="busy" @click="randomize">
               <RefreshCw :size="16" />
-              随机
+              {{ t('avatar.random') }}
             </AppButton>
           </div>
           <div class="controls">
             <div class="block">
-              <span>形象</span>
+              <span>{{ t('avatar.figure') }}</span>
               <div class="choices">
                 <button
                   type="button"
                   :class="{ on: genderPref === 'any' }"
                   @click="genderPref = 'any'"
                 >
-                  不限
+                  {{ t('avatar.any') }}
                 </button>
                 <button
                   type="button"
                   :class="{ on: genderPref === 'male' }"
                   @click="genderPref = 'male'"
                 >
-                  男性
+                  {{ t('avatar.male') }}
                 </button>
                 <button
                   type="button"
                   :class="{ on: genderPref === 'female' }"
                   @click="genderPref = 'female'"
                 >
-                  女性
+                  {{ t('avatar.female') }}
                 </button>
               </div>
             </div>
             <div class="parts">
-              <div v-for="item in widgetControls" :key="item.type" class="part">
-                <span>{{ item.label }}</span>
-                <button type="button" @click="cycleWidget(item.type, -1)">
+              <div v-for="type in widgetControls" :key="type" class="part">
+                <span>{{ t(`avatar.widget.${type}`) }}</span>
+                <button type="button" @click="cycleWidget(type, -1)">
                   <ChevronLeft :size="16" />
                 </button>
-                <strong>{{ shapeLabel(item.type) }}</strong>
-                <button type="button" @click="cycleWidget(item.type, 1)">
+                <strong>{{ shapeLabel(type) }}</strong>
+                <button type="button" @click="cycleWidget(type, 1)">
                   <ChevronRight :size="16" />
                 </button>
               </div>
             </div>
             <div class="block">
-              <span>肤色</span>
+              <span>{{ t('avatar.skin') }}</span>
               <div class="swatches">
                 <button
                   v-for="color in SETTINGS.skinColors"
@@ -335,7 +296,7 @@ watch(
               </div>
             </div>
             <div class="block">
-              <span>发色</span>
+              <span>{{ t('avatar.hair') }}</span>
               <div class="swatches">
                 <button
                   v-for="color in SETTINGS.commonColors"
@@ -349,7 +310,7 @@ watch(
               </div>
             </div>
             <div class="block">
-              <span>衣服</span>
+              <span>{{ t('avatar.clothes') }}</span>
               <div class="swatches">
                 <button
                   v-for="color in SETTINGS.commonColors"
@@ -363,7 +324,7 @@ watch(
               </div>
             </div>
             <div class="block">
-              <span>背景</span>
+              <span>{{ t('avatar.background') }}</span>
               <div class="swatches">
                 <button
                   v-for="color in SETTINGS.backgroundColor"
@@ -379,10 +340,12 @@ watch(
           </div>
         </div>
         <div class="actions">
-          <AppButton variant="quiet" type="button" @click="emit('update:open', false)"
-            >取消</AppButton
-          >
-          <AppButton type="button" :loading="busy" @click="confirm">用这张</AppButton>
+          <AppButton variant="quiet" type="button" @click="emit('update:open', false)">{{
+            t('action.cancel')
+          }}</AppButton>
+          <AppButton type="button" :loading="busy" @click="confirm">{{
+            t('avatar.useThis')
+          }}</AppButton>
         </div>
       </DialogContent>
     </DialogPortal>

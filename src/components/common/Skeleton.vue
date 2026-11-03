@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SkeletonBone from '@/components/common/SkeletonBone.vue'
 
 const props = withDefaults(
@@ -19,12 +20,13 @@ const props = withDefaults(
   { count: 1 },
 )
 
+const { t } = useI18n()
 const rows = computed(() => Array.from({ length: Math.max(props.count, 1) }, (_, index) => index))
 </script>
 
 <template>
   <div class="block" :class="preset" role="status" aria-busy="true">
-    <span class="sr-only">正在加载</span>
+    <span class="sr-only">{{ t('skeleton.loading') }}</span>
     <template v-if="preset === 'timeline'">
       <div v-for="row in rows" :key="row" class="timeline">
         <div class="rail">

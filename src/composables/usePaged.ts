@@ -1,4 +1,5 @@
 import { ref, type Ref } from 'vue'
+import { i18n } from '@/i18n'
 import type { Page } from '@/types/page'
 import { ApiError } from '@/utils/request'
 
@@ -24,7 +25,8 @@ export function usePaged<T>(load: (page: number) => Promise<Page<T>>) {
       size.value = result.size
       hasMore.value = result.hasMore
     } catch (cause) {
-      error.value = cause instanceof ApiError ? cause.message : '加载失败'
+      error.value =
+        cause instanceof ApiError ? cause.message : String(i18n.global.t('action.loadFailed'))
     } finally {
       loading.value = false
     }

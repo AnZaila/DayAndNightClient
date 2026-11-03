@@ -19,6 +19,15 @@
                 ? 'dark'
                 : 'light'
           document.documentElement.setAttribute('data-theme', theme)
+          var locale = localStorage.getItem('dayandnight-locale')
+          if (locale === 'en-US' || locale === 'zh-CN') {
+            document.documentElement.setAttribute('lang', locale)
+            if (locale === 'en-US') {
+              document.title = 'Zhaomu · Our days'
+              var desc = document.querySelector('meta[name="description"]')
+              if (desc) desc.setAttribute('content', 'Zhaomu, the days that belong to us.')
+            }
+          }
         } catch (e) {}
       })()
     </script>

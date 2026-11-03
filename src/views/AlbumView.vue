@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Trash2 } from '@lucide/vue'
 import { deleteAlbumPhoto, fetchAlbum, uploadAlbumPhoto } from '@/api/album'
 import AppFilePicker from '@/components/common/AppFilePicker.vue'
@@ -15,6 +16,7 @@ import type { AlbumPhoto } from '@/types/album'
 import { ApiError } from '@/utils/request'
 import { formatDate } from '@/utils/text'
 
+const { t } = useI18n()
 const session = useSessionStore()
 const pageSize = 24
 const album = usePaged((page) => fetchAlbum(page, pageSize))
@@ -45,13 +47,13 @@ async function add(files: File[]) {
     }
     album.reset()
     await album.open(1)
-    pushToast(saved === 1 ? '已放进相册' : `已放进 ${saved} 张`)
+    pushToast(saved === 1 ? t('album.addedOne') : t('album.addedMany', { n: saved }))
   } catch (cause) {
     if (saved) {
       album.reset()
       await album.open(1)
     }
-    if (!(cause instanceof ApiError)) pushToast('没有传上去', 'error')
+    if (!(cause instanceof ApiError)) pushToast(t('album.uploadFailed'), 'error')
   } finally {
     uploading.value = false
   }
@@ -67,9 +69,9 @@ async function remove() {
       (item) => !(item.kind === 'ALBUM' && item.id === photo.id),
     )
     album.total.value = Math.max(0, album.total.value - 1)
-    pushToast('已从相册拿掉')
+    pushToast(t('album.removed'))
   } catch (cause) {
-    if (!(cause instanceof ApiError)) pushToast('没有删掉', 'error')
+    if (!(cause instanceof ApiError)) pushToast(t('album.removeFailed'), 'error')
   }
 }
 </script>
@@ -78,27 +80,29 @@ async function remove() {
   <section class="shell wide">
     <header class="mast">
       <div class="heading">
-        <h1 class="page-title">相册</h1>
-        <p v-if="album.total.value > 0" class="count">{{ album.total.value }} 张</p>
+        <h1 class="page-title">{{ t('album.title') }}</h1>
+        <p v-if="album.total.value > 0" class="count">
+          {{ t('album.count', { n: album.total.value }) }}
+        </p>
       </div>
       <AppFilePicker
         v-if="session.user"
         accept="image/jpeg,image/png,image/webp"
         multiple
         hide-names
-        :label="uploading ? '正在放进去' : '放进相册'"
+        :label="uploading ? t('album.adding') : t('album.add')"
         @select="add"
       />
     </header>
     <Skeleton v-if="album.loading.value && album.page.value === 0" preset="detail" />
     <p v-else-if="album.error.value" class="error">{{ album.error.value }}</p>
-    <p v-else-if="album.items.value.length === 0" class="muted">还没有照片。</p>
+    <p v-else-if="album.items.value.length === 0" class="muted">{{ t('album.empty') }}</p>
     <ul v-if="album.items.value.length" class="grid">
       <li v-for="photo in album.items.value" :key="`${photo.kind}-${photo.id}`">
         <button type="button" class="shot" @click="active = photo">
           <img :src="photo.url" alt="" />
           <span class="veil">
-            <span v-if="photo.kind === 'COVER'" class="mark">封面</span>
+            <span v-if="photo.kind === 'COVER'" class="mark">{{ t('album.cover') }}</span>
             <time :datetime="photo.takenAt">{{ when(photo.takenAt) }}</time>
           </span>
         </button>
@@ -107,13 +111,13 @@ async function remove() {
           class="go"
           :to="{ name: 'post', params: { id: photo.postId } }"
         >
-          看这篇
+          {{ t('album.viewPost') }}
         </WaveLink>
         <button
           v-if="session.user && photo.kind === 'ALBUM'"
           type="button"
           class="drop"
-          aria-label="从相册拿掉"
+          :aria-label="t('album.removeAria')"
           @click="pending = photo"
         >
           <Trash2 :size="14" />
@@ -126,12 +130,16 @@ async function remove() {
       :key="album.page.value"
       @visible="album.more"
     />
-    <ImageLightbox v-model:open="lightboxOpen" :src="active?.url || ''" alt="相册照片" />
+    <ImageLightbox
+      v-model:open="lightboxOpen"
+      :src="active?.url || ''"
+      :alt="t('album.photoAlt')"
+    />
     <ConfirmDialog
       :open="pending !== null"
-      title="从相册拿掉？"
-      description="删掉之后找不回来。封面还在原来的帖子上。"
-      confirm-label="拿掉"
+      :title="t('album.removeTitle')"
+      :description="t('album.removeBody')"
+      :confirm-label="t('album.remove')"
       tone="danger"
       @update:open="pending = $event ? pending : null"
       @confirm="remove"

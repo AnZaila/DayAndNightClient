@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { CalendarDays } from '@lucide/vue'
 import { createAnniversary, deleteAnniversary, fetchAnniversaries } from '@/api/anniversary'
 import AppButton from '@/components/common/AppButton.vue'
@@ -14,6 +15,7 @@ import { pushToast } from '@/composables/useToast'
 import { formatDate } from '@/utils/text'
 import { useSessionStore } from '@/stores/session'
 
+const { t } = useI18n()
 const session = useSessionStore()
 const items = ref<Anniversary[]>([])
 const loading = ref(true)
@@ -25,10 +27,10 @@ const note = ref('')
 const visibility = ref<Visibility>('PUBLIC')
 const pendingId = ref<number | null>(null)
 
-const visibilityOptions = [
-  { value: 'PUBLIC' as const, label: '公开' },
-  { value: 'PRIVATE' as const, label: '仅双方' },
-]
+const visibilityOptions = computed(() => [
+  { value: 'PUBLIC' as const, label: t('visibility.PUBLIC') },
+  { value: 'PRIVATE' as const, label: t('visibility.PRIVATE') },
+])
 
 const listed = computed(() =>
   items.value.map((item) => {
@@ -57,22 +59,22 @@ function daysUntil(value: string) {
   const parts = value.split('-').map(Number)
   const month = parts[1]
   const day = parts[2]
-  if (!month || !day) return { days: null, label: '日期还没写全', progress: 0 }
+  if (!month || !day) return { days: null, label: t('anniversary.incomplete'), progress: 0 }
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   let next = new Date(today.getFullYear(), month - 1, day)
   if (next < today) next = new Date(today.getFullYear() + 1, month - 1, day)
   const days = Math.round((next.getTime() - today.getTime()) / 86400000)
   const progress = Math.min(1, Math.max(0, 1 - days / 365))
-  if (days === 0) return { days, label: '就是今天', progress: 1 }
-  return { days, label: `还有 ${days} 天`, progress }
+  if (days === 0) return { days, label: t('anniversary.today'), progress: 1 }
+  return { days, label: t('anniversary.remaining', { n: days }), progress }
 }
 
 function weekdayOf(value: string) {
   const parts = value.split('-').map(Number)
   if (!parts[1] || !parts[2]) return ''
   const weekday = new Date(parts[0] ?? 2000, parts[1] - 1, parts[2]).getDay()
-  return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][weekday] ?? ''
+  return t(`weekday.${weekday}`)
 }
 
 async function load() {
@@ -86,11 +88,11 @@ async function load() {
 async function add() {
   error.value = null
   if (!title.value.trim()) {
-    pushToast('写一个名称', 'error')
+    pushToast(t('anniversary.needTitle'), 'error')
     return
   }
   if (!date.value) {
-    pushToast('选一个日期', 'error')
+    pushToast(t('anniversary.needDate'), 'error')
     return
   }
   adding.value = true
@@ -106,9 +108,9 @@ async function add() {
     date.value = ''
     note.value = ''
     await load()
-    pushToast('已记下')
+    pushToast(t('anniversary.saved'))
   } catch (cause) {
-    error.value = cause instanceof ApiError ? cause.message : '保存失败'
+    error.value = cause instanceof ApiError ? cause.message : t('anniversary.saveFailed')
     if (!(cause instanceof ApiError)) pushToast(error.value, 'error')
   } finally {
     adding.value = false
@@ -133,7 +135,7 @@ async function confirmRemove() {
 async function remove(id: number) {
   await deleteAnniversary(id)
   items.value = items.value.filter((item) => item.id !== id)
-  pushToast('已删除')
+  pushToast(t('action.deleted'))
 }
 
 onMounted(load)
@@ -142,17 +144,17 @@ onMounted(load)
 <template>
   <section class="shell wide">
     <header class="mast">
-      <h1 class="page-title">纪念日</h1>
-      <p v-if="listed.length" class="count">{{ listed.length }} 个</p>
+      <h1 class="page-title">{{ t('anniversary.title') }}</h1>
+      <p v-if="listed.length" class="count">{{ t('anniversary.count', { n: listed.length }) }}</p>
     </header>
 
     <Skeleton v-if="loading && listed.length === 0" preset="anniversary" :count="3" />
-    <p v-else-if="listed.length === 0" class="muted empty">还没有纪念日。</p>
+    <p v-else-if="listed.length === 0" class="muted empty">{{ t('anniversary.empty') }}</p>
 
     <div v-else class="spread">
       <article v-if="nextUp" class="hero">
         <div class="hero-main">
-          <p class="hero-label">下一个</p>
+          <p class="hero-label">{{ t('anniversary.next') }}</p>
           <p class="hero-name">{{ nextUp.title }}</p>
           <p class="hero-date">
             {{ formatDate(nextUp.date) }}
@@ -162,7 +164,7 @@ onMounted(load)
         </div>
         <p class="hero-count">
           <span class="hero-num">{{ nextUp.days }}</span>
-          <span class="hero-unit">天</span>
+          <span class="hero-unit">{{ t('anniversary.daysUnit') }}</span>
         </p>
         <span class="bar" aria-hidden="true">
           <span class="bar-fill" :style="{ inlineSize: `${nextUp.progress * 100}%` }" />
@@ -179,7 +181,7 @@ onMounted(load)
               <span class="dot">·</span>
               {{ item.weekday }}
               <span v-if="item.visibility === 'PRIVATE'" class="dot">·</span>
-              <span v-if="item.visibility === 'PRIVATE'">仅双方</span>
+              <span v-if="item.visibility === 'PRIVATE'">{{ t('visibility.PRIVATE') }}</span>
             </p>
             <p v-if="item.note" class="row-note">{{ item.note }}</p>
           </div>
@@ -191,41 +193,41 @@ onMounted(load)
             tone="danger"
             type="button"
             @click="askRemove(item.id)"
-            >删除</AppButton
+            >{{ t('action.delete') }}</AppButton
           >
         </li>
       </ul>
     </div>
 
     <form v-if="session.user" class="card composer" novalidate @submit.prevent="add">
-      <h2>记一个新的</h2>
+      <h2>{{ t('anniversary.addTitle') }}</h2>
       <div class="grid">
         <label class="field">
-          <span>名称</span>
-          <input v-model="title" maxlength="40" placeholder="例如：在一起" />
+          <span>{{ t('anniversary.name') }}</span>
+          <input v-model="title" maxlength="40" :placeholder="t('anniversary.namePlaceholder')" />
         </label>
         <div class="field">
-          <span>日期</span>
+          <span>{{ t('anniversary.date') }}</span>
           <AppDatePicker v-model="date" />
         </div>
         <label class="field">
-          <span>备注</span>
-          <input v-model="note" maxlength="200" placeholder="可以空着" />
+          <span>{{ t('anniversary.note') }}</span>
+          <input v-model="note" maxlength="200" :placeholder="t('anniversary.notePlaceholder')" />
         </label>
         <div class="field">
-          <span>谁可以看</span>
+          <span>{{ t('anniversary.who') }}</span>
           <AppSelect v-model="visibility" :options="visibilityOptions" />
         </div>
       </div>
       <p v-if="error" class="error">{{ error }}</p>
-      <AppButton type="submit" :loading="adding">记下</AppButton>
+      <AppButton type="submit" :loading="adding">{{ t('anniversary.submit') }}</AppButton>
     </form>
 
     <ConfirmDialog
       :open="pendingId !== null"
-      title="删除这个纪念日？"
-      description="删掉之后找不回来。"
-      confirm-label="删除"
+      :title="t('anniversary.deleteTitle')"
+      :description="t('anniversary.deleteBody')"
+      :confirm-label="t('action.delete')"
       tone="danger"
       @update:open="closeConfirm"
       @confirm="confirmRemove"

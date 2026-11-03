@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { updateProfile, uploadAvatar, uploadCover } from '@/api/auth'
 import AppButton from '@/components/common/AppButton.vue'
 import AppSelect from '@/components/common/AppSelect.vue'
@@ -13,6 +14,7 @@ import { useSessionStore } from '@/stores/session'
 import type { ProfileVisibility } from '@/types/auth'
 import { ApiError } from '@/utils/request'
 
+const { t } = useI18n()
 const session = useSessionStore()
 const name = ref(session.user?.displayName ?? '')
 const signature = ref(session.user?.signature ?? '')
@@ -30,12 +32,14 @@ const picked = ref<File | null>(null)
 const avatarInput = ref<HTMLInputElement | null>(null)
 const coverInput = ref<HTMLInputElement | null>(null)
 
-const visibilityOptions = [
-  { value: 'PUBLIC' as const, label: '公开' },
-  { value: 'PRIVATE' as const, label: '仅双方' },
-  { value: 'SELF' as const, label: '仅自己' },
-]
-const cropTitle = computed(() => (cropKind.value === 'cover' ? '裁剪背景' : '裁剪头像'))
+const visibilityOptions = computed(() => [
+  { value: 'PUBLIC' as const, label: t('visibility.PUBLIC') },
+  { value: 'PRIVATE' as const, label: t('visibility.PRIVATE') },
+  { value: 'SELF' as const, label: t('visibility.SELF') },
+])
+const cropTitle = computed(() =>
+  cropKind.value === 'cover' ? t('profile.cropCover') : t('profile.cropAvatar'),
+)
 const cropAspect = computed(() =>
   cropKind.value === 'cover' ? ([16, 7] as [number, number]) : ([1, 1] as [number, number]),
 )
@@ -57,7 +61,7 @@ watch(
 async function saveProfile() {
   const next = name.value.trim()
   if (!next) {
-    pushToast('写一个名字', 'error')
+    pushToast(t('profile.needName'), 'error')
     return
   }
   saving.value = true
@@ -72,9 +76,9 @@ async function saveProfile() {
       session.user?.showComments ?? false,
       showLikes.value,
     )
-    pushToast('资料已保存')
+    pushToast(t('profile.saved'))
   } catch (cause) {
-    if (!(cause instanceof ApiError)) pushToast('保存失败', 'error')
+    if (!(cause instanceof ApiError)) pushToast(t('action.saveFailed'), 'error')
   } finally {
     saving.value = false
   }
@@ -96,14 +100,13 @@ async function useFile(file: File) {
     session.user = cropKind.value === 'cover' ? await uploadCover(file) : await uploadAvatar(file)
     cropOpen.value = false
     generateOpen.value = false
-    pushToast(cropKind.value === 'cover' ? '背景已更新' : '头像已更新')
+    pushToast(cropKind.value === 'cover' ? t('profile.coverUpdated') : t('profile.avatarUpdated'))
   } catch (cause) {
-    if (!(cause instanceof ApiError)) pushToast('上传失败', 'error')
+    if (!(cause instanceof ApiError)) pushToast(t('profile.uploadFailed'), 'error')
   } finally {
     uploading.value = false
   }
 }
-
 </script>
 
 <template>
@@ -112,11 +115,13 @@ async function useFile(file: File) {
       :name="session.user.displayName"
       :avatar-url="session.user.avatarUrl"
       :cover-url="session.user.coverUrl"
-      :signature="session.user.signature || '还没有签名'"
+      :signature="session.user.signature || t('profile.noSignature')"
       :email="session.user.email"
     >
       <template #cover>
-        <AppButton type="button" @click="coverInput?.click()">换背景</AppButton>
+        <AppButton type="button" @click="coverInput?.click()">{{
+          t('profile.changeCover')
+        }}</AppButton>
         <input
           ref="coverInput"
           class="sr-only"
@@ -129,8 +134,8 @@ async function useFile(file: File) {
         <p class="closed">
           {{
             session.user.profileVisibility === 'SELF'
-              ? '其他人打开这里，只会看到名字和头像。'
-              : '没有登录的人打开这里，只会看到名字和头像。'
+              ? t('profile.closedPublic')
+              : t('profile.closedGuest')
           }}
         </p>
       </template>
@@ -140,8 +145,12 @@ async function useFile(file: File) {
       <template #profile>
         <form class="card" novalidate @submit.prevent="saveProfile">
           <div class="row">
-            <AppButton type="button" @click="avatarInput?.click()">上传头像</AppButton>
-            <AppButton variant="quiet" type="button" @click="generateOpen = true">生成头像</AppButton>
+            <AppButton type="button" @click="avatarInput?.click()">{{
+              t('profile.uploadAvatar')
+            }}</AppButton>
+            <AppButton variant="quiet" type="button" @click="generateOpen = true">{{
+              t('profile.generateAvatar')
+            }}</AppButton>
             <input
               ref="avatarInput"
               class="sr-only"
@@ -151,27 +160,29 @@ async function useFile(file: File) {
             />
           </div>
           <label class="field">
-            <span>名字</span>
+            <span>{{ t('profile.name') }}</span>
             <input v-model="name" maxlength="40" />
           </label>
           <label class="field">
-            <span>签名</span>
-            <textarea v-model="signature" maxlength="120" placeholder="一句话就好" />
+            <span>{{ t('profile.signature') }}</span>
+            <textarea
+              v-model="signature"
+              maxlength="120"
+              :placeholder="t('profile.signaturePlaceholder')"
+            />
           </label>
           <div class="field">
-            <span>谁可以看</span>
+            <span>{{ t('profile.who') }}</span>
             <AppSelect v-model="visibility" :options="visibilityOptions" />
           </div>
           <div class="priv">
-            <AppSwitch v-model="showSignature">签名</AppSwitch>
-            <AppSwitch v-model="showCover">背景</AppSwitch>
-            <AppSwitch v-model="showEmail">邮箱</AppSwitch>
-            <AppSwitch v-model="showLikes">赞过的</AppSwitch>
+            <AppSwitch v-model="showSignature">{{ t('profile.showSignature') }}</AppSwitch>
+            <AppSwitch v-model="showCover">{{ t('profile.showCover') }}</AppSwitch>
+            <AppSwitch v-model="showEmail">{{ t('profile.showEmail') }}</AppSwitch>
+            <AppSwitch v-model="showLikes">{{ t('profile.showLikes') }}</AppSwitch>
           </div>
-          <p class="hint">
-            公开时访客也能看，仅双方要登录，仅自己只有你能看。打开赞过的后，别人打开你的主页也能看到你赞过的公开帖子。名字和头像仍会出现在帖子上。
-          </p>
-          <AppButton type="submit" :loading="saving">保存</AppButton>
+          <p class="hint">{{ t('profile.hint') }}</p>
+          <AppButton type="submit" :loading="saving">{{ t('action.save') }}</AppButton>
         </form>
       </template>
     </ProfileShelf>

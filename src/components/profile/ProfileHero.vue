@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import ImageLightbox from '@/components/common/ImageLightbox.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 
@@ -11,6 +12,7 @@ const props = defineProps<{
   email?: string | null
 }>()
 
+const { t } = useI18n()
 const coverOpen = ref(false)
 const coverStyle = computed(() => {
   const url = props.coverUrl
@@ -25,7 +27,7 @@ const coverStyle = computed(() => {
         v-if="coverUrl"
         type="button"
         class="cover-view"
-        aria-label="查看背景"
+        :aria-label="t('profile.viewCover')"
         @click="coverOpen = true"
       />
       <div class="cover-slot">
@@ -43,7 +45,12 @@ const coverStyle = computed(() => {
         <slot name="meta" />
       </div>
     </div>
-    <ImageLightbox v-if="coverUrl" v-model:open="coverOpen" :src="coverUrl" alt="背景" />
+    <ImageLightbox
+      v-if="coverUrl"
+      v-model:open="coverOpen"
+      :src="coverUrl"
+      :alt="t('profile.coverAlt')"
+    />
   </section>
 </template>
 

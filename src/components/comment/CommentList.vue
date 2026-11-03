@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Eye, EyeOff, Heart, Trash2 } from '@lucide/vue'
 import AppButton from '@/components/common/AppButton.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
@@ -24,6 +25,7 @@ const emit = defineEmits<{
   reply: [comment: Comment]
 }>()
 
+const { t } = useI18n()
 const pendingId = ref<number | null>(null)
 const openThreads = ref<number[]>([])
 
@@ -76,16 +78,18 @@ function confirmRemove() {
           <p class="text">{{ thread.root.content }}</p>
           <div class="meta">
             <span class="muted">{{ formatDateTime(thread.root.createdAt) }}</span>
-            <span v-if="thread.root.status === 'HIDDEN'" class="muted">已隐藏</span>
+            <span v-if="thread.root.status === 'HIDDEN'" class="muted">{{
+              t('comment.hidden')
+            }}</span>
             <button v-wave type="button" class="text-btn" @click="emit('reply', thread.root)">
-              回复
+              {{ t('action.reply') }}
             </button>
             <WaveLink
               v-if="showPost"
               class="text-btn"
               :to="{ name: 'post', params: { id: thread.root.postId } }"
             >
-              看这篇
+              {{ t('comment.viewPost') }}
             </WaveLink>
             <template v-if="canModerate">
               <button
@@ -95,7 +99,7 @@ function confirmRemove() {
                 class="text-btn warn"
                 @click="emit('hide', thread.root.id)"
               >
-                <EyeOff :size="14" /> 隐藏
+                <EyeOff :size="14" /> {{ t('action.hide') }}
               </button>
               <button
                 v-else
@@ -104,7 +108,7 @@ function confirmRemove() {
                 class="text-btn ok"
                 @click="emit('show', thread.root.id)"
               >
-                <Eye :size="14" /> 显示
+                <Eye :size="14" /> {{ t('action.show') }}
               </button>
               <button
                 v-wave
@@ -112,7 +116,7 @@ function confirmRemove() {
                 class="text-btn danger"
                 @click="askRemove(thread.root.id)"
               >
-                <Trash2 :size="14" /> 删除
+                <Trash2 :size="14" /> {{ t('action.delete') }}
               </button>
             </template>
           </div>
@@ -131,15 +135,17 @@ function confirmRemove() {
                 </ProfileLink>
                 <p class="text">
                   <template v-if="reply.replyToNickname">
-                    回复 <span class="at">{{ reply.replyToNickname }}</span>
+                    {{ t('comment.reply') }} <span class="at">{{ reply.replyToNickname }}</span>
                   </template>
                   {{ reply.content }}
                 </p>
                 <div class="meta">
                   <span class="muted">{{ formatDateTime(reply.createdAt) }}</span>
-                  <span v-if="reply.status === 'HIDDEN'" class="muted">已隐藏</span>
+                  <span v-if="reply.status === 'HIDDEN'" class="muted">{{
+                    t('comment.hidden')
+                  }}</span>
                   <button v-wave type="button" class="text-btn" @click="emit('reply', reply)">
-                    回复
+                    {{ t('action.reply') }}
                   </button>
                   <template v-if="canModerate">
                     <button
@@ -149,7 +155,7 @@ function confirmRemove() {
                       class="text-btn warn"
                       @click="emit('hide', reply.id)"
                     >
-                      隐藏
+                      {{ t('action.hide') }}
                     </button>
                     <button
                       v-else
@@ -158,7 +164,7 @@ function confirmRemove() {
                       class="text-btn ok"
                       @click="emit('show', reply.id)"
                     >
-                      显示
+                      {{ t('action.show') }}
                     </button>
                     <button
                       v-wave
@@ -166,7 +172,7 @@ function confirmRemove() {
                       class="text-btn danger"
                       @click="askRemove(reply.id)"
                     >
-                      删除
+                      {{ t('action.delete') }}
                     </button>
                   </template>
                 </div>
@@ -176,7 +182,7 @@ function confirmRemove() {
                 type="button"
                 class="like"
                 :class="{ on: reply.liked }"
-                :aria-label="reply.liked ? '取消赞' : '赞'"
+                :aria-label="reply.liked ? t('action.unlike') : t('action.like')"
                 @click="emit('like', reply.id)"
               >
                 <Heart :size="14" :fill="reply.liked ? 'currentColor' : 'none'" />
@@ -192,8 +198,8 @@ function confirmRemove() {
             >
               {{
                 openThreads.includes(thread.root.id)
-                  ? '收起回复'
-                  : `展开 ${thread.replies.length - 1} 条回复`
+                  ? t('comment.collapse')
+                  : t('comment.expand', { n: thread.replies.length - 1 })
               }}
             </button>
           </div>
@@ -203,7 +209,7 @@ function confirmRemove() {
           type="button"
           class="like"
           :class="{ on: thread.root.liked }"
-          :aria-label="thread.root.liked ? '取消赞' : '赞'"
+          :aria-label="thread.root.liked ? t('action.unlike') : t('action.like')"
           @click="emit('like', thread.root.id)"
         >
           <Heart :size="16" :fill="thread.root.liked ? 'currentColor' : 'none'" />
@@ -223,12 +229,16 @@ function confirmRemove() {
             <strong>{{ comment.nickname }}</strong>
           </ProfileLink>
           <span class="muted">{{ formatDateTime(comment.createdAt) }}</span>
-          <span v-if="comment.status === 'HIDDEN'" class="muted">已隐藏</span>
-          <span v-if="comment.likeCount" class="muted">{{ comment.likeCount }} 赞</span>
+          <span v-if="comment.status === 'HIDDEN'" class="muted">{{ t('comment.hidden') }}</span>
+          <span v-if="comment.likeCount" class="muted">{{
+            t('comment.likes', { n: comment.likeCount })
+          }}</span>
         </div>
       </div>
       <p class="text">
-        <template v-if="comment.replyToNickname">回复 {{ comment.replyToNickname }}：</template>
+        <template v-if="comment.replyToNickname">{{
+          t('comment.replyTo', { name: comment.replyToNickname })
+        }}</template>
         {{ comment.content }}
       </p>
       <div v-if="canModerate || showPost" class="row">
@@ -237,7 +247,7 @@ function confirmRemove() {
           class="btn quiet"
           :to="{ name: 'post', params: { id: comment.postId } }"
         >
-          看这篇
+          {{ t('comment.viewPost') }}
         </WaveLink>
         <template v-if="canModerate">
           <AppButton
@@ -248,7 +258,7 @@ function confirmRemove() {
             @click="emit('hide', comment.id)"
           >
             <EyeOff :size="16" />
-            隐藏
+            {{ t('action.hide') }}
           </AppButton>
           <AppButton
             v-else
@@ -258,11 +268,11 @@ function confirmRemove() {
             @click="emit('show', comment.id)"
           >
             <Eye :size="16" />
-            显示
+            {{ t('action.show') }}
           </AppButton>
           <AppButton variant="plain" tone="danger" type="button" @click="askRemove(comment.id)">
             <Trash2 :size="16" />
-            删除
+            {{ t('action.delete') }}
           </AppButton>
         </template>
       </div>
@@ -270,9 +280,9 @@ function confirmRemove() {
   </ul>
   <ConfirmDialog
     :open="pendingId !== null"
-    title="删除这条评论？"
-    description="删掉之后找不回来。"
-    confirm-label="删除"
+    :title="t('comments.deleteCommentTitle')"
+    :description="t('comments.deleteCommentBody')"
+    :confirm-label="t('action.delete')"
     tone="danger"
     @update:open="closeConfirm"
     @confirm="confirmRemove"

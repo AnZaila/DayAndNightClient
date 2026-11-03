@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { deleteComment, fetchRecentComments, updateCommentStatus } from '@/api/comment'
 import { deleteDanmaku, fetchRecentDanmaku, updateDanmakuStatus } from '@/api/danmaku'
 import AppButton from '@/components/common/AppButton.vue'
@@ -14,6 +15,7 @@ import type { Comment, CommentStatus } from '@/types/comment'
 import type { Danmaku } from '@/types/danmaku'
 import { formatDateTime } from '@/utils/text'
 
+const { t } = useI18n()
 const pageSize = 20
 const thread = usePaged<Comment>((page) => fetchRecentComments('manage', page, pageSize))
 const notes = usePaged<Danmaku>((page) => fetchRecentDanmaku(page, pageSize))
@@ -25,7 +27,7 @@ void notes.open(1)
 async function setStatus(id: number, status: CommentStatus) {
   const updated = await updateCommentStatus(id, status)
   thread.items.value = thread.items.value.map((item) => (item.id === id ? updated : item))
-  pushToast(status === 'HIDDEN' ? '已隐藏' : '已显示')
+  pushToast(status === 'HIDDEN' ? t('action.hidden') : t('action.shown'))
 }
 
 async function removeComment(id: number) {
@@ -35,13 +37,13 @@ async function removeComment(id: number) {
       ? thread.page.value - 1
       : thread.page.value
   await thread.open(next || 1)
-  pushToast('已删除')
+  pushToast(t('action.deleted'))
 }
 
 async function setNoteStatus(id: number, status: Danmaku['status']) {
   const updated = await updateDanmakuStatus(id, status)
   notes.items.value = notes.items.value.map((item) => (item.id === id ? updated : item))
-  pushToast(status === 'HIDDEN' ? '已隐藏' : '已显示')
+  pushToast(status === 'HIDDEN' ? t('action.hidden') : t('action.shown'))
 }
 
 function closeNoteConfirm(open: boolean) {
@@ -56,14 +58,14 @@ async function confirmRemoveNote() {
   const next =
     notes.items.value.length === 1 && notes.page.value > 1 ? notes.page.value - 1 : notes.page.value
   await notes.open(next || 1)
-  pushToast('已删除')
+  pushToast(t('action.deleted'))
 }
 </script>
 
 <template>
   <div class="shell stack wide">
     <section class="card">
-      <h1 class="page-title">评论管理</h1>
+      <h1 class="page-title">{{ t('comments.title') }}</h1>
       <Skeleton
         v-if="thread.loading.value && thread.items.value.length === 0"
         preset="comment"
@@ -72,7 +74,7 @@ async function confirmRemoveNote() {
       <p v-else-if="thread.error.value && thread.items.value.length === 0" class="error">
         {{ thread.error.value }}
       </p>
-      <p v-else-if="thread.items.value.length === 0" class="muted">还没有别人的留言。</p>
+      <p v-else-if="thread.items.value.length === 0" class="muted">{{ t('comments.empty') }}</p>
       <CommentList
         v-if="thread.items.value.length"
         :comments="thread.items.value"
@@ -91,7 +93,7 @@ async function confirmRemoveNote() {
       />
     </section>
     <section class="card">
-      <h2>弹幕</h2>
+      <h2>{{ t('comments.danmaku') }}</h2>
       <Skeleton
         v-if="notes.loading.value && notes.items.value.length === 0"
         preset="note"
@@ -100,21 +102,23 @@ async function confirmRemoveNote() {
       <p v-else-if="notes.error.value && notes.items.value.length === 0" class="error">
         {{ notes.error.value }}
       </p>
-      <p v-else-if="notes.items.value.length === 0" class="muted">还没有弹幕。</p>
+      <p v-else-if="notes.items.value.length === 0" class="muted">
+        {{ t('comments.emptyDanmaku') }}
+      </p>
       <ul v-if="notes.items.value.length" class="notes">
         <li v-for="note in notes.items.value" :key="note.id">
           <div>
             <p class="facts">
               <strong>{{ note.nickname }}</strong>
               <span class="muted">{{ formatDateTime(note.createdAt) }}</span>
-              <span v-if="note.status === 'HIDDEN'" class="muted">已隐藏</span>
+              <span v-if="note.status === 'HIDDEN'" class="muted">{{ t('action.hidden') }}</span>
             </p>
             <p>{{ note.content }}</p>
             <p class="muted">
-              <WaveLink v-if="note.postId" :to="{ name: 'post', params: { id: note.postId } }"
-                >看这篇</WaveLink
-              >
-              <span v-else>地图</span>
+              <WaveLink v-if="note.postId" :to="{ name: 'post', params: { id: note.postId } }">{{
+                t('comments.viewPost')
+              }}</WaveLink>
+              <span v-else>{{ t('comments.map') }}</span>
             </p>
           </div>
           <div class="row">
@@ -125,7 +129,7 @@ async function confirmRemoveNote() {
               type="button"
               @click="setNoteStatus(note.id, 'HIDDEN')"
             >
-              隐藏
+              {{ t('action.hide') }}
             </AppButton>
             <AppButton
               v-else
@@ -134,11 +138,11 @@ async function confirmRemoveNote() {
               type="button"
               @click="setNoteStatus(note.id, 'VISIBLE')"
             >
-              显示
+              {{ t('action.show') }}
             </AppButton>
-            <AppButton variant="plain" tone="danger" type="button" @click="pendingNote = note.id"
-              >删除</AppButton
-            >
+            <AppButton variant="plain" tone="danger" type="button" @click="pendingNote = note.id">{{
+              t('action.delete')
+            }}</AppButton>
           </div>
         </li>
       </ul>
@@ -152,9 +156,9 @@ async function confirmRemoveNote() {
     </section>
     <ConfirmDialog
       :open="pendingNote !== null"
-      title="删除这条弹幕？"
-      description="删掉之后找不回来。"
-      confirm-label="删除"
+      :title="t('comments.deleteDanmakuTitle')"
+      :description="t('comments.deleteDanmakuBody')"
+      :confirm-label="t('action.delete')"
       tone="danger"
       @update:open="closeNoteConfirm"
       @confirm="confirmRemoveNote"

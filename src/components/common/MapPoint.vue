@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 export type MapMarker = {
   id: number
@@ -9,6 +10,7 @@ export type MapMarker = {
   coverUrl?: string | null
 }
 
+const { t } = useI18n()
 const latitude = defineModel<number | null>('latitude', { default: null })
 const longitude = defineModel<number | null>('longitude', { default: null })
 
@@ -437,7 +439,7 @@ onBeforeUnmount(() => {
         />
       </div>
       <img v-else-if="src" class="shot" :src="src" alt="" draggable="false" />
-      <p v-else class="map-note">{{ failed || '地图加载中' }}</p>
+      <p v-else class="map-note">{{ failed || t('map.loading') }}</p>
       <span
         v-if="useTiles && latitude != null && longitude != null"
         class="pin here"
@@ -457,10 +459,10 @@ onBeforeUnmount(() => {
       </button>
     </div>
     <div class="tools">
-      <button type="button" aria-label="放大" :disabled="zoom >= 17" @click="changeZoom(1)">
+      <button type="button" :aria-label="t('map.zoomIn')" :disabled="zoom >= 17" @click="changeZoom(1)">
         +
       </button>
-      <button type="button" aria-label="缩小" :disabled="zoom <= 3" @click="changeZoom(-1)">
+      <button type="button" :aria-label="t('map.zoomOut')" :disabled="zoom <= 3" @click="changeZoom(-1)">
         −
       </button>
     </div>

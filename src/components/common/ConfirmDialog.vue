@@ -8,6 +8,8 @@ import {
   DialogRoot,
   DialogTitle,
 } from 'reka-ui'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppButton from '@/components/common/AppButton.vue'
 
 const props = withDefaults(
@@ -22,12 +24,16 @@ const props = withDefaults(
   }>(),
   {
     description: '',
-    confirmLabel: '确认',
-    cancelLabel: '留下',
+    confirmLabel: '',
+    cancelLabel: '',
     tone: 'primary',
     closeOnOutside: true,
   },
 )
+
+const { t } = useI18n()
+const confirmText = computed(() => props.confirmLabel || t('action.confirm'))
+const cancelText = computed(() => props.cancelLabel || t('action.keep'))
 
 function onOutside(event: Event) {
   if (!props.closeOnOutside) event.preventDefault()
@@ -54,9 +60,9 @@ function confirm() {
         <DialogDescription v-else class="sr-only">{{ title }}</DialogDescription>
         <div class="actions">
           <DialogClose as-child>
-            <AppButton variant="quiet">{{ cancelLabel }}</AppButton>
+            <AppButton variant="quiet">{{ cancelText }}</AppButton>
           </DialogClose>
-          <AppButton :tone="tone" @click="confirm">{{ confirmLabel }}</AppButton>
+          <AppButton :tone="tone" @click="confirm">{{ confirmText }}</AppButton>
         </div>
       </DialogContent>
     </DialogPortal>

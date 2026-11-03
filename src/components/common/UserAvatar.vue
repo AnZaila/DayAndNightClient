@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import ImageLightbox from '@/components/common/ImageLightbox.vue'
 
 const props = withDefaults(
@@ -17,13 +18,16 @@ const props = withDefaults(
   },
 )
 
+const { t } = useI18n()
 const failed = ref(false)
 const viewOpen = ref(false)
 const source = computed(() => (props.src || '').trim())
 const showImage = computed(() => Boolean(source.value) && !failed.value)
-const letter = computed(() => (props.name || '朝').trim().slice(0, 1) || '朝')
+const letter = computed(
+  () => (props.name || t('user.fallback')).trim().slice(0, 1) || t('user.fallback'),
+)
 const fontSize = computed(() => Math.max(12, Math.round(props.size * 0.4)))
-const alt = computed(() => (props.name || '头像').trim() || '头像')
+const alt = computed(() => (props.name || t('user.avatar')).trim() || t('user.avatar'))
 
 watch(source, () => {
   failed.value = false
@@ -46,7 +50,7 @@ function openView(event: Event) {
     :style="{ width: `${size}px`, height: `${size}px`, fontSize: `${fontSize}px` }"
     :role="canPreview ? 'button' : undefined"
     :tabindex="canPreview ? 0 : undefined"
-    :aria-label="canPreview ? `查看${alt}` : undefined"
+    :aria-label="canPreview ? t('user.view', { name: alt }) : undefined"
     @click="openView"
     @keydown.enter="openView"
   >

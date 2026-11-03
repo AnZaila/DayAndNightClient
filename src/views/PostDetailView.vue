@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { Maximize2, Pin } from '@lucide/vue'
 import { motion } from 'motion-v'
@@ -33,6 +34,7 @@ import { ApiError } from '@/utils/request'
 import { plainText } from '@/utils/text'
 import { useSessionStore } from '@/stores/session'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
@@ -59,7 +61,9 @@ const canComment = computed(
     post.value.visibility === 'PUBLIC' &&
     post.value.status === 'PUBLISHED',
 )
-const alt = computed(() => (post.value ? plainText(post.value.content).slice(0, 40) : '帖子图片'))
+const alt = computed(() =>
+  post.value ? plainText(post.value.content).slice(0, 40) : t('post.imageAlt'),
+)
 const flying = computed(() => notes.items.value.filter((item) => item.status === 'VISIBLE'))
 
 async function load() {
@@ -70,7 +74,7 @@ async function load() {
     notes.reset()
     await Promise.all([thread.more(), notes.more()])
   } catch (cause) {
-    error.value = cause instanceof ApiError ? cause.message : '加载失败'
+    error.value = cause instanceof ApiError ? cause.message : t('action.loadFailed')
   }
 }
 
@@ -95,9 +99,9 @@ async function submitComment(nickname: string | null, content: string, avatarUrl
         thread.items.value = [...thread.items.value, created]
       }
     }
-    pushToast(created.status === 'VISIBLE' ? '已留下' : '已提交，待显示')
+    pushToast(created.status === 'VISIBLE' ? t('post.left') : t('map.pending'))
   } catch (cause) {
-    commentError.value = cause instanceof ApiError ? cause.message : '评论失败'
+    commentError.value = cause instanceof ApiError ? cause.message : t('post.commentFailed')
     if (!(cause instanceof ApiError)) pushToast(commentError.value, 'error')
     throw cause
   }
@@ -107,9 +111,9 @@ async function sendDanmaku(nickname: string | null, content: string, avatarUrl: 
   try {
     const created = await createPostDanmaku(postId.value, nickname, content, avatarUrl)
     if (created.status === 'VISIBLE') notes.items.value = [created, ...notes.items.value]
-    pushToast(created.status === 'VISIBLE' ? '已飞出去' : '已提交，待显示')
+    pushToast(created.status === 'VISIBLE' ? t('map.sent') : t('map.pending'))
   } catch (cause) {
-    if (!(cause instanceof ApiError)) pushToast('弹幕没有发出去', 'error')
+    if (!(cause instanceof ApiError)) pushToast(t('map.sendFailed'), 'error')
     throw cause
   }
 }
@@ -122,7 +126,7 @@ async function setStatus(id: number, status: 'VISIBLE' | 'HIDDEN') {
     post.value.commentCount += status === 'VISIBLE' ? 1 : -1
     if (post.value.commentCount < 0) post.value.commentCount = 0
   }
-  pushToast(status === 'HIDDEN' ? '已隐藏' : '已显示')
+  pushToast(status === 'HIDDEN' ? t('action.hidden') : t('action.shown'))
 }
 
 async function removeComment(id: number) {
@@ -133,7 +137,7 @@ async function removeComment(id: number) {
     const lost = gone.filter((item) => item.status === 'VISIBLE').length
     post.value.commentCount = Math.max(0, post.value.commentCount - lost)
   }
-  pushToast('已删除')
+  pushToast(t('action.deleted'))
 }
 
 async function likeOne(id: number) {
@@ -146,7 +150,7 @@ async function likeThis() {
   try {
     post.value = await likePost(post.value.id)
   } catch (cause) {
-    pushToast(cause instanceof ApiError ? cause.message : '没有点上', 'error')
+    pushToast(cause instanceof ApiError ? cause.message : t('post.likeFailed'), 'error')
   }
 }
 
@@ -154,9 +158,9 @@ async function pinThis() {
   if (!post.value) return
   try {
     post.value = await pinPost(post.value.id)
-    pushToast(post.value.pinned ? '已置顶' : '已放下')
+    pushToast(post.value.pinned ? t('action.pinned') : t('action.unpinned'))
   } catch (cause) {
-    pushToast(cause instanceof ApiError ? cause.message : '没有置上', 'error')
+    pushToast(cause instanceof ApiError ? cause.message : t('post.pinFailed'), 'error')
   }
 }
 
@@ -167,7 +171,7 @@ async function likeNote(id: number) {
 
 async function removePost() {
   await deletePost(postId.value)
-  pushToast('已删除')
+  pushToast(t('action.deleted'))
   await router.push({ name: 'timeline' })
 }
 
@@ -208,12 +212,12 @@ onMounted(load)
                 :alt="alt"
                 :layout-id="media.id === post.media[0]?.id ? `cover-${post.id}` : undefined"
               />
-              <span class="zoom"><Maximize2 :size="16" /> 放大</span>
+              <span class="zoom"><Maximize2 :size="16" /> {{ t('action.zoomIn') }}</span>
             </button>
           </div>
         </template>
         <template #chips>
-          <span v-if="post.status === 'HIDDEN'">时间轴上已隐藏</span>
+          <span v-if="post.status === 'HIDDEN'">{{ t('post.hiddenOnTimeline') }}</span>
         </template>
         <template #stats>
           <PostStats
@@ -228,29 +232,30 @@ onMounted(load)
         <div v-if="session.user" class="row">
           <AppButton variant="plain" type="button" @click="pinThis">
             <Pin :size="16" :fill="post.pinned ? 'currentColor' : 'none'" />
-            {{ post.pinned ? '取消置顶' : '置顶' }}
+            {{ post.pinned ? t('action.unpin') : t('action.pin') }}
           </AppButton>
           <template v-if="mine">
-            <WaveLink class="btn quiet" :to="{ name: 'write', params: { id: post.id } }"
-              >修改这篇</WaveLink
-            >
-            <AppButton variant="plain" tone="danger" type="button" @click="confirmOpen = true"
-              >删除这篇</AppButton
-            >
+            <WaveLink class="btn quiet" :to="{ name: 'write', params: { id: post.id } }">{{
+              t('post.edit')
+            }}</WaveLink>
+            <AppButton variant="plain" tone="danger" type="button" @click="confirmOpen = true">{{
+              t('post.delete')
+            }}</AppButton>
           </template>
         </div>
         <DanmakuStage :items="flying" @like="likeNote" @need-more="notes.more" />
       </PostArticle>
       <section class="card">
-        <h2>弹幕</h2>
+        <h2>{{ t('post.danmaku') }}</h2>
         <DanmakuForm :send="sendDanmaku" />
       </section>
       <section id="comments" class="card">
         <h2>
-          评论<span v-if="post.commentCount" class="count">{{ post.commentCount }}</span>
+          {{ t('post.comments')
+          }}<span v-if="post.commentCount" class="count">{{ post.commentCount }}</span>
         </h2>
         <p v-if="!canComment" class="lede">
-          {{ post.commentsOpen ? '这篇不开放评论。' : '评论已关闭。' }}
+          {{ post.commentsOpen ? t('post.commentsClosedOff') : t('post.commentsClosed') }}
         </p>
         <Skeleton
           v-if="thread.loading.value && thread.page.value === 0"
@@ -275,7 +280,7 @@ onMounted(load)
           v-else-if="thread.page.value > 0 && thread.items.value.length === 0"
           class="muted empty-note"
         >
-          还没有留言。
+          {{ t('post.noComments') }}
         </p>
         <Skeleton v-if="thread.loading.value && thread.items.value.length" preset="comment" />
         <ScrollSentinel
@@ -293,16 +298,16 @@ onMounted(load)
       </section>
       <ConfirmDialog
         v-model:open="confirmOpen"
-        title="删除这篇？"
-        description="删掉之后找不回来。"
-        confirm-label="删除"
+        :title="t('post.deleteTitle')"
+        :description="t('post.deleteBody')"
+        :confirm-label="t('action.delete')"
         tone="danger"
         @confirm="removePost"
       />
       <ImageLightbox v-model:open="lightboxOpen" :src="active?.url || ''" :alt="alt" />
     </div>
     <p v-else-if="error" class="shell wide error">
-      {{ error }}。如果这是仅双方的帖子，需要先登录。
+      {{ t('post.privateHint', { error }) }}
     </p>
     <Skeleton v-else class="shell wide" preset="detail" />
   </div>

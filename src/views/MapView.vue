@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { Maximize2, Minimize2 } from '@lucide/vue'
 import { createMapDanmaku, fetchMapDanmaku, likeDanmaku } from '@/api/danmaku'
@@ -14,6 +15,7 @@ import type { PlacePin } from '@/types/place'
 import { ApiError } from '@/utils/request'
 import { formatDate } from '@/utils/text'
 
+const { t } = useI18n()
 const router = useRouter()
 const places = ref<PlacePin[]>([])
 const notes = usePaged((page) => fetchMapDanmaku(page, 20))
@@ -48,8 +50,8 @@ onMounted(async () => {
   try {
     places.value = await fetchPlaces()
     await notes.more()
-  } catch {
-    error.value = '地图没有加载出来。'
+  } catch (cause) {
+    error.value = cause instanceof ApiError ? cause.message : t('map.loadFailed')
   } finally {
     ready.value = true
   }
@@ -67,9 +69,9 @@ async function send(nickname: string | null, content: string, avatarUrl: string 
   try {
     const created = await createMapDanmaku(nickname, content, avatarUrl)
     if (created.status === 'VISIBLE') notes.items.value = [created, ...notes.items.value]
-    pushToast(created.status === 'VISIBLE' ? '已飞出去' : '已提交，待显示')
+    pushToast(created.status === 'VISIBLE' ? t('map.sent') : t('map.pending'))
   } catch (cause) {
-    if (!(cause instanceof ApiError)) pushToast('弹幕没有发出去', 'error')
+    if (!(cause instanceof ApiError)) pushToast(t('map.sendFailed'), 'error')
     throw cause
   }
 }
@@ -83,7 +85,7 @@ async function likeNote(id: number) {
 <template>
   <section class="shell stack page" :class="{ fill: filled }">
     <div v-if="!filled">
-      <h1 class="page-title">地图</h1>
+      <h1 class="page-title">{{ t('map.title') }}</h1>
     </div>
     <p v-if="error" class="error">{{ error }}</p>
     <div v-else class="board card" :class="{ wait: !ready }">
@@ -94,8 +96,8 @@ async function likeNote(id: number) {
         <button
           class="fs"
           type="button"
-          :aria-label="filled ? '退出铺满' : '铺满地图'"
-          :title="filled ? '退出铺满' : '铺满地图'"
+          :aria-label="filled ? t('map.unfill') : t('map.fill')"
+          :title="filled ? t('map.unfill') : t('map.fill')"
           @click="toggleFullscreen"
         >
           <Minimize2 v-if="filled" :size="16" />
@@ -105,7 +107,7 @@ async function likeNote(id: number) {
       </div>
     </div>
     <p v-if="ready && !error && places.length === 0 && !filled" class="muted">
-      还没有标过地点的帖子。
+      {{ t('map.empty') }}
     </p>
   </section>
 </template>
@@ -174,7 +176,7 @@ async function likeNote(id: number) {
   display: flex;
   align-items: center;
   gap: var(--space-2xs);
-  width: min(600px, calc(100% - 32px));
+  width: min(700px, calc(100% - 32px));
   padding: 6px;
   border-radius: var(--radius-pill);
   background: color-mix(in oklab, var(--surface) 86%, transparent);

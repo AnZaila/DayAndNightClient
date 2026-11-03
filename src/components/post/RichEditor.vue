@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { QuillEditor } from '@vueup/vue-quill'
 import { uploadContentImage } from '@/api/post'
 import Spinner from '@/components/common/Spinner.vue'
@@ -19,6 +20,7 @@ type QuillLike = {
   root: HTMLElement
 }
 
+const { t, locale } = useI18n()
 const model = defineModel<string>({ required: true })
 const editor = ref<{ getToolbar: () => HTMLElement; getQuill: () => QuillLike } | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -32,18 +34,20 @@ const toolbar = [
   ['clean'],
 ]
 
-const titles: Record<string, string> = {
-  bold: '加粗',
-  italic: '斜体',
-  underline: '下划线',
-  strike: '删除线',
-  blockquote: '引用',
-  link: '链接',
-  image: '图片',
-  clean: '清除格式',
-  'list:ordered': '有序列表',
-  'list:bullet': '无序列表',
-}
+const titles = computed<Record<string, string>>(() => ({
+  bold: t('editor.bold'),
+  italic: t('editor.italic'),
+  underline: t('editor.underline'),
+  strike: t('editor.strike'),
+  blockquote: t('editor.blockquote'),
+  link: t('editor.link'),
+  image: t('editor.image'),
+  clean: t('editor.clean'),
+  'list:ordered': t('editor.ordered'),
+  'list:bullet': t('editor.bullet'),
+}))
+
+watch(locale, () => localize())
 
 function localize() {
   const bar = editor.value?.getToolbar()
@@ -57,7 +61,7 @@ function localize() {
     if (!format) return
     const name = format.slice(3)
     const value = node.getAttribute('value')
-    const title = titles[value ? `${name}:${value}` : name]
+    const title = titles.value[value ? `${name}:${value}` : name]
     if (title) node.setAttribute('title', title)
   })
   const quill = editor.value?.getQuill()
@@ -111,11 +115,11 @@ async function insertFile(file: File) {
   if (uploading.value) return
   const type = file.type.toLowerCase()
   if (type && !['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(type)) {
-    pushToast('只接收 jpg、png、webp', 'error')
+    pushToast(t('editor.type'), 'error')
     return
   }
   if (file.size > 8 * 1024 * 1024) {
-    pushToast('单张图片不能超过 8MB', 'error')
+    pushToast(t('editor.tooBig'), 'error')
     return
   }
   const quill = editor.value?.getQuill()
@@ -128,7 +132,7 @@ async function insertFile(file: File) {
     quill.insertEmbed(index, 'image', saved.url, 'user')
     quill.setSelection(index + 1, 0, 'user')
   } catch (cause) {
-    if (!(cause instanceof ApiError)) pushToast('图片没有放进去', 'error')
+    if (!(cause instanceof ApiError)) pushToast(t('editor.failed'), 'error')
   } finally {
     uploading.value = false
   }
@@ -154,14 +158,14 @@ function onUpdate(value: string | null | undefined) {
       :content="model"
       content-type="html"
       theme="snow"
-      placeholder="写这一天发生了什么。"
+      :placeholder="t('editor.placeholder')"
       :toolbar="toolbar"
       @update:content="onUpdate"
       @ready="localize"
     />
     <p v-if="uploading" class="wait" role="status">
       <Spinner />
-      正在放入图片
+      {{ t('editor.uploading') }}
     </p>
   </div>
 </template>

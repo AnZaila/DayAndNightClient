@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { CalendarDays, Heart } from '@lucide/vue'
 import { storeToRefs } from 'pinia'
 import Skeleton from '@/components/common/Skeleton.vue'
 import WaveLink from '@/components/common/WaveLink.vue'
 import { useSiteStore } from '@/stores/site'
 
+const { t } = useI18n()
 const { site } = storeToRefs(useSiteStore())
 
 const since = computed(() => {
@@ -14,7 +16,7 @@ const since = computed(() => {
   const parts = value.slice(0, 10).split('-').map(Number)
   const [year, month, day] = parts
   if (!year || !month || !day) return ''
-  return `${year} 年 ${month} 月 ${day} 日`
+  return t('date.ymd', { y: year, m: month, d: day })
 })
 </script>
 
@@ -22,27 +24,29 @@ const since = computed(() => {
   <div>
     <section v-if="site" class="shell wide about">
       <div class="ledger">
-        <p class="since">{{ since }} 起</p>
+        <p class="since">{{ t('about.since', { date: since }) }}</p>
         <p class="count">
           <span class="num">{{ site.daysTogether }}</span
-          ><span class="unit">天</span>
+          ><span class="unit">{{ t('about.daysUnit') }}</span>
         </p>
         <p class="together">
           <Heart :size="15" />
-          在一起
+          {{ t('about.together') }}
         </p>
       </div>
       <div class="letter">
         <h1>{{ site.title }}</h1>
         <p class="subtitle">{{ site.subtitle }}</p>
         <p class="body" :class="{ quiet: !site.about }">
-          {{ site.about || '还没有写介绍。' }}
+          {{ site.about || t('about.empty') }}
         </p>
         <div class="row">
-          <WaveLink class="btn solid" :to="{ name: 'timeline' }">去看时间轴</WaveLink>
+          <WaveLink class="btn solid" :to="{ name: 'timeline' }">{{
+            t('about.toTimeline')
+          }}</WaveLink>
           <WaveLink class="btn quiet" :to="{ name: 'anniversaries' }">
             <CalendarDays :size="16" />
-            纪念日
+            {{ t('nav.anniversaries') }}
           </WaveLink>
         </div>
       </div>
