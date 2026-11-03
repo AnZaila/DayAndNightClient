@@ -56,7 +56,7 @@ export async function deletePost(id: number) {
   await request.delete(`/posts/${id}`)
 }
 
-export async function uploadPostCover(id: number, file: File) {
+export async function uploadPostMedia(id: number, file: File) {
   const form = new FormData()
   form.append('file', file)
   const { data } = await request.post<Media>(`/posts/${id}/media`, form)

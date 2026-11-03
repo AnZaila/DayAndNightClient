@@ -269,12 +269,23 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             </div>
             <PopoverRoot v-if="session.user" v-model:open="menuOpen">
               <PopoverTrigger as-child>
-                <button type="button" class="more" :aria-label="t('action.more')">
+                <button
+                  type="button"
+                  class="more"
+                  :aria-label="t('action.more')"
+                  @pointerdown.stop
+                  @click.stop
+                >
                   <Ellipsis :size="20" />
                 </button>
               </PopoverTrigger>
               <PopoverPortal>
-                <PopoverContent class="soft-menu more-menu" align="end" :side-offset="6">
+                <PopoverContent
+                  class="soft-menu more-menu note-more"
+                  align="end"
+                  :side-offset="6"
+                  @click.stop
+                >
                   <button type="button" class="soft-item" @click="pinThis">
                     <Pin :size="14" :fill="post.pinned ? 'currentColor' : 'none'" />
                     {{ post.pinned ? t('action.unpin') : t('action.pin') }}

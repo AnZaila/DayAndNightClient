@@ -8,6 +8,7 @@ import { useRoute } from 'vue-router'
 import HeaderActions from '@/components/layout/HeaderActions.vue'
 import HeaderBrand from '@/components/layout/HeaderBrand.vue'
 import HeaderNav from '@/components/layout/HeaderNav.vue'
+import { overlayBehind } from '@/composables/usePostOverlay'
 import { useSiteStore } from '@/stores/site'
 
 const { t } = useI18n()
@@ -19,8 +20,11 @@ const menuOpen = ref(false)
 const headerEl = useTemplateRef('headerEl')
 let headerSize: ResizeObserver | null = null
 
-/* 首页顶部是整幅插画，滚动不到 88px 时页头浮在画面上 */
-const overHero = computed(() => route.name === 'timeline' && y.value < 88 && !menuOpen.value)
+/* 首页顶部是整幅插画，滚动不到 88px 时页头浮在画面上。详情浮层仍按背后那页算，免得开关时实心底和透明来回切。 */
+const overHero = computed(() => {
+  const page = route.name === 'post' ? overlayBehind.value?.name : route.name
+  return page === 'timeline' && y.value < 88 && !menuOpen.value
+})
 
 onMounted(() => {
   const el = headerEl.value

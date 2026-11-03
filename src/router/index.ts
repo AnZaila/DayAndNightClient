@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { rememberPostBackground } from '@/composables/usePostOverlay'
+import { forgetPostBackground, rememberPostBackground } from '@/composables/usePostOverlay'
 import { setupProgress } from '@/plugins/progress'
 import { useSessionStore } from '@/stores/session'
 
@@ -100,6 +100,10 @@ router.beforeEach(async (to, from) => {
     if (id === session.user.id) return { name: 'profile' }
   }
   return true
+})
+
+router.afterEach((to) => {
+  forgetPostBackground(to)
 })
 
 setupProgress(router)

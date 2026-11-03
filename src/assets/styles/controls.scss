@@ -347,6 +347,14 @@
   z-index: calc(var(--z-sticky) + 1);
 }
 
+.note-more {
+  z-index: calc(var(--z-modal) + 10);
+}
+
+[data-reka-popper-content-wrapper]:has(.note-more) {
+  z-index: calc(var(--z-modal) + 10) !important;
+}
+
 .soft-menu[data-state='open'],
 .soft-calendar[data-state='open'] {
   animation-name: lift-in;

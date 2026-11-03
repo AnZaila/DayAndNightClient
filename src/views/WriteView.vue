@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { createPost, deletePostMedia, fetchPost, updatePost, uploadPostCover } from '@/api/post'
+import { createPost, deletePostMedia, fetchPost, updatePost, uploadPostMedia } from '@/api/post'
 import AppButton from '@/components/common/AppButton.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import AppSwitch from '@/components/common/AppSwitch.vue'
@@ -40,8 +40,8 @@ const status = ref<PostStatus>('PUBLISHED')
 const commentsOpen = ref(true)
 const pickerKey = ref(0)
 const pendingMedia = ref<number | null>(null)
-const file = ref<File | null>(null)
-const draft = ref<string | null>(null)
+const files = ref<File[]>([])
+const drafts = ref<string[]>([])
 const existing = ref<Media[]>([])
 const error = ref<string | null>(null)
 const saving = ref(false)
@@ -104,10 +104,10 @@ function happenedAtValue() {
   return happenedDate.value && time ? `${happenedDate.value}T${time}` : ''
 }
 
-const previewMedia = computed(() => {
-  if (draft.value) return [{ url: draft.value }]
-  return existing.value
-})
+const previewMedia = computed(() => [
+  ...existing.value,
+  ...drafts.value.map((url) => ({ url })),
+])
 
 function reset() {
   content.value = ''
@@ -120,7 +120,7 @@ function reset() {
   visibility.value = 'PUBLIC'
   status.value = 'PUBLISHED'
   commentsOpen.value = true
-  file.value = null
+  files.value = []
   pickerKey.value += 1
   existing.value = []
   ready.value = true
@@ -149,27 +149,27 @@ async function load() {
   status.value = post.status
   commentsOpen.value = post.commentsOpen
   existing.value = post.media
-  file.value = null
+  files.value = []
   pickerKey.value += 1
   ready.value = true
 }
 
-watch(file, (next) => {
-  if (draft.value) URL.revokeObjectURL(draft.value)
-  draft.value = next ? URL.createObjectURL(next) : null
+watch(files, (next) => {
+  drafts.value.forEach((url) => URL.revokeObjectURL(url))
+  drafts.value = next.map((file) => URL.createObjectURL(file))
 })
 
 onBeforeUnmount(() => {
-  if (draft.value) URL.revokeObjectURL(draft.value)
+  drafts.value.forEach((url) => URL.revokeObjectURL(url))
 })
 
-function chooseCover(list: File[]) {
-  file.value = list[0] ?? null
+function choosePhotos(list: File[]) {
+  files.value = list
 }
 
-function clearCover() {
-  file.value = null
-  pickerKey.value += 1
+function dropDraft(index: number) {
+  files.value = files.value.filter((_, i) => i !== index)
+  if (!files.value.length) pickerKey.value += 1
 }
 
 watch(
@@ -207,11 +207,13 @@ async function save() {
           commentsOpen: commentsOpen.value,
         })
       : await createPost(input)
-    if (file.value) {
+    if (files.value.length) {
       try {
-        await uploadPostCover(saved.id, file.value)
+        for (const photo of files.value) {
+          await uploadPostMedia(saved.id, photo)
+        }
       } catch (cause) {
-        const message = cause instanceof ApiError ? cause.message : t('write.coverFailed')
+        const message = cause instanceof ApiError ? cause.message : t('write.photosFailed')
         error.value = message
         if (!(cause instanceof ApiError)) pushToast(message, 'error')
         if (!editing.value) {
@@ -320,26 +322,30 @@ async function removeMedia(mediaId: number) {
         <AppSwitch v-model="commentsOpen">{{ t('write.comments') }}</AppSwitch>
       </template>
       <div class="field">
-        <span>{{ t('write.cover') }}</span>
+        <span>{{ t('write.photos') }}</span>
         <AppFilePicker
           :key="pickerKey"
-          :label="t('write.pickCover')"
+          :label="t('write.pickPhotos')"
           accept="image/jpeg,image/png,image/webp"
-          @select="chooseCover"
+          multiple
+          hide-names
+          @select="choosePhotos"
         />
-        <p v-if="file && existing.length" class="hint">{{ t('write.coverReplace') }}</p>
+        <p class="hint">{{ t('write.photosHint') }}</p>
       </div>
-      <figure v-if="draft" class="pending">
-        <img :src="draft" alt="" />
-        <AppButton variant="quiet" type="button" @click="clearCover">{{
-          t('write.cancelCover')
-        }}</AppButton>
-      </figure>
-      <div v-else-if="existing.length" class="photos">
-        <figure v-for="media in existing" :key="media.id">
+      <div v-if="existing.length || drafts.length" class="photos">
+        <figure v-for="(media, index) in existing" :key="media.id">
           <img :src="media.url" alt="" />
+          <span v-if="index === 0" class="mark">{{ t('write.cover') }}</span>
           <AppButton variant="plain" tone="danger" type="button" @click="askRemoveMedia(media.id)">{{
             t('write.remove')
+          }}</AppButton>
+        </figure>
+        <figure v-for="(url, index) in drafts" :key="url">
+          <img :src="url" alt="" />
+          <span v-if="!existing.length && index === 0" class="mark">{{ t('write.cover') }}</span>
+          <AppButton variant="quiet" type="button" @click="dropDraft(index)">{{
+            t('write.cancelPhoto')
           }}</AppButton>
         </figure>
       </div>
@@ -366,8 +372,8 @@ async function removeMedia(mediaId: number) {
     </aside>
     <ConfirmDialog
       :open="pendingMedia !== null"
-      :title="t('write.removeCoverTitle')"
-      :description="t('write.removeCoverBody')"
+      :title="t('write.removePhotoTitle')"
+      :description="t('write.removePhotoBody')"
       :confirm-label="t('write.remove')"
       tone="danger"
       @update:open="closeMediaConfirm"
@@ -431,21 +437,6 @@ async function removeMedia(mediaId: number) {
   gap: var(--space-sm);
 }
 
-.pending {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  max-width: 280px;
-  margin: 0 0 var(--space-md);
-
-  img {
-    width: 100%;
-    max-height: 180px;
-    object-fit: cover;
-    border-radius: var(--radius);
-  }
-}
-
 .photos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -454,6 +445,7 @@ async function removeMedia(mediaId: number) {
 }
 
 figure {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -466,6 +458,18 @@ figure {
     object-fit: cover;
     border-radius: var(--radius);
   }
+}
+
+.mark {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--surface) 82%, transparent);
+  color: var(--heading);
+  font-size: 11px;
+  pointer-events: none;
 }
 
 @media (max-width: 900px) {
