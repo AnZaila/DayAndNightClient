@@ -14,6 +14,9 @@ importers:
       '@lucide/vue':
         specifier: ^1.61.0
         version: 1.61.0(vue@3.5.44(typescript@6.0.3))
+      '@mojs/core':
+        specifier: ^1.7.1
+        version: 1.7.1
       '@vueup/vue-quill':
         specifier: ^1.5.5
         version: 1.5.5(vue@3.5.44(typescript@6.0.3))
@@ -44,6 +47,9 @@ importers:
       reka-ui:
         specifier: ^2.11.0
         version: 2.11.0(vue@3.5.44(typescript@6.0.3))
+      rough-notation:
+        specifier: ^0.5.1
+        version: 0.5.1
       v-viewer:
         specifier: ^5.0.0
         version: 5.0.0(vue@3.5.44(typescript@6.0.3))
@@ -267,6 +273,10 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
+  '@babel/runtime@7.29.10':
+    resolution: {integrity: sha512-NpugTzbKgGrNe45Ui32cN8vCFFMxVtP/9rtfwv0nP5FRDAjvYBxJcLVpYA9mr1jxP6cnIT7x9LUzuDTbWYYNRA==}
+    engines: {node: '>=6.9.0'}
+
   '@babel/template@7.29.7':
     resolution: {integrity: sha512-puq+Gf35oI24FeN11LkoUQFqv9uwNeWpxXZi/Ji3rRIoKAzKnxRaZ+Gkj0vKS9ZCiTESfng1N9LyOyXvo+m+Gg==}
     engines: {node: '>=6.9.0'}
@@ -404,6 +414,10 @@ packages:
     resolution: {integrity: sha512-XYclbwUQ6Mvf0UskBG9gJH91BdF3VK4Tt6Pv8PSntwPwNnf357PCQnma4TrzOEdwD49UYCtsTafpfytRIxm1cQ==}
     peerDependencies:
       vue: '>=3.0.1'
+
+  '@mojs/core@1.7.1':
+    resolution: {integrity: sha512-DMe8b6DPiYqpPoVi9HiDTVTchDE47A6aqGD0b1yGmHrGnNO+I25fSKkVFxvjWrW1lAIqpV/ROMZH03GPl3d6PA==}
+    engines: {node: ^20, npm: ^10}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1877,6 +1891,9 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
+  rough-notation@0.5.1:
+    resolution: {integrity: sha512-ITHofTzm13cWFVfoGsh/4c/k2Mg8geKgBCwex71UZLnNuw403tCRjYPQ68jSAd37DMbZIePXPjDgY0XdZi9HPw==}
+
   run-applescript@7.1.0:
     resolution: {integrity: sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q==}
     engines: {node: '>=18'}
@@ -2397,6 +2414,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@babel/runtime@7.29.10': {}
+
   '@babel/template@7.29.7':
     dependencies:
       '@babel/code-frame': 7.29.7
@@ -2556,6 +2575,10 @@ snapshots:
   '@lucide/vue@1.61.0(vue@3.5.44(typescript@6.0.3))':
     dependencies:
       vue: 3.5.44(typescript@6.0.3)
+
+  '@mojs/core@1.7.1':
+    dependencies:
+      '@babel/runtime': 7.29.10
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -3911,6 +3934,8 @@ snapshots:
       '@rolldown/binding-openharmony-arm64': 1.2.15
       '@rolldown/binding-win32-arm64-msvc': 1.2.15
       '@rolldown/binding-win32-x64-msvc': 1.2.15
+
+  rough-notation@0.5.1: {}
 
   run-applescript@7.1.0: {}
 

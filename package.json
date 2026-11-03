@@ -17,6 +17,7 @@
   "dependencies": {
     "@internationalized/date": "^3.12.4",
     "@lucide/vue": "^1.61.0",
+    "@mojs/core": "^1.7.1",
     "@vueup/vue-quill": "^1.5.5",
     "@vueuse/core": "^15.0.0",
     "axios": "^1.20.0",
@@ -27,6 +28,7 @@
     "pinia": "^4.0.3",
     "quill": "^2.0.3",
     "reka-ui": "^2.11.0",
+    "rough-notation": "^0.5.1",
     "v-viewer": "^5.0.0",
     "v-wave": "^3.1.1",
     "vue": "^3.5.42",
